@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ subcategory.title }} - {{ card.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #ED651C, #F4800C);
+        padding: 60px 0;
+        color: white;
+        margin-bottom: 40px;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    
+    .breadcrumb {
+        background: transparent;
+        padding: 0;
+        margin-bottom: 20px;
+    }
+    
+    .breadcrumb-item a {
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+    }
+    
+    .breadcrumb-item a:hover {
+        color: white;
+    }
+    
+    .breadcrumb-item.active {
+        color: white;
+    }
+    
+    .breadcrumb-item + .breadcrumb-item::before {
+        color: rgba(255,255,255,0.6);
+    }
+    
+    .category-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border-left: 4px solid;
+        cursor: pointer;
+        text-decoration: none;
+        display: block;
+        color: inherit;
+    }
+    
+    .category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    
+    .category-icon {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 20px;
+    }
+    
+    .category-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    
+    .category-card h4 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #2c3e50;
+    }
+    
+    .page-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: block;
+        color: inherit;
+        border-left: 3px solid #3498db;
+    }
+    
+    .page-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .page-card h5 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #2c3e50;
+    }
+    
+    .page-card p {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        margin-bottom: 0;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 25px;
+        color: #2c3e50;
+        padding-bottom: 10px;
+        border-bottom: 3px solid #ED651C;
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="page-header">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'main_app:home' %}"><i class="fas fa-home"></i> Home</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'main_app:online_education' %}">Online Education</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'main_app:online_education_card_detail' card.slug %}">{{ card.title }}</a>
+                </li>
+                {% for crumb in breadcrumb %}
+                    {% if not forloop.last %}
+                        <li class="breadcrumb-item">{{ crumb.title }}</li>
+                    {% else %}
+                        <li class="breadcrumb-item active">{{ crumb.title }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ol>
+        </nav>
+        
+        <h1>{{ subcategory.title }}</h1>
+        {% if subcategory.description %}
+            <p>{{ subcategory.description }}</p>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Content Section -->
+<section class="py-5">
+    <div class="container">
+        <!-- Child Subcategories -->
+        {% if children %}
+            <h3 class="section-title">Categories</h3>
+            <div class="row mb-5">
+                {% for child in children %}
+                <div class="col-lg-4 col-md-6">
+                    <a href="{% url 'main_app:online_education_subcategory_detail' card.slug current_path|add:'/'|add:child.slug %}" 
+                       class="category-card" 
+                       style="border-left-color: {{ child.icon_color }};">
+                        
+                        <div class="category-icon">
+                            <img src="{{ child.get_icon }}" alt="{{ child.title }}">
+                        </div>
+                        
+                        <h4>{{ child.title }}</h4>
+                        <p>{{ child.description|truncatewords:15 }}</p>
+                        
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-folder"></i> 
+                                {% if child.has_children %}
+                                    {{ child.children.count }} subcategories
+                                {% else %}
+                                    {{ child.content_pages.count }} pages
+                                {% endif %}
+                            </small>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <!-- Pages -->
+        {% if pages %}
+            <h3 class="section-title">Content</h3>
+            <div class="row">
+                <div class="col-lg-8">
+                    {% for page in pages %}
+                    <a href="{% url 'main_app:online_education_page_detail' card.slug current_path page.slug %}" 
+                       class="page-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5>{{ page.title }}</h5>
+                                {% if page.summary %}
+                                    <p>{{ page.summary|truncatewords:25 }}</p>
+                                {% endif %}
+                            </div>
+                            <span class="badge bg-primary">{{ page.views_count }} views</span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Empty State -->
+        {% if not children and not pages %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                <h4>No Content Available</h4>
+                <p class="text-muted">Content will be added soon.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

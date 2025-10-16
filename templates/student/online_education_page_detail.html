@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page.title }} - {{ card.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #ED651C, #F4800C);
+        padding: 60px 0;
+        color: white;
+        margin-bottom: 40px;
+    }
+    
+    .breadcrumb {
+        background: transparent;
+        padding: 0;
+        margin-bottom: 20px;
+    }
+    
+    .breadcrumb-item a {
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+    }
+    
+    .breadcrumb-item a:hover {
+        color: white;
+    }
+    
+    .breadcrumb-item.active {
+        color: white;
+    }
+    
+    .breadcrumb-item + .breadcrumb-item::before {
+        color: rgba(255,255,255,0.6);
+    }
+    
+    .content-card {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+    
+    .content-card h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 20px;
+    }
+    
+    .content-body {
+        line-height: 1.8;
+        color: #34495e;
+        font-size: 1.05rem;
+    }
+    
+    .content-body h2 {
+        font-size: 1.6rem;
+        font-weight: 600;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        color: #2c3e50;
+    }
+    
+    .content-body h3 {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-top: 25px;
+        margin-bottom: 12px;
+        color: #34495e;
+    }
+    
+    .content-body img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 10px;
+        margin: 20px 0;
+    }
+    
+    .views-badge {
+        color: #95a5a6;
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'main_app:home' %}"><i class="fas fa-home"></i> Home</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'main_app:online_education' %}">Online Education</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'main_app:online_education_card_detail' card.slug %}">{{ card.title }}</a>
+                </li>
+                <li class="breadcrumb-item active">{{ page.title|truncatewords:5 }}</li>
+            </ol>
+        </nav>
+    </div>
+</section>
+
+<!-- Content Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-9">
+                <div class="content-card">
+                    <h1>{{ page.title }}</h1>
+                    
+                    <div class="views-badge">
+                        <i class="fas fa-eye"></i> {{ page.views_count }} views
+                    </div>
+                    
+                    {% if page.featured_image or page.featured_image_url %}
+                        <img src="{{ page.get_featured_image }}" alt="{{ page.title }}" class="img-fluid mb-4">
+                    {% endif %}
+                    
+                    <div class="content-body">
+                        {{ page.content|safe }}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="col-lg-3">
+                {% if related_pages %}
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Related Content</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        {% for related in related_pages %}
+                        <a href="{% url 'main_app:online_education_page_detail' card.slug subcategory.slug related.slug %}" 
+                           class="list-group-item list-group-item-action">
+                            {{ related.title|truncatewords:8 }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

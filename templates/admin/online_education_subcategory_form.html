@@ -1,0 +1,130 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Edit{% else %}Add{% endif %} Subcategory{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'main_app:admin_online_education_cards_list' %}">Online Education Cards</a>
+                    </li>
+                    {% if breadcrumb %}
+                        {% for item in breadcrumb %}
+                            <li class="breadcrumb-item">{{ item.title }}</li>
+                        {% endfor %}
+                    {% endif %}
+                    <li class="breadcrumb-item active">{% if is_edit %}Edit{% else %}Add{% endif %} Subcategory</li>
+                </ol>
+            </nav>
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h4 class="mb-0">{% if is_edit %}Edit{% else %}Add{% endif %} Subcategory</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Title *</label>
+                            <input type="text" 
+                                   name="title" 
+                                   class="form-control" 
+                                   value="{% if is_edit %}{{ subcategory.title }}{% endif %}"
+                                   required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Slug</label>
+                            <input type="text" 
+                                   name="slug" 
+                                   class="form-control" 
+                                   value="{% if is_edit %}{{ subcategory.slug }}{% endif %}"
+                                   placeholder="Leave blank to auto-generate">
+                            <small class="text-muted">Auto-generated if left blank</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" 
+                                      class="form-control" 
+                                      rows="3">{% if is_edit %}{{ subcategory.description }}{% endif %}</textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Icon Image</label>
+                                    <input type="file" 
+                                           name="icon_image" 
+                                           class="form-control"
+                                           accept="image/*">
+                                    {% if is_edit and subcategory.icon_image %}
+                                        <img src="{{ subcategory.icon_image.url }}" 
+                                             alt="Current icon" 
+                                             class="mt-2" 
+                                             style="max-width: 100px;">
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Icon URL (Optional)</label>
+                                    <input type="url" 
+                                           name="icon_url" 
+                                           class="form-control"
+                                           value="{% if is_edit %}{{ subcategory.icon_url }}{% endif %}"
+                                           placeholder="https://example.com/icon.png">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Icon Color</label>
+                                    <input type="color" 
+                                           name="icon_color" 
+                                           class="form-control" 
+                                           value="{% if is_edit %}{{ subcategory.icon_color }}{% else %}#007bff{% endif %}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Order</label>
+                                    <input type="number" 
+                                           name="order" 
+                                           class="form-control" 
+                                           value="{% if is_edit %}{{ subcategory.order }}{% else %}0{% endif %}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" 
+                                   name="is_active" 
+                                   class="form-check-input" 
+                                   id="is_active"
+                                   {% if not is_edit or subcategory.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="is_active">Active</label>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save
+                            </button>
+                            <a href="javascript:history.back()" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

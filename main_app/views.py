@@ -896,6 +896,7 @@ def admin_distance_education_cards_list(request):
     cards = DistanceEducationCard.objects.all()
     return render(request, 'admin/distance_education_cards_list.html', {'cards': cards})
 
+
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_distance_education_card_add(request):
@@ -904,12 +905,20 @@ def admin_distance_education_card_add(request):
         if form.is_valid():
             card = form.save(commit=False)
             card.created_by = request.user
+            
+            # ✅ Auto-generate slug if empty
+            if not card.slug:
+                from django.utils.text import slugify
+                card.slug = slugify(card.title)
+            
             card.save()
             messages.success(request, 'Card added successfully!')
             return redirect('main_app:admin_distance_education_cards_list')
     else:
         form = DistanceEducationCardForm()
+    
     return render(request, 'admin/distance_education_card_form.html', {'form': form})
+
 
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -2710,6 +2719,7 @@ def admin_admission_abroad_page_add(request, subcategory_id):
 
 # ==================== STUDENT: FRONTEND VIEWS ====================
 
+
 @login_required(login_url='main_app:user_login')
 def admission_abroad_card_detail(request, card_slug):
     """Student: Display main card with its subcategories"""
@@ -2717,10 +2727,17 @@ def admission_abroad_card_detail(request, card_slug):
                             slug=card_slug, 
                             is_active=True)
     
+    # ✅ Get TOP-LEVEL subcategories only
     subcategories = card.sub_categories.filter(
         is_active=True, 
-        parent_subcategory__isnull=True
+        parent_subcategory__isnull=True  # ✅ Important: only top-level
     ).order_by('order')
+    
+    # ✅ DEBUG: Print karo
+    print(f"Card: {card.title}")
+    print(f"Subcategories found: {subcategories.count()}")
+    for sub in subcategories:
+        print(f"  - {sub.title} (slug: {sub.slug})")
     
     context = {
         'card': card,
@@ -2728,37 +2745,52 @@ def admission_abroad_card_detail(request, card_slug):
     }
     return render(request, 'student/admission_abroad_card_detail.html', context)
 
-
 @login_required(login_url='main_app:user_login')
 def admission_abroad_subcategory_detail(request, card_slug, subcategory_path):
     """Student: Display subcategory with children or pages"""
     card = get_object_or_404(AdmissionAbroadCard, slug=card_slug, is_active=True)
     
-    # Parse nested path
+    # Parse nested path: "engineering/government/delhi"
     path_parts = subcategory_path.strip('/').split('/')
-    current_slug = path_parts[-1]
     
-    # Get subcategory
-    subcategory = get_object_or_404(
-        AdmissionAbroadSubCategory,
-        slug=current_slug,
-        is_active=True
-    )
+    # Navigate through the path to find current subcategory
+    current_subcategory = None
+    for slug in path_parts:
+        if current_subcategory is None:
+            # First level - find under card
+            current_subcategory = get_object_or_404(
+                AdmissionAbroadSubCategory,
+                slug=slug,
+                parent_card=card,
+                parent_subcategory__isnull=True,
+                is_active=True
+            )
+        else:
+            # Nested level - find under parent
+            current_subcategory = get_object_or_404(
+                AdmissionAbroadSubCategory,
+                slug=slug,
+                parent_subcategory=current_subcategory,
+                is_active=True
+            )
     
-    # Check if has children
-    children = subcategory.get_children()
-    pages = subcategory.content_pages.filter(is_active=True).order_by('order')
+    # Get children and pages
+    children = current_subcategory.get_children()
+    pages = current_subcategory.content_pages.filter(is_active=True).order_by('order')
+    
+    # Build current path for nested links
+    current_path = subcategory_path.rstrip('/')
     
     context = {
         'card': card,
-        'subcategory': subcategory,
+        'subcategory': current_subcategory,
         'children': children,
         'pages': pages,
-        'breadcrumb': subcategory.get_breadcrumb(),
+        'current_path': current_path,  # ✅ Pass this to template
+        'breadcrumb': current_subcategory.get_breadcrumb(),
     }
     
     return render(request, 'student/admission_abroad_subcategory_detail.html', context)
-
 
 @login_required(login_url='main_app:user_login')
 def admission_abroad_page_detail(request, card_slug, subcategory_path, page_slug):
@@ -2957,3 +2989,667 @@ def admin_admission_abroad_subcategory_delete(request, subcategory_id):
         return redirect('main_app:admin_admission_abroad_nested_subcategories', parent_id=parent_subcategory.id)
     else:
         return redirect('main_app:admin_admission_abroad_subcategories', card_id=parent_card.id)
+    
+
+# ==================== DISTANCE EDUCATION - NESTED STRUCTURE ====================
+
+from .models import DistanceEducationCard, DistanceEducationSubCategory, DistanceEducationPage
+from .forms import DistanceEducationSubCategoryForm, DistanceEducationPageForm
+
+# ==================== ADMIN: SUBCATEGORIES BY CARD ====================
+
+@login_required(login_url='main_app:admin_login')
+@user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
+def admin_distance_education_subcategories(request, card_id):
+    """List all TOP-LEVEL subcategories under a specific card"""
+    card = get_object_or_404(DistanceEducationCard, id=card_id)
+    
+    subcategories = DistanceEducationSubCategory.objects.filter(
+        parent_card=card,
+        parent_subcategory__isnull=True
+    ).annotate(
+        children_count=Count('children')
+    ).order_by('order', 'title')
+    
+    context = {
+        'card': card,
+        'subcategories': subcategories,
+    }
+    
+    return render(request, 'admin/distance_education_subcategories.html', context)
+
+
+@login_required(login_url='main_app:admin_login')
+@user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
+def admin_distance_education_nested_subcategories(request, parent_id):
+    """List all child subcategories under a parent subcategory"""
+    parent = get_object_or_404(DistanceEducationSubCategory, id=parent_id)
+    
+    subcategories = DistanceEducationSubCategory.objects.filter(
+        parent_subcategory=parent
+    ).annotate(
+        children_count=Count('children')
+    ).order_by('order', 'title')
+    
+    breadcrumb = parent.get_breadcrumb() if hasattr(parent, 'get_breadcrumb') else []
+    
+    context = {
+        'parent': parent,
+        'subcategories': subcategories,
+        'breadcrumb': breadcrumb,
+    }
+    
+    return render(request, 'admin/distance_education_nested_subcategories.html', context)
+
+
+@login_required(login_url='main_app:admin_login')
+@user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
+def admin_distance_education_nested_subcategory_add(request, parent_id):
+    """Add a new subcategory under either a Card or another Subcategory"""
+    parent_card = None
+    parent_subcategory = None
+    
+    # ✅ FIX: First check if it's a subcategory (most common case)
+    try:
+        parent_subcategory = DistanceEducationSubCategory.objects.get(id=parent_id)
+        parent_card = parent_subcategory.get_root_card()
+    except DistanceEducationSubCategory.DoesNotExist:
+        # If not a subcategory, then it must be a card
+        try:
+            parent_card = DistanceEducationCard.objects.get(id=parent_id)
+        except DistanceEducationCard.DoesNotExist:
+            messages.error(request, "Invalid parent ID")
+            return redirect('main_app:admin_distance_education_cards_list')
+    
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        slug = request.POST.get('slug', '').strip()
+        description = request.POST.get('description', '')
+        icon_image = request.FILES.get('icon_image')
+        icon_url = request.POST.get('icon_url', '')
+        icon_color = request.POST.get('icon_color', '#007bff')
+        order = request.POST.get('order', 0)
+        is_active = request.POST.get('is_active') == 'on'
+        
+        # Auto-generate slug if empty
+        if not slug:
+            from django.utils.text import slugify
+            slug = slugify(title)
+        
+        # ✅ CRITICAL FIX: Properly set parent relationships
+        new_subcategory = DistanceEducationSubCategory.objects.create(
+            parent_card=parent_card if not parent_subcategory else None,  # ✅ Only set if top-level
+            parent_subcategory=parent_subcategory,  # ✅ Set if nested
+            title=title,
+            slug=slug,
+            description=description,
+            icon_image=icon_image,
+            icon_url=icon_url,
+            icon_color=icon_color,
+            order=order or 0,
+            is_active=is_active,
+            created_by=request.user
+        )
+        
+        messages.success(request, f"✓ Subcategory '{title}' added successfully!")
+        
+        # Redirect back to the parent view
+        if parent_subcategory:
+            return redirect('main_app:admin_distance_education_nested_subcategories', parent_id=parent_subcategory.id)
+        else:
+            return redirect('main_app:admin_distance_education_subcategories', card_id=parent_card.id)
+    
+    # Build breadcrumb
+    breadcrumb = []
+    if parent_subcategory:
+        breadcrumb = parent_subcategory.get_breadcrumb()
+    elif parent_card:
+        breadcrumb = [{'id': parent_card.id, 'title': parent_card.title}]
+    
+    context = {
+        'parent_card': parent_card,
+        'parent_subcategory': parent_subcategory,
+        'breadcrumb': breadcrumb,
+        'card_id': parent_card.id if parent_card else None,
+        'parent_id': parent_subcategory.id if parent_subcategory else None,
+    }
+    
+    return render(request, 'admin/distance_education_subcategory_form.html', context)
+
+
+@login_required(login_url='main_app:admin_login')
+@user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
+def admin_distance_education_subcategory_edit(request, subcategory_id):
+    """Edit an existing subcategory"""
+    subcategory = get_object_or_404(DistanceEducationSubCategory, id=subcategory_id)
+    parent_card = subcategory.get_root_card()
+    parent_subcategory = subcategory.parent_subcategory
+    
+    if request.method == 'POST':
+        subcategory.title = request.POST.get('title')
+        slug = request.POST.get('slug', '').strip()
+        subcategory.slug = slug if slug else slugify(subcategory.title)
+        subcategory.description = request.POST.get('description', '')
+        subcategory.icon_url = request.POST.get('icon_url', '')
+        subcategory.icon_color = request.POST.get('icon_color', '#007bff')
+        subcategory.order = request.POST.get('order', 0)
+        subcategory.is_active = request.POST.get('is_active') == 'on'
+        
+        if request.FILES.get('icon_image'):
+            subcategory.icon_image = request.FILES['icon_image']
+        
+        subcategory.save()
+        
+        messages.success(request, f"Subcategory '{subcategory.title}' updated successfully!")
+        
+        if parent_subcategory:
+            return redirect('main_app:admin_distance_education_nested_subcategories', parent_id=parent_subcategory.id)
+        else:
+            return redirect('main_app:admin_distance_education_subcategories', card_id=parent_card.id)
+    
+    breadcrumb = subcategory.get_breadcrumb() if hasattr(subcategory, 'get_breadcrumb') else []
+    
+    context = {
+        'form': {'instance': subcategory},
+        'subcategory': subcategory,
+        'parent_card': parent_card,
+        'parent_subcategory': parent_subcategory,
+        'breadcrumb': breadcrumb,
+        'is_edit': True,
+    }
+    
+    return render(request, 'admin/distance_education_subcategory_form.html', context)
+
+
+@login_required(login_url='main_app:admin_login')
+@user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
+def admin_distance_education_subcategory_delete(request, subcategory_id):
+    """Delete a subcategory"""
+    subcategory = get_object_or_404(DistanceEducationSubCategory, id=subcategory_id)
+    parent_card = subcategory.get_root_card()
+    parent_subcategory = subcategory.parent_subcategory
+    
+    if subcategory.children.exists():
+        messages.error(request, f"Cannot delete '{subcategory.title}' because it has child subcategories!")
+        if parent_subcategory:
+            return redirect('main_app:admin_distance_education_nested_subcategories', parent_id=parent_subcategory.id)
+        else:
+            return redirect('main_app:admin_distance_education_subcategories', card_id=parent_card.id)
+    
+    title = subcategory.title
+    subcategory.delete()
+    
+    messages.success(request, f"Subcategory '{title}' deleted successfully!")
+    
+    if parent_subcategory:
+        return redirect('main_app:admin_distance_education_nested_subcategories', parent_id=parent_subcategory.id)
+    else:
+        return redirect('main_app:admin_distance_education_subcategories', card_id=parent_card.id)
+
+
+@login_required(login_url='main_app:admin_login')
+@user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
+def admin_distance_education_pages_by_subcategory(request, subcategory_id):
+    """View content pages for a subcategory"""
+    subcategory = get_object_or_404(DistanceEducationSubCategory, pk=subcategory_id)
+    pages = subcategory.content_pages.all().order_by('order')
+    
+    context = {
+        'subcategory': subcategory,
+        'pages': pages,
+        'breadcrumb': subcategory.get_breadcrumb(),
+    }
+    return render(request, 'admin/distance_education_pages_list.html', context)
+
+
+@login_required(login_url='main_app:admin_login')
+@user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
+def admin_distance_education_page_add(request, subcategory_id):
+    """Add content page for subcategory"""
+    subcategory = get_object_or_404(DistanceEducationSubCategory, pk=subcategory_id)
+    
+    if request.method == 'POST':
+        form = DistanceEducationPageForm(request.POST, request.FILES)
+        if form.is_valid():
+            page = form.save(commit=False)
+            page.sub_category = subcategory
+            page.created_by = request.user
+            page.save()
+            messages.success(request, 'Page added successfully!')
+            return redirect('main_app:admin_distance_education_pages_by_subcategory', subcategory_id=subcategory_id)
+    else:
+        form = DistanceEducationPageForm()
+    
+    context = {
+        'form': form,
+        'subcategory': subcategory,
+    }
+    return render(request, 'admin/distance_education_page_form.html', context)
+
+
+# ==================== STUDENT: FRONTEND VIEWS ====================
+
+@login_required(login_url='main_app:user_login')
+def distance_education_card_detail(request, card_slug):
+    """Student: Display main card with its subcategories"""
+    card = get_object_or_404(DistanceEducationCard, slug=card_slug, is_active=True)
+    
+    subcategories = card.sub_categories.filter(
+        is_active=True, 
+        parent_subcategory__isnull=True
+    ).order_by('order')
+    
+    context = {
+        'card': card,
+        'subcategories': subcategories,
+    }
+    return render(request, 'student/distance_education_card_detail.html', context)
+
+
+@login_required(login_url='main_app:user_login')
+def distance_education_subcategory_detail(request, card_slug, subcategory_path):
+    """Student: Display subcategory with children or pages"""
+    card = get_object_or_404(DistanceEducationCard, slug=card_slug, is_active=True)
+    
+    path_parts = subcategory_path.strip('/').split('/')
+    
+    current_subcategory = None
+    for slug in path_parts:
+        if current_subcategory is None:
+            current_subcategory = get_object_or_404(
+                DistanceEducationSubCategory,
+                slug=slug,
+                parent_card=card,
+                parent_subcategory__isnull=True,
+                is_active=True
+            )
+        else:
+            current_subcategory = get_object_or_404(
+                DistanceEducationSubCategory,
+                slug=slug,
+                parent_subcategory=current_subcategory,
+                is_active=True
+            )
+    
+    children = current_subcategory.get_children()
+    pages = current_subcategory.content_pages.filter(is_active=True).order_by('order')
+    current_path = subcategory_path.rstrip('/')
+    
+    context = {
+        'card': card,
+        'subcategory': current_subcategory,
+        'children': children,
+        'pages': pages,
+        'current_path': current_path,
+        'breadcrumb': current_subcategory.get_breadcrumb(),
+    }
+    
+    return render(request, 'student/distance_education_subcategory_detail.html', context)
+
+
+@login_required(login_url='main_app:user_login')
+def distance_education_page_detail(request, card_slug, subcategory_path, page_slug):
+    """Student: Display full page content"""
+    card = get_object_or_404(DistanceEducationCard, slug=card_slug, is_active=True)
+    
+    path_parts = subcategory_path.strip('/').split('/')
+    current_slug = path_parts[-1]
+    
+    subcategory = get_object_or_404(
+        DistanceEducationSubCategory,
+        slug=current_slug,
+        is_active=True
+    )
+    
+    page = get_object_or_404(
+        DistanceEducationPage,
+        sub_category=subcategory,
+        slug=page_slug,
+        is_active=True
+    )
+    
+    page.increment_views()
+    
+    related_pages = subcategory.content_pages.filter(
+        is_active=True
+    ).exclude(id=page.id).order_by('order')[:5]
+    
+    context = {
+        'card': card,
+        'subcategory': subcategory,
+        'page': page,
+        'related_pages': related_pages,
+        'breadcrumb': subcategory.get_breadcrumb(),
+    }
+    
+    return render(request, 'student/distance_education_page_detail.html', context)
+
+
+
+# ==================== ONLINE EDUCATION - NESTED STRUCTURE ====================
+
+from .models import OnlineEducationCard, OnlineEducationSubCategory, OnlineEducationPage
+from .forms import OnlineEducationSubCategoryForm, OnlineEducationPageForm
+from django.db.models import Count
+
+# ==================== ADMIN: SUBCATEGORIES BY CARD ====================
+
+@login_required(login_url='main_app:admin_login')
+@user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
+def admin_online_education_subcategories(request, card_id):
+    """List all TOP-LEVEL subcategories under a specific card"""
+    card = get_object_or_404(OnlineEducationCard, id=card_id)
+    
+    subcategories = OnlineEducationSubCategory.objects.filter(
+        parent_card=card,
+        parent_subcategory__isnull=True
+    ).annotate(
+        children_count=Count('children')
+    ).order_by('order', 'title')
+    
+    context = {
+        'card': card,
+        'subcategories': subcategories,
+    }
+    
+    return render(request, 'admin/online_education_subcategories.html', context)
+
+
+@login_required(login_url='main_app:admin_login')
+@user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
+def admin_online_education_nested_subcategories(request, parent_id):
+    """List all child subcategories under a parent subcategory"""
+    parent = get_object_or_404(OnlineEducationSubCategory, id=parent_id)
+    
+    subcategories = OnlineEducationSubCategory.objects.filter(
+        parent_subcategory=parent
+    ).annotate(
+        children_count=Count('children')
+    ).order_by('order', 'title')
+    
+    breadcrumb = parent.get_breadcrumb() if hasattr(parent, 'get_breadcrumb') else []
+    
+    context = {
+        'parent': parent,
+        'subcategories': subcategories,
+        'breadcrumb': breadcrumb,
+    }
+    
+    return render(request, 'admin/online_education_nested_subcategories.html', context)
+
+
+@login_required(login_url='main_app:admin_login')
+@user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
+def admin_online_education_nested_subcategory_add(request, parent_id):
+    """Add a new subcategory under either a Card or another Subcategory"""
+    parent_card = None
+    parent_subcategory = None
+    
+    try:
+        parent_subcategory = OnlineEducationSubCategory.objects.get(id=parent_id)
+        parent_card = parent_subcategory.get_root_card()
+    except OnlineEducationSubCategory.DoesNotExist:
+        try:
+            parent_card = OnlineEducationCard.objects.get(id=parent_id)
+        except OnlineEducationCard.DoesNotExist:
+            messages.error(request, "Invalid parent ID")
+            return redirect('main_app:admin_online_education_cards_list')
+    
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        slug = request.POST.get('slug', '').strip()
+        description = request.POST.get('description', '')
+        icon_image = request.FILES.get('icon_image')
+        icon_url = request.POST.get('icon_url', '')
+        icon_color = request.POST.get('icon_color', '#007bff')
+        order = request.POST.get('order', 0)
+        is_active = request.POST.get('is_active') == 'on'
+        
+        if not slug:
+            from django.utils.text import slugify
+            slug = slugify(title)
+        
+        new_subcategory = OnlineEducationSubCategory.objects.create(
+            parent_card=parent_card if not parent_subcategory else None,
+            parent_subcategory=parent_subcategory,
+            title=title,
+            slug=slug,
+            description=description,
+            icon_image=icon_image,
+            icon_url=icon_url,
+            icon_color=icon_color,
+            order=order or 0,
+            is_active=is_active,
+            created_by=request.user
+        )
+        
+        messages.success(request, f"✓ Subcategory '{title}' added successfully!")
+        
+        if parent_subcategory:
+            return redirect('main_app:admin_online_education_nested_subcategories', parent_id=parent_subcategory.id)
+        else:
+            return redirect('main_app:admin_online_education_subcategories', card_id=parent_card.id)
+    
+    breadcrumb = []
+    if parent_subcategory:
+        breadcrumb = parent_subcategory.get_breadcrumb()
+    elif parent_card:
+        breadcrumb = [{'id': parent_card.id, 'title': parent_card.title}]
+    
+    context = {
+        'parent_card': parent_card,
+        'parent_subcategory': parent_subcategory,
+        'breadcrumb': breadcrumb,
+        'card_id': parent_card.id if parent_card else None,
+        'parent_id': parent_subcategory.id if parent_subcategory else None,
+    }
+    
+    return render(request, 'admin/online_education_subcategory_form.html', context)
+
+
+@login_required(login_url='main_app:admin_login')
+@user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
+def admin_online_education_subcategory_edit(request, subcategory_id):
+    """Edit an existing subcategory"""
+    subcategory = get_object_or_404(OnlineEducationSubCategory, id=subcategory_id)
+    parent_card = subcategory.get_root_card()
+    parent_subcategory = subcategory.parent_subcategory
+    
+    if request.method == 'POST':
+        subcategory.title = request.POST.get('title')
+        slug = request.POST.get('slug', '').strip()
+        subcategory.slug = slug if slug else slugify(subcategory.title)
+        subcategory.description = request.POST.get('description', '')
+        subcategory.icon_url = request.POST.get('icon_url', '')
+        subcategory.icon_color = request.POST.get('icon_color', '#007bff')
+        subcategory.order = request.POST.get('order', 0)
+        subcategory.is_active = request.POST.get('is_active') == 'on'
+        
+        if request.FILES.get('icon_image'):
+            subcategory.icon_image = request.FILES['icon_image']
+        
+        subcategory.save()
+        
+        messages.success(request, f"Subcategory '{subcategory.title}' updated successfully!")
+        
+        if parent_subcategory:
+            return redirect('main_app:admin_online_education_nested_subcategories', parent_id=parent_subcategory.id)
+        else:
+            return redirect('main_app:admin_online_education_subcategories', card_id=parent_card.id)
+    
+    breadcrumb = subcategory.get_breadcrumb() if hasattr(subcategory, 'get_breadcrumb') else []
+    
+    context = {
+        'form': {'instance': subcategory},
+        'subcategory': subcategory,
+        'parent_card': parent_card,
+        'parent_subcategory': parent_subcategory,
+        'breadcrumb': breadcrumb,
+        'is_edit': True,
+    }
+    
+    return render(request, 'admin/online_education_subcategory_form.html', context)
+
+
+@login_required(login_url='main_app:admin_login')
+@user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
+def admin_online_education_subcategory_delete(request, subcategory_id):
+    """Delete a subcategory"""
+    subcategory = get_object_or_404(OnlineEducationSubCategory, id=subcategory_id)
+    parent_card = subcategory.get_root_card()
+    parent_subcategory = subcategory.parent_subcategory
+    
+    if subcategory.children.exists():
+        messages.error(request, f"Cannot delete '{subcategory.title}' because it has child subcategories!")
+        if parent_subcategory:
+            return redirect('main_app:admin_online_education_nested_subcategories', parent_id=parent_subcategory.id)
+        else:
+            return redirect('main_app:admin_online_education_subcategories', card_id=parent_card.id)
+    
+    title = subcategory.title
+    subcategory.delete()
+    
+    messages.success(request, f"Subcategory '{title}' deleted successfully!")
+    
+    if parent_subcategory:
+        return redirect('main_app:admin_online_education_nested_subcategories', parent_id=parent_subcategory.id)
+    else:
+        return redirect('main_app:admin_online_education_subcategories', card_id=parent_card.id)
+
+
+@login_required(login_url='main_app:admin_login')
+@user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
+def admin_online_education_pages_by_subcategory(request, subcategory_id):
+    """View content pages for a subcategory"""
+    subcategory = get_object_or_404(OnlineEducationSubCategory, pk=subcategory_id)
+    pages = subcategory.content_pages.all().order_by('order')
+    
+    context = {
+        'subcategory': subcategory,
+        'pages': pages,
+        'breadcrumb': subcategory.get_breadcrumb(),
+    }
+    return render(request, 'admin/online_education_pages_list.html', context)
+
+
+@login_required(login_url='main_app:admin_login')
+@user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
+def admin_online_education_page_add(request, subcategory_id):
+    """Add content page for subcategory"""
+    subcategory = get_object_or_404(OnlineEducationSubCategory, pk=subcategory_id)
+    
+    if request.method == 'POST':
+        form = OnlineEducationPageForm(request.POST, request.FILES)
+        if form.is_valid():
+            page = form.save(commit=False)
+            page.sub_category = subcategory
+            page.created_by = request.user
+            page.save()
+            messages.success(request, 'Page added successfully!')
+            return redirect('main_app:admin_online_education_pages_by_subcategory', subcategory_id=subcategory_id)
+    else:
+        form = OnlineEducationPageForm()
+    
+    context = {
+        'form': form,
+        'subcategory': subcategory,
+    }
+    return render(request, 'admin/online_education_page_form.html', context)
+
+
+# ==================== STUDENT: FRONTEND VIEWS ====================
+
+@login_required(login_url='main_app:user_login')
+def online_education_card_detail(request, card_slug):
+    """Student: Display main card with its subcategories"""
+    card = get_object_or_404(OnlineEducationCard, slug=card_slug, is_active=True)
+    
+    subcategories = card.sub_categories.filter(
+        is_active=True, 
+        parent_subcategory__isnull=True
+    ).order_by('order')
+    
+    context = {
+        'card': card,
+        'subcategories': subcategories,
+    }
+    return render(request, 'student/online_education_card_detail.html', context)
+
+
+@login_required(login_url='main_app:user_login')
+def online_education_subcategory_detail(request, card_slug, subcategory_path):
+    """Student: Display subcategory with children or pages"""
+    card = get_object_or_404(OnlineEducationCard, slug=card_slug, is_active=True)
+    
+    path_parts = subcategory_path.strip('/').split('/')
+    
+    current_subcategory = None
+    for slug in path_parts:
+        if current_subcategory is None:
+            current_subcategory = get_object_or_404(
+                OnlineEducationSubCategory,
+                slug=slug,
+                parent_card=card,
+                parent_subcategory__isnull=True,
+                is_active=True
+            )
+        else:
+            current_subcategory = get_object_or_404(
+                OnlineEducationSubCategory,
+                slug=slug,
+                parent_subcategory=current_subcategory,
+                is_active=True
+            )
+    
+    children = current_subcategory.get_children()
+    pages = current_subcategory.content_pages.filter(is_active=True).order_by('order')
+    current_path = subcategory_path.rstrip('/')
+    
+    context = {
+        'card': card,
+        'subcategory': current_subcategory,
+        'children': children,
+        'pages': pages,
+        'current_path': current_path,
+        'breadcrumb': current_subcategory.get_breadcrumb(),
+    }
+    
+    return render(request, 'student/online_education_subcategory_detail.html', context)
+
+
+@login_required(login_url='main_app:user_login')
+def online_education_page_detail(request, card_slug, subcategory_path, page_slug):
+    """Student: Display full page content"""
+    card = get_object_or_404(OnlineEducationCard, slug=card_slug, is_active=True)
+    
+    path_parts = subcategory_path.strip('/').split('/')
+    current_slug = path_parts[-1]
+    
+    subcategory = get_object_or_404(
+        OnlineEducationSubCategory,
+        slug=current_slug,
+        is_active=True
+    )
+    
+    page = get_object_or_404(
+        OnlineEducationPage,
+        sub_category=subcategory,
+        slug=page_slug,
+        is_active=True
+    )
+    
+    page.increment_views()
+    
+    related_pages = subcategory.content_pages.filter(
+        is_active=True
+    ).exclude(id=page.id).order_by('order')[:5]
+    
+    context = {
+        'card': card,
+        'subcategory': subcategory,
+        'page': page,
+        'related_pages': related_pages,
+        'breadcrumb': subcategory.get_breadcrumb(),
+    }
+    
+    return render(request, 'student/online_education_page_detail.html', context)

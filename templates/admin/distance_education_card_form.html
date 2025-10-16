@@ -22,12 +22,14 @@
                     {% csrf_token %}
                     
                     <div class="mb-3">
-                        <label class="form-label">Title *</label>
-                        {{ form.title }}
-                        {% if form.title.errors %}
-                            <div class="text-danger">{{ form.title.errors }}</div>
-                        {% endif %}
-                    </div>
+    <label class="form-label">Title *</label>
+    <input type="text" 
+           name="title" 
+           id="id_title"
+           class="form-control" 
+           value="{% if card %}{{ card.title }}{% endif %}"
+           required>
+</div>
 
                     <div class="mb-3">
                         <label class="form-label">Description *</label>
@@ -54,10 +56,15 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Redirect Link</label>
-                        {{ form.redirect_link }}
-                        <small class="form-text text-muted">Leave blank if no redirect needed</small>
-                    </div>
+    <label class="form-label">Slug</label>
+    <input type="text" 
+           name="slug" 
+           id="id_slug"
+           class="form-control" 
+           value="{% if card %}{{ card.slug }}{% endif %}"
+           placeholder="Leave blank to auto-generate">
+    <small class="text-muted">✨ Auto-generated from title if left blank</small>
+</div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -90,4 +97,35 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const titleInput = document.getElementById('id_title');
+    const slugInput = document.getElementById('id_slug');
+    
+    if (titleInput && slugInput) {
+        titleInput.addEventListener('input', function() {
+            // Only auto-generate if slug is empty
+            if (!slugInput.value) {
+                let slug = this.value
+                    .toLowerCase()
+                    .replace(/[^\w\s-]/g, '')  // Remove special chars
+                    .replace(/\s+/g, '-')       // Replace spaces with -
+                    .replace(/--+/g, '-')       // Replace multiple - with single -
+                    .trim();
+                
+                slugInput.value = slug;
+                slugInput.style.borderColor = '#28a745';  // Green border
+            }
+        });
+        
+        // Manual edit turns off auto-generation
+        slugInput.addEventListener('input', function() {
+            if (this.value) {
+                this.style.borderColor = '#007bff';  // Blue border when manual
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

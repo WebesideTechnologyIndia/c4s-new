@@ -1,7 +1,7 @@
 {% extends 'admin/base.html' %}
 {% load static %}
 
-{% block title %}Subcategories - {{ parent.title }}{% endblock %}
+{% block title %}Subcategories - {{ card.title }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
@@ -11,23 +11,9 @@
             <nav aria-label="breadcrumb" class="mb-3">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item">
-                        <a href="{% url 'main_app:admin_admission_abroad_cards_list' %}">Admission Abroad Cards</a>
+                        <a href="{% url 'main_app:admin_distance_education_cards_list' %}">Distance Education Cards</a>
                     </li>
-                    {% if breadcrumb %}
-                        {% for item in breadcrumb %}
-                            {% if forloop.last %}
-                                <li class="breadcrumb-item active">{{ item.title }}</li>
-                            {% else %}
-                                <li class="breadcrumb-item">
-                                    <a href="{% url 'main_app:admin_admission_abroad_nested_subcategories' parent_id=item.id %}">
-                                        {{ item.title }}
-                                    </a>
-                                </li>
-                            {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        <li class="breadcrumb-item active">{{ parent.title }}</li>
-                    {% endif %}
+                    <li class="breadcrumb-item active">{{ card.title }}</li>
                 </ol>
             </nav>
 
@@ -35,9 +21,9 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2>Subcategories</h2>
-                    <p class="text-muted mb-0">Under: <strong>{{ parent.title }}</strong></p>
+                    <p class="text-muted mb-0">Card: <strong>{{ card.title }}</strong></p>
                 </div>
-                <a href="{% url 'main_app:admin_admission_abroad_nested_subcategory_add' parent_id=parent.id %}" 
+                <a href="{% url 'main_app:admin_distance_education_nested_subcategory_add' parent_id=card.id %}" 
                    class="btn btn-success">
                     <i class="fas fa-plus"></i> Add Subcategory
                 </a>
@@ -93,51 +79,40 @@
                                     </td>
                                     <td>
                                         {% if subcategory.children_count > 0 %}
-                                            <span class="badge bg-info">{{ subcategory.children_count }} children</span>
+                                            <span class="badge bg-info">{{ subcategory.children_count }}</span>
                                         {% else %}
                                             <span class="text-muted">-</span>
                                         {% endif %}
                                     </td>
                                     <td class="text-end">
                                         <div class="btn-group btn-group-sm">
-                                            <!-- View Pages -->
-                                            <a href="{% url 'main_app:admin_admission_abroad_pages_by_subcategory' subcategory_id=subcategory.id %}" 
+                                            <a href="{% url 'main_app:admin_distance_education_pages_by_subcategory' subcategory_id=subcategory.id %}" 
                                                class="btn btn-info" 
-                                               title="View Pages"
-                                               data-bs-toggle="tooltip">
+                                               title="Pages">
                                                 <i class="fas fa-file-alt"></i>
                                             </a>
                                             
-                                            <!-- View/Add Children -->
                                             {% if subcategory.children_count > 0 %}
-                                                <a href="{% url 'main_app:admin_admission_abroad_nested_subcategories' parent_id=subcategory.id %}" 
+                                                <a href="{% url 'main_app:admin_distance_education_nested_subcategories' parent_id=subcategory.id %}" 
                                                    class="btn btn-primary" 
-                                                   title="View Children"
-                                                   data-bs-toggle="tooltip">
+                                                   title="View Children">
                                                     <i class="fas fa-folder-open"></i>
                                                 </a>
                                             {% else %}
-                                                <a href="{% url 'main_app:admin_admission_abroad_nested_subcategory_add' parent_id=subcategory.id %}" 
+                                                <a href="{% url 'main_app:admin_distance_education_nested_subcategory_add' parent_id=subcategory.id %}" 
                                                    class="btn btn-primary" 
-                                                   title="Add Child"
-                                                   data-bs-toggle="tooltip">
+                                                   title="Add Child">
                                                     <i class="fas fa-plus"></i>
                                                 </a>
                                             {% endif %}
                                             
-                                            <!-- Edit -->
-                                            <a href="{% url 'main_app:admin_admission_abroad_subcategory_edit' subcategory_id=subcategory.id %}" 
-                                               class="btn btn-warning" 
-                                               title="Edit"
-                                               data-bs-toggle="tooltip">
+                                            <a href="{% url 'main_app:admin_distance_education_subcategory_edit' subcategory_id=subcategory.id %}" 
+                                               class="btn btn-warning">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             
-                                            <!-- Delete -->
-                                            <a href="{% url 'main_app:admin_admission_abroad_subcategory_delete' subcategory_id=subcategory.id %}" 
-                                               class="btn btn-danger" 
-                                               title="Delete"
-                                               data-bs-toggle="tooltip"
+                                            <a href="{% url 'main_app:admin_distance_education_subcategory_delete' subcategory_id=subcategory.id %}" 
+                                               class="btn btn-danger"
                                                onclick="return confirm('Are you sure?')">
                                                 <i class="fas fa-trash"></i>
                                             </a>
@@ -153,20 +128,10 @@
             {% else %}
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i> No subcategories found. 
-                <a href="{% url 'main_app:admin_admission_abroad_nested_subcategory_add' parent_id=parent.id %}">Add one now</a>
+                <a href="{% url 'main_app:admin_distance_education_nested_subcategory_add' parent_id=card.id %}">Add one now</a>
             </div>
             {% endif %}
         </div>
     </div>
 </div>
-
-<script>
-// Initialize Bootstrap tooltips
-document.addEventListener('DOMContentLoaded', function() {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
-    })
-});
-</script>
 {% endblock %}

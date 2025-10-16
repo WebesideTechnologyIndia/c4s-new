@@ -183,21 +183,21 @@
 <section class="services-section">
     <div class="container">
         <div class="row">
-            {% for card in cards %}
-            <div class="col-lg-3 col-md-6 col-6">
-                <a href="{{ card.redirect_link }}" class="service-card" style="border-top-color: {{ card.border_color }};">
-                    <div class="service-icon">
-                        <img src="{{ card.get_image }}" alt="{{ card.title }}" class="img-fluid">
-                    </div>
-                    <h4>{{ card.title }}</h4>
-                    <p>{{ card.description }}</p>
-                </a>
-            </div>
-            {% empty %}
-            <div class="col-12 text-center">
-                <p class="text-muted">No services available at the moment.</p>
-            </div>
-            {% endfor %}
+        {% for card in cards %}
+<div class="col-lg-3 col-md-6 col-6">
+    <a href="{% url 'main_app:admission_abroad_card_detail' card.slug %}" class="service-card" style="border-top-color: {{ card.border_color }};">
+        <div class="service-icon">
+            <img src="{{ card.get_image }}" alt="{{ card.title }}" class="img-fluid">
+        </div>
+        <h4>{{ card.title }}</h4>
+        <p>{{ card.description }}</p>
+    </a>
+</div>
+{% empty %}
+<div class="col-12 text-center">
+    <p class="text-muted">No services available at the moment.</p>
+</div>
+{% endfor %}
         </div>
     </div>
 </section>

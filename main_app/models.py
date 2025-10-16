@@ -473,13 +473,14 @@ class AdmissionAbroadCard(models.Model):
     
     # Card Content
     title = models.CharField(max_length=200, help_text="Service title")
+    slug = models.SlugField(max_length=200, unique=True, blank=True)  # ✅ ADD THIS
     description = models.TextField(max_length=300, help_text="Short description")
     
     # Icon/Image
     card_image = models.ImageField(upload_to='admission_abroad/', blank=True, null=True)
     image_url = models.URLField(max_length=500, blank=True)
     
-    # Link/Redirect
+    # Link/Redirect (keep for backward compatibility)
     redirect_link = models.CharField(max_length=500, blank=True)
     
     # Styling
@@ -501,56 +502,189 @@ class AdmissionAbroadCard(models.Model):
     def __str__(self):
         return f"{self.order}. {self.title}"
     
+    def save(self, *args, **kwargs):
+        # ✅ Auto-generate slug from title
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+    
     def get_image(self):
         if self.card_image:
             return self.card_image.url
         return self.image_url if self.image_url else 'https://via.placeholder.com/100'
-    
 # models.py mein ye add karo
 
 
 # ==================== DISTANCE EDUCATION MODEL ====================
 class DistanceEducationCard(models.Model):
-    """Model for Distance Education Services Page"""
-    
-    BORDER_COLOR_CHOICES = [
-        ('#f39c12', 'Orange'),
-        ('#e74c3c', 'Red'),
-        ('#3498db', 'Blue'),
-        ('#2ecc71', 'Green'),
-    ]
-    
-    title = models.CharField(max_length=200)
-    description = models.TextField(max_length=300)
-    
+    """Distance Education service cards"""
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True, blank=True)  # ✅ ADD THIS
+    description = models.TextField(blank=True)
     card_image = models.ImageField(upload_to='distance_education/', blank=True, null=True)
-    image_url = models.URLField(max_length=500, blank=True)
-    
+    image_url = models.URLField(blank=True, null=True)
+    border_color = models.CharField(max_length=20, default='#3498db')
     redirect_link = models.CharField(max_length=500, blank=True)
-    border_color = models.CharField(max_length=7, default='#f39c12', choices=BORDER_COLOR_CHOICES)
+    order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Distance Education Card"
+        verbose_name_plural = "Distance Education Cards"
+        ordering = ['order', 'title']
+    
+    def __str__(self):
+        return self.title
+    
+    # ✅ ADD THIS METHOD
+    def save(self, *args, **kwargs):
+        """Auto-generate slug if not provided"""
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+    
+    def get_image(self):
+        """Return image URL"""
+        if self.card_image:
+            return self.card_image.url
+        elif self.image_url:
+            return self.image_url
+        return '/static/img/default-card.png'
+# ==================== DISTANCE EDUCATION NESTED STRUCTURE ====================
+
+class DistanceEducationSubCategory(models.Model):
+    """Nested subcategories for Distance Education (infinite levels)"""
+    parent_card = models.ForeignKey(
+        DistanceEducationCard, 
+        on_delete=models.CASCADE, 
+        related_name='sub_categories',
+        null=True, 
+        blank=True
+    )
+    parent_subcategory = models.ForeignKey(
+        'self', 
+        on_delete=models.CASCADE, 
+        related_name='children',
+        null=True, 
+        blank=True
+    )
+    
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)
+    description = models.TextField(blank=True)
+    
+    # Icon options
+    icon_image = models.ImageField(upload_to='distance_education/icons/', blank=True, null=True)
+    icon_url = models.URLField(blank=True, null=True)
+    icon_color = models.CharField(max_length=20, default='#007bff')
     
     order = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
     
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     
     class Meta:
-        ordering = ['order', 'id']
-        verbose_name = "Distance Education Card"
-        verbose_name_plural = "Distance Education Cards"
+        verbose_name = "Distance Education Sub-Category"
+        verbose_name_plural = "Distance Education Sub-Categories"
+        ordering = ['order', 'title']
     
     def __str__(self):
-        return f"{self.order}. {self.title}"
+        return self.title
     
-    def get_image(self):
-        if self.card_image:
-            return self.card_image.url
-        return self.image_url if self.image_url else 'https://via.placeholder.com/100'
+    def get_icon(self):
+        """Return icon image or URL"""
+        if self.icon_image:
+            return self.icon_image.url
+        elif self.icon_url:
+            return self.icon_url
+        return '/static/img/default-icon.png'
+    
+    def get_children(self):
+        """Get all child subcategories"""
+        return self.children.filter(is_active=True).order_by('order')
+    
+    def has_children(self):
+        """Check if has child subcategories"""
+        return self.children.filter(is_active=True).exists()
+    
+    def get_breadcrumb(self):
+        """Get breadcrumb trail"""
+        breadcrumb = []
+        current = self
+        while current:
+            breadcrumb.insert(0, {'id': current.id, 'title': current.title})
+            current = current.parent_subcategory
+        return breadcrumb
+    
+    def get_root_card(self):
+        """Get the root card by traversing up"""
+        current = self
+        while current.parent_subcategory:
+            current = current.parent_subcategory
+        return current.parent_card
 
+
+class DistanceEducationPage(models.Model):
+    """Content pages for Distance Education subcategories"""
+    sub_category = models.ForeignKey(
+        DistanceEducationSubCategory,
+        on_delete=models.CASCADE,
+        related_name='content_pages'
+    )
+    
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255)
+    summary = models.TextField(blank=True)
+    content = models.TextField()
+    
+    # SEO & Images
+    featured_image = models.ImageField(upload_to='distance_education/pages/', blank=True, null=True)
+    featured_image_url = models.URLField(blank=True, null=True)
+    meta_description = models.CharField(max_length=160, blank=True)
+    meta_keywords = models.CharField(max_length=255, blank=True)
+    
+    # Settings
+    order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    is_featured = models.BooleanField(default=False)
+    views_count = models.IntegerField(default=0)
+    
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Distance Education Page"
+        verbose_name_plural = "Distance Education Pages"
+        ordering = ['order', 'title']
+        unique_together = ['sub_category', 'slug']
+    
+    def __str__(self):
+        return f"{self.sub_category.title} - {self.title}"
+    
+    def get_featured_image(self):
+        """Return featured image or URL"""
+        if self.featured_image:
+            return self.featured_image.url
+        elif self.featured_image_url:
+            return self.featured_image_url
+        return None
+    
+    def increment_views(self):
+        """Increment page views"""
+        self.views_count += 1
+        self.save(update_fields=['views_count'])
 
 # ==================== ONLINE EDUCATION MODEL ====================
+
+
 class OnlineEducationCard(models.Model):
     """Model for Online Education Services Page"""
     
@@ -562,6 +696,7 @@ class OnlineEducationCard(models.Model):
     ]
     
     title = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=255, unique=True, blank=True)  # ✅ ADD THIS
     description = models.TextField(max_length=300)
     
     card_image = models.ImageField(upload_to='online_education/', blank=True, null=True)
@@ -585,11 +720,142 @@ class OnlineEducationCard(models.Model):
     def __str__(self):
         return f"{self.order}. {self.title}"
     
+    # ✅ ADD THIS METHOD
+    def save(self, *args, **kwargs):
+        """Auto-generate slug if not provided"""
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+    
     def get_image(self):
         if self.card_image:
             return self.card_image.url
         return self.image_url if self.image_url else 'https://via.placeholder.com/100'
+
+
+# ✅ ADD NEW MODELS
+
+class OnlineEducationSubCategory(models.Model):
+    """Nested subcategories for Online Education (infinite levels)"""
+    parent_card = models.ForeignKey(
+        OnlineEducationCard, 
+        on_delete=models.CASCADE, 
+        related_name='sub_categories',
+        null=True, 
+        blank=True
+    )
+    parent_subcategory = models.ForeignKey(
+        'self', 
+        on_delete=models.CASCADE, 
+        related_name='children',
+        null=True, 
+        blank=True
+    )
     
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)
+    description = models.TextField(blank=True)
+    
+    # Icon options
+    icon_image = models.ImageField(upload_to='online_education/icons/', blank=True, null=True)
+    icon_url = models.URLField(blank=True, null=True)
+    icon_color = models.CharField(max_length=20, default='#007bff')
+    
+    order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Online Education Sub-Category"
+        verbose_name_plural = "Online Education Sub-Categories"
+        ordering = ['order', 'title']
+    
+    def __str__(self):
+        return self.title
+    
+    def get_icon(self):
+        if self.icon_image:
+            return self.icon_image.url
+        elif self.icon_url:
+            return self.icon_url
+        return '/static/img/default-icon.png'
+    
+    def get_children(self):
+        return self.children.filter(is_active=True).order_by('order')
+    
+    def has_children(self):
+        return self.children.filter(is_active=True).exists()
+    
+    def get_breadcrumb(self):
+        breadcrumb = []
+        current = self
+        while current:
+            breadcrumb.insert(0, {'id': current.id, 'title': current.title})
+            current = current.parent_subcategory
+        return breadcrumb
+    
+    def get_root_card(self):
+        current = self
+        while current.parent_subcategory:
+            current = current.parent_subcategory
+        return current.parent_card
+
+
+class OnlineEducationPage(models.Model):
+    """Content pages for Online Education subcategories"""
+    sub_category = models.ForeignKey(
+        OnlineEducationSubCategory,
+        on_delete=models.CASCADE,
+        related_name='content_pages'
+    )
+    
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255)
+    summary = models.TextField(blank=True)
+    content = models.TextField()
+    
+    # SEO & Images
+    featured_image = models.ImageField(upload_to='online_education/pages/', blank=True, null=True)
+    featured_image_url = models.URLField(blank=True, null=True)
+    meta_description = models.CharField(max_length=160, blank=True)
+    meta_keywords = models.CharField(max_length=255, blank=True)
+    
+    # Settings
+    order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    is_featured = models.BooleanField(default=False)
+    views_count = models.IntegerField(default=0)
+    
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Online Education Page"
+        verbose_name_plural = "Online Education Pages"
+        ordering = ['order', 'title']
+        unique_together = ['sub_category', 'slug']
+    
+    def __str__(self):
+        return f"{self.sub_category.title} - {self.title}"
+    
+    def get_featured_image(self):
+        if self.featured_image:
+            return self.featured_image.url
+        elif self.featured_image_url:
+            return self.featured_image_url
+        return None
+    
+    def increment_views(self):
+        self.views_count += 1
+        self.save(update_fields=['views_count'])
+
+
+
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -1110,7 +1376,16 @@ class AdmissionAbroadSubCategory(models.Model):
             breadcrumb.insert(0, {'id': root_card.id, 'title': root_card.title})
         
         return breadcrumb
-    
+    def get_full_path(self):
+        """Get complete URL path: parent/child/grandchild"""
+        path = [self.slug]
+        current = self.parent_subcategory
+        
+        while current:
+            path.insert(0, current.slug)
+            current = current.parent_subcategory
+        
+        return '/'.join(path)
 # Same for AdmissionAbroadPage - Keep only ONE copy
 class AdmissionAbroadPage(models.Model):
     """Content pages for Admission Abroad"""

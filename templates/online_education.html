@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Study Abroad Services{% endblock %}
+{% block title %}Online Education Services{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -185,7 +185,10 @@
         <div class="row">
             {% for card in cards %}
 <div class="col-lg-3 col-md-6 col-6">
-    <a href="{{ card.redirect_link }}" class="service-card" style="border-top-color: {{ card.border_color }};">
+    <!-- ✅ FIXED: Use slug-based URL -->
+    <a href="{% url 'main_app:online_education_card_detail' card.slug %}" 
+       class="service-card" 
+       style="border-top-color: {{ card.border_color }};">
         <div class="service-icon">
             <img src="{{ card.get_image }}" alt="{{ card.title }}" class="img-fluid">
         </div>

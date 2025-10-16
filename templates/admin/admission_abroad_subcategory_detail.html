@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'main_app:admission_abroad' %}">Admission Abroad</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'main_app:admission_abroad_card_detail' card.slug %}">{{ card.title }}</a></li>
+            {% for crumb in breadcrumb %}
+                {% if forloop.last %}
+                    <li class="breadcrumb-item active">{{ crumb.title }}</li>
+                {% else %}
+                    <li class="breadcrumb-item">{{ crumb.title }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+    
+    <h2 class="mb-4">{{ subcategory.title }}</h2>
+    
+ <!-- Child Subcategories -->
+{% if children %}
+    <h3 class="section-title">Categories</h3>
+    <div class="row mb-5">
+        {% for child in children %}
+        <div class="col-lg-4 col-md-6">
+            <a href="{% url 'main_app:admission_abroad_subcategory_detail' card.slug current_path|add:'/'|add:child.slug %}" 
+               class="category-card" 
+               style="border-left-color: {{ child.icon_color }};">
+                
+                <div class="category-icon">
+                    <img src="{{ child.get_icon }}" alt="{{ child.title }}">
+                </div>
+                
+                <h4>{{ child.title }}</h4>
+                <p>{{ child.description|truncatewords:15 }}</p>
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-folder"></i> 
+                        {% if child.has_children %}
+                            {{ child.children_count }} subcategories
+                        {% else %}
+                            {{ child.content_pages.count }} pages
+                        {% endif %}
+                    </small>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<!-- Pages -->
+{% if pages %}
+    <h3 class="section-title">Content</h3>
+    <div class="row">
+        <div class="col-lg-8">
+            {% for page in pages %}
+            <a href="{% url 'main_app:admission_abroad_page_detail' card.slug current_path page.slug %}" 
+               class="page-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5>{{ page.title }}</h5>
+                        {% if page.summary %}
+                            <p>{{ page.summary|truncatewords:25 }}</p>
+                        {% endif %}
+                    </div>
+                    <span class="badge bg-primary">{{ page.views_count }} views</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
+
+    
+    <!-- ✅ Agar kuch bhi nahi hai -->
+    {% if not children and not pages %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No content available yet.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -487,35 +487,53 @@ class AdmissionAbroadCardForm(forms.ModelForm):
 class DistanceEducationCardForm(forms.ModelForm):
     class Meta:
         model = DistanceEducationCard
-        fields = ['title', 'description', 'card_image', 'image_url', 'redirect_link', 'border_color', 'order', 'is_active']
-        
+        fields = ['title', 'slug', 'description', 'card_image', 'image_url', 
+                  'border_color', 'redirect_link', 'order', 'is_active']
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Study Destinations'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Short description', 'rows': 3}),
-            'card_image': forms.FileInput(attrs={'class': 'form-control'}),
-            'image_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://example.com/icon.png'}),
-            'redirect_link': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '/destinations/'}),
-            'border_color': forms.Select(attrs={'class': 'form-select'}),
-            'order': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '1'}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'description': forms.Textarea(attrs={'rows': 3}),
+            'border_color': forms.TextInput(attrs={'type': 'color'}),
         }
 
 
-# ==================== ONLINE EDUCATION FORM ====================
+# ==================== ONLINE EDUCATION FORMS ====================
 class OnlineEducationCardForm(forms.ModelForm):
     class Meta:
         model = OnlineEducationCard
-        fields = ['title', 'description', 'card_image', 'image_url', 'redirect_link', 'border_color', 'order', 'is_active']
+        fields = ['title', 'slug', 'description', 'card_image', 'image_url', 
+                  'redirect_link', 'border_color', 'order', 'is_active']
         
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Study Destinations'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Short description', 'rows': 3}),
-            'card_image': forms.FileInput(attrs={'class': 'form-control'}),
-            'image_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://example.com/icon.png'}),
-            'redirect_link': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '/courses/'}),
-            'border_color': forms.Select(attrs={'class': 'form-select'}),
-            'order': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '1'}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'slug': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Leave blank to auto-generate'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'border_color': forms.TextInput(attrs={'type': 'color'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['slug'].required = False
+
+
+class OnlineEducationSubCategoryForm(forms.ModelForm):
+    class Meta:
+        model = OnlineEducationSubCategory
+        fields = ['parent_card', 'parent_subcategory', 'title', 'slug', 'description', 
+                  'icon_image', 'icon_url', 'icon_color', 'order', 'is_active']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+            'icon_color': forms.TextInput(attrs={'type': 'color'}),
+        }
+
+
+class OnlineEducationPageForm(forms.ModelForm):
+    class Meta:
+        model = OnlineEducationPage
+        fields = ['title', 'slug', 'summary', 'content', 'featured_image', 
+                  'featured_image_url', 'meta_description', 'meta_keywords', 
+                  'order', 'is_active', 'is_featured']
+        widgets = {
+            'summary': forms.Textarea(attrs={'rows': 3}),
+            'content': forms.Textarea(attrs={'rows': 10}),
         }
 
 from django import forms
@@ -723,4 +741,27 @@ class AdmissionAbroadPageForm(forms.ModelForm):
             'order': forms.NumberInput(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_featured': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+from .models import DistanceEducationSubCategory, DistanceEducationPage
+
+class DistanceEducationSubCategoryForm(forms.ModelForm):
+    class Meta:
+        model = DistanceEducationSubCategory
+        fields = ['parent_card', 'parent_subcategory', 'title', 'slug', 'description', 
+                  'icon_image', 'icon_url', 'icon_color', 'order', 'is_active']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+            'icon_color': forms.TextInput(attrs={'type': 'color'}),
+        }
+
+class DistanceEducationPageForm(forms.ModelForm):
+    class Meta:
+        model = DistanceEducationPage
+        fields = ['title', 'slug', 'summary', 'content', 'featured_image', 
+                  'featured_image_url', 'meta_description', 'meta_keywords', 
+                  'order', 'is_active', 'is_featured']
+        widgets = {
+            'summary': forms.Textarea(attrs={'rows': 3}),
+            'content': forms.Textarea(attrs={'rows': 10}),
         }
