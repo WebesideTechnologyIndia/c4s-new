@@ -1,0 +1,159 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}Admission Abroad Cards{% endblock %}
+
+{% block content %}
+
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-globe me-2"></i>
+            Admission Abroad Cards
+        </h5>
+        <a href="{% url 'main_app:admin_admission_abroad_card_add' %}" class="btn btn-light btn-sm">
+            <i class="bi bi-plus-circle me-1"></i> Add New Card
+        </a>
+    </div>
+
+    <div class="card-body">
+        {% if cards %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th width="80">Order</th>
+                        <th width="100">Image</th>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th width="150">Sub-Categories</th>
+                        <th width="100">Status</th>
+                        <th width="300">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for card in cards %}
+                    <tr>
+                        <td>
+                            <span class="badge bg-info">{{ card.order }}</span>
+                        </td>
+                        
+                        <td>
+                            <img src="{{ card.get_image }}" 
+                                 alt="{{ card.title }}"
+                                 style="width: 60px; height: 60px; object-fit: contain; border-radius: 8px;">
+                        </td>
+                        
+                        <td>
+                            <strong class="text-dark">{{ card.title }}</strong>
+                            <br>
+                            <small class="text-muted">
+                                <i class="bi bi-link-45deg"></i> {{ card.redirect_link }}
+                            </small>
+                        </td>
+                        
+                        <td>
+                            <small class="text-muted">{{ card.description|truncatewords:10 }}</small>
+                        </td>
+                        
+                        <td>
+                            <a href="{% url 'main_app:admin_admission_abroad_subcategories' card.id %}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-diagram-3 me-1"></i>
+                                Manage ({{ card.sub_categories.count }})
+                            </a>
+                        </td>
+                        
+                        <td>
+                            {% if card.is_active %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Active
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-x-circle"></i> Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+                        
+                        <td>
+                            <div class="btn-group" role="group">
+                                <!-- View Tree -->
+                                <a href="{% url 'main_app:admin_admission_abroad_subcategories' card.id %}"
+                                   class="btn btn-sm btn-success" title="View Tree">
+                                    <i class="bi bi-diagram-3"></i>
+                                </a>
+                                
+                                <!-- Manage SubCategories -->
+                                <a href="{% url 'main_app:admin_admission_abroad_subcategories' card.id %}"
+                                   class="btn btn-sm btn-primary" title="Manage Sub-Categories">
+                                    <i class="bi bi-folder-fill"></i>
+                                </a>
+                                
+                                <!-- Edit Card -->
+                                <a href="{% url 'main_app:admin_admission_abroad_card_edit' card.id %}"
+                                   class="btn btn-sm btn-warning" title="Edit Card">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                
+                                <!-- Delete Card -->
+                                <a href="{% url 'main_app:admin_admission_abroad_card_delete' card.id %}"
+                                   class="btn btn-sm btn-danger" title="Delete Card"
+                                   onclick="return confirm('⚠️ Delete {{ card.title }}?\n\nThis will also delete:\n- All subcategories\n- All nested subcategories\n- All pages')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 4rem; color: #ddd;"></i>
+            <h5 class="text-muted mt-3">No cards found. Create your first card!</h5>
+            <a href="{% url 'main_app:admin_admission_abroad_card_add' %}" 
+               class="btn btn-primary mt-3">
+                <i class="bi bi-plus-circle me-2"></i> Add First Card
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Info Card -->
+<div class="card mt-3 border-info">
+    <div class="card-body">
+        <h6 class="text-info">
+            <i class="bi bi-info-circle me-2"></i>
+            Admission Abroad Nested System:
+        </h6>
+        <ul class="mb-0 small">
+            <li><strong>Card</strong> → Top-level country/region (e.g., USA, UK, Canada)</li>
+            <li><strong>Sub-Category (Level 1)</strong> → Under card (e.g., Universities, Courses)</li>
+            <li><strong>Sub-Category (Level 2+)</strong> → Nested unlimited (e.g., Engineering → Computer Science)</li>
+            <li><strong>Pages</strong> → Content at the deepest level (e.g., Admission Process, Requirements)</li>
+        </ul>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table td {
+        vertical-align: middle;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+        transition: background-color 0.2s;
+    }
+    
+    .btn-group .btn {
+        margin: 0 2px;
+    }
+</style>
+{% endblock %}

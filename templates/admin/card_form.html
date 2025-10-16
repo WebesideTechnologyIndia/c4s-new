@@ -1,0 +1,468 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}{% if card %}Edit Card{% else %}Add Card{% endif %} - Admin{% endblock %}
+{% block page_title %}{% if card %}Edit Card{% else %}Add New Card{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+    
+    .form-card-header {
+        background: linear-gradient(135deg, #ED651C, #F4800C);
+        color: white;
+        padding: 20px 30px;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    
+    .form-card-body {
+        padding: 35px 30px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .required-badge {
+        background: #dc3545;
+        color: white;
+        font-size: 0.7rem;
+        padding: 3px 8px;
+        border-radius: 5px;
+    }
+    
+    .optional-badge {
+        background: #6c757d;
+        color: white;
+        font-size: 0.7rem;
+        padding: 3px 8px;
+        border-radius: 5px;
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid #e8e8e8;
+        border-radius: 10px;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #ED651C;
+        box-shadow: 0 0 0 4px rgba(237, 101, 28, 0.1);
+        outline: none;
+    }
+    
+    .color-input-wrapper {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .color-input-wrapper input[type="color"] {
+        width: 60px;
+        height: 45px;
+        border: 2px solid #e8e8e8;
+        border-radius: 10px;
+        cursor: pointer;
+        padding: 3px;
+    }
+    
+    .color-input-wrapper input[type="text"] {
+        flex: 1;
+    }
+    
+    .form-text {
+        color: #6c757d;
+        font-size: 0.85rem;
+        margin-top: 5px;
+        display: block;
+    }
+    
+    .alert-info-custom {
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        border: none;
+        border-left: 4px solid #2196F3;
+        border-radius: 10px;
+        padding: 15px 20px;
+        margin: 25px 0;
+    }
+    
+    .alert-info-custom i {
+        color: #2196F3;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #ED651C, #F4800C);
+        border: none;
+        color: white;
+        padding: 12px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(237, 101, 28, 0.3);
+        color: white;
+    }
+    
+    .btn-cancel {
+        background: #6c757d;
+        border: none;
+        color: white;
+        padding: 12px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-cancel:hover {
+        background: #5a6268;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .section-divider {
+        border-top: 2px dashed #e8e8e8;
+        margin: 30px 0;
+        position: relative;
+    }
+    
+    .section-divider span {
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        padding: 0 15px;
+        color: #95a5a6;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .preview-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        position: sticky;
+        top: 100px;
+    }
+    
+    .preview-card h6 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+    
+    .preview-content {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 30px;
+        border: 3px dashed #ED651C;
+        min-height: 250px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .preview-image {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .preview-title {
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #ED651C;
+    }
+    
+    .form-check-input:checked {
+        background-color: #ED651C;
+        border-color: #ED651C;
+    }
+    
+    .form-check-label {
+        color: #2c3e50;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <!-- Form Column -->
+    <div class="col-lg-8">
+        <div class="form-card">
+            <div class="form-card-header">
+                <i class="bi bi-card-text me-2"></i>
+                Card Details
+            </div>
+            <div class="form-card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Title Line 1 - REQUIRED -->
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-fonts"></i>
+                            Card Title (Main Heading)
+                            <span class="required-badge">Required</span>
+                        </label>
+                        <input type="text" 
+                               name="title_line1" 
+                               class="form-control" 
+                               placeholder="e.g., CAREER COUNSELLING"
+                               value="{% if card %}{{ card.title_line1 }}{% endif %}"
+                               required>
+                        <small class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Main heading for the card (COMPULSORY)
+                        </small>
+                    </div>
+                    
+                    <!-- Title Line 2 - OPTIONAL -->
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-fonts"></i>
+                            Card Subtitle (Second Line)
+                            <span class="optional-badge">Optional</span>
+                        </label>
+                        <input type="text" 
+                               name="title_line2" 
+                               class="form-control" 
+                               placeholder="e.g., SERVICES (Optional - leave blank if not needed)"
+                               value="{% if card %}{{ card.title_line2 }}{% endif %}">
+                        <small class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Second line of title (Optional - agar nahi chahiye toh blank chhod do)
+                        </small>
+                    </div>
+                    
+                    <div class="section-divider">
+                        <span>IMAGE SETTINGS</span>
+                    </div>
+                    
+                    <!-- Image Upload -->
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-cloud-upload"></i>
+                            Upload Image
+                            <span class="optional-badge">Optional</span>
+                        </label>
+                        <input type="file" 
+                               name="card_image" 
+                               class="form-control" 
+                               accept="image/*">
+                        {% if card.card_image %}
+                            <div class="mt-3">
+                                <img src="{{ card.card_image.url }}" 
+                                     class="img-thumbnail" 
+                                     style="max-width: 150px; border-radius: 10px;">
+                                <small class="d-block text-muted mt-1">Current Image</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- OR Image URL -->
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-link-45deg"></i>
+                            OR Image URL
+                            <span class="optional-badge">Optional</span>
+                        </label>
+                        <input type="url" 
+                               name="image_url" 
+                               class="form-control" 
+                               placeholder="https://img.icons8.com/color/96/video-conference.png"
+                               value="{% if card %}{{ card.image_url }}{% endif %}">
+                        <small class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Image URL (Icons8, Flaticon, etc.)
+                        </small>
+                    </div>
+                    
+                    <div class="alert-info-custom">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Note:</strong> Upload image YA URL paste karo (dono mein se ek). 
+                        Agar dono diye toh uploaded image use hogi.
+                    </div>
+                    
+                    <div class="section-divider">
+                        <span>LINK & STYLING</span>
+                    </div>
+                    
+                    <!-- Redirect Link -->
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-box-arrow-up-right"></i>
+                            Redirect Link
+                            <span class="optional-badge">Optional</span>
+                        </label>
+                        <input type="text" 
+                               name="redirect_link" 
+                               class="form-control" 
+                               placeholder="/career-counselling/"
+                               value="{% if card %}{{ card.redirect_link }}{% endif %}">
+                        <small class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Card click karne pe kaha redirect hoga?
+                        </small>
+                    </div>
+                    
+                    <!-- Colors -->
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-palette"></i>
+                                Border Color
+                            </label>
+                            <div class="color-input-wrapper">
+                                <input type="color" 
+                                       id="borderColor" 
+                                       name="border_color" 
+                                       value="{% if card %}{{ card.border_color }}{% else %}#ff6b35{% endif %}">
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="borderColorText" 
+                                       value="{% if card %}{{ card.border_color }}{% else %}#ff6b35{% endif %}"
+                                       readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-palette-fill"></i>
+                                Title Color
+                            </label>
+                            <div class="color-input-wrapper">
+                                <input type="color" 
+                                       id="titleColor" 
+                                       name="title_color" 
+                                       value="{% if card %}{{ card.title_color }}{% else %}#ff6b35{% endif %}">
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="titleColorText" 
+                                       value="{% if card %}{{ card.title_color }}{% else %}#ff6b35{% endif %}"
+                                       readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="section-divider">
+                        <span>DISPLAY SETTINGS</span>
+                    </div>
+                    
+                    <!-- Order & Active Status -->
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-sort-numeric-down"></i>
+                                Display Order
+                            </label>
+                            <input type="number" 
+                                   name="order" 
+                                   class="form-control" 
+                                   placeholder="0"
+                                   value="{% if card %}{{ card.order }}{% else %}0{% endif %}">
+                            <small class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Lower number = Display first (0, 1, 2...)
+                            </small>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-eye"></i>
+                                Visibility
+                            </label>
+                            <div class="form-check form-switch" style="padding-top: 8px;">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       name="is_active" 
+                                       id="isActive"
+                                       {% if not card or card.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="isActive">
+                                    Show on homepage
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Buttons -->
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit" class="btn btn-submit">
+                            <i class="bi bi-check-circle me-2"></i>
+                            {% if card %}Update Card{% else %}Create Card{% endif %}
+                        </button>
+                        <a href="{% url 'main_app:admin_cards_list' %}" class="btn btn-cancel">
+                            <i class="bi bi-x-circle me-2"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Preview Column -->
+    <div class="col-lg-4">
+        <div class="preview-card">
+            <h6>
+                <i class="bi bi-eye text-success me-2"></i>
+                Live Preview
+            </h6>
+            <div class="preview-content">
+                {% if card %}
+                    <img src="{{ card.get_image }}" 
+                         alt="{{ card.title_line1 }}" 
+                         class="preview-image">
+                    <div class="preview-title" style="color: {{ card.title_color }};">
+                        {{ card.title_line1 }}
+                        {% if card.title_line2 %}<br>{{ card.title_line2 }}{% endif %}
+                    </div>
+                {% else %}
+                    <i class="bi bi-card-image text-muted" style="font-size: 60px; opacity: 0.3;"></i>
+                    <p class="text-muted mt-3 mb-0">
+                        Preview will appear after saving
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Color picker sync
+    document.getElementById('borderColor').addEventListener('input', function() {
+        document.getElementById('borderColorText').value = this.value;
+    });
+    
+    document.getElementById('titleColor').addEventListener('input', function() {
+        document.getElementById('titleColorText').value = this.value;
+    });
+</script>
+{% endblock %}

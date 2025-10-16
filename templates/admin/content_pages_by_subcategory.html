@@ -1,0 +1,107 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}Pages - {{ sub_category.title }}{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'main_app:admin_all_india_cards_list' %}">All India Cards</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'main_app:admin_sub_categories_by_card' sub_category.parent_card.id %}">
+                {{ sub_category.parent_card.title }}
+            </a>
+        </li>
+        <li class="breadcrumb-item active">{{ sub_category.title }} - Pages</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-file-earmark-text me-2"></i>
+            Pages for: {{ sub_category.title }}
+        </h5>
+        <a href="{% url 'main_app:admin_content_page_add_for_subcategory' sub_category.id %}" 
+           class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i> Add Page
+        </a>
+    </div>
+    <div class="card-body">
+        {% if pages %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Featured Image</th>
+                        <th>Title</th>
+                        <th>Summary</th>
+                        <th>Views</th>
+                        <th>Featured</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for page in pages %}
+                    <tr>
+                        <td><span class="badge bg-info">{{ page.order }}</span></td>
+                        <td>
+                            <img src="{{ page.get_featured_image }}" 
+                                 style="width: 60px; height: 40px; object-fit: cover; border-radius: 5px;">
+                        </td>
+                        <td>
+                            <strong>{{ page.title|truncatewords:8 }}</strong>
+                        </td>
+                        <td>{{ page.summary|truncatewords:10|default:"No summary" }}</td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-eye me-1"></i>{{ page.views_count }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if page.is_featured %}
+                                <span class="badge bg-warning">⭐ Featured</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if page.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'main_app:admin_content_page_edit' page.id %}"
+                                    class="btn btn-sm btn-warning" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'main_app:admin_content_page_delete' page.id %}"
+                                    class="btn btn-sm btn-danger" title="Delete"
+                                    onclick="return confirm('Delete this page?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 3rem; color: #ddd;"></i>
+            <p class="text-muted mt-3">No pages found for this sub-category.</p>
+            <a href="{% url 'main_app:admin_content_page_add_for_subcategory' sub_category.id %}" 
+               class="btn btn-primary mt-2">
+                Add First Page
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

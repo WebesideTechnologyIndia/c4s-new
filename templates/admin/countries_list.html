@@ -1,0 +1,63 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}Countries Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Countries</h5>
+        <a href="{% url 'main_app:admin_country_add' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i> Add New Country
+        </a>
+    </div>
+    <div class="card-body">
+        {% if countries %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Code</th>
+                        <th>States</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for country in countries %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><strong>{{ country.name }}</strong></td>
+                        <td><span class="badge bg-secondary">{{ country.code }}</span></td>
+                        <td>{{ country.states.count }} states</td>
+                        <td>
+                            {% if country.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'main_app:admin_country_edit' country.id %}" class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'main_app:admin_country_delete' country.id %}" class="btn btn-sm btn-danger">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-globe" style="font-size: 3rem; color: #ddd;"></i>
+            <p class="text-muted mt-3">No countries found.</p>
+            <a href="{% url 'main_app:admin_country_add' %}" class="btn btn-primary">Add First Country</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

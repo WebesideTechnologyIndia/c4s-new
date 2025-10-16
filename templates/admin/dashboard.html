@@ -1,0 +1,132 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Admin Dashboard - LearnUp{% endblock %}
+{% block page_title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+
+<!-- Stats Cards Row -->
+<div class="row mb-4">
+    <!-- Total Home Cards -->
+    <div class="col-md-3">
+        <div class="stat-card orange">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">{{ total_home_cards }}</h2>
+                    <p class="mb-0 opacity-75">Home Cards</p>
+                </div>
+                <i class="bi bi-card-list" style="font-size: 40px; opacity: 0.5;"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Active Home Cards -->
+    <div class="col-md-3">
+        <div class="stat-card green">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">{{ active_home_cards }}</h2>
+                    <p class="mb-0 opacity-75">Active Home Cards</p>
+                </div>
+                <i class="bi bi-check-circle" style="font-size: 40px; opacity: 0.5;"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Total Counselling Cards -->
+    <div class="col-md-3">
+        <div class="stat-card blue">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">{{ total_counselling_cards }}</h2>
+                    <p class="mb-0 opacity-75">Counselling Cards</p>
+                </div>
+                <i class="bi bi-mortarboard" style="font-size: 40px; opacity: 0.5;"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Active Counselling Cards -->
+    <div class="col-md-3">
+        <div class="stat-card purple">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">{{ active_counselling_cards }}</h2>
+                    <p class="mb-0 opacity-75">Active Counselling</p>
+                </div>
+                <i class="bi bi-check2-square" style="font-size: 40px; opacity: 0.5;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-house-door text-primary me-2"></i>
+                    Home Section Cards
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Manage cards displayed on the homepage hero section.</p>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'main_app:admin_card_add' %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-circle me-1"></i> Add New
+                    </a>
+                    <a href="{% url 'main_app:admin_cards_list' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-list-ul me-1"></i> View All
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-mortarboard text-success me-2"></i>
+                    Counselling Service Cards
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Manage cards for college admission counselling services page.</p>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'main_app:admin_counselling_card_add' %}" class="btn btn-success btn-sm">
+                        <i class="bi bi-plus-circle me-1"></i> Add New
+                    </a>
+                    <a href="{% url 'main_app:admin_counselling_cards_list' %}" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-list-ul me-1"></i> View All
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-lightning text-warning me-2"></i>
+                    Quick Links
+                </h5>
+                <div class="d-flex gap-2 flex-wrap mt-3">
+                    <a href="{% url 'main_app:home' %}" target="_blank" class="btn btn-outline-primary">
+                        <i class="bi bi-eye me-1"></i> View Homepage
+                    </a>
+                    <a href="{% url 'main_app:college_counselling' %}" target="_blank" class="btn btn-outline-success">
+                        <i class="bi bi-eye me-1"></i> View Counselling Page
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

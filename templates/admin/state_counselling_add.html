@@ -1,0 +1,194 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Add State Counselling Update{% endblock %}
+{% block page_title %}Add New State Counselling Update{% endblock %}
+
+{% block extra_css %}
+<style>
+    .preview-icon {
+        width: 100px;
+        height: 100px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 10px;
+        display: none;
+    }
+    
+    .preview-icon img {
+        max-width: 60px;
+        max-height: 60px;
+        object-fit: contain;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">State Counselling Update Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <!-- State Selection -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">State <span class="text-danger">*</span></label>
+                            <select name="state" class="form-select" required>
+                                <option value="">Select State</option>
+                                {% for state in states %}
+                                <option value="{{ state.id }}">{{ state.name }} ({{ state.country.name }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Order -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Display Order</label>
+                            <input type="number" name="order" class="form-control" value="0" placeholder="0">
+                            <small class="text-muted">Lower numbers appear first</small>
+                        </div>
+
+                        <!-- Title -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Title <span class="text-danger">*</span></label>
+                            <input type="text" name="title" class="form-control" required 
+                                   placeholder="e.g., Haryana NEET Counselling 2025">
+                        </div>
+
+                        <!-- Description -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Description (Optional)</label>
+                            <textarea name="description" class="form-control" rows="3"
+                                      placeholder="Short description about this counselling..."></textarea>
+                        </div>
+
+                        <!-- External Link -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">External Link (Counselling Website) <span class="text-danger">*</span></label>
+                            <input type="url" name="external_link" class="form-control" required 
+                                   placeholder="https://example.com/counselling">
+                            <small class="text-muted">Link to the state's official counselling website</small>
+                        </div>
+
+                        <!-- Upload Icon -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Upload Icon</label>
+                            <input type="file" name="icon_image" class="form-control" 
+                                   accept="image/*" id="iconUpload">
+                        </div>
+
+                        <!-- OR Icon URL -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">OR Icon URL</label>
+                            <input type="url" name="icon_url" class="form-control" id="iconUrl"
+                                   placeholder="https://example.com/icon.png">
+                            <small class="text-muted">Paste icon URL from web</small>
+                        </div>
+
+                        <!-- Icon Preview & Color -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Icon Background Color</label>
+                            <select name="icon_color" id="iconColor" class="form-select">
+                                <option value="#ED651C">Orange</option>
+                                <option value="#e74c3c">Red</option>
+                                <option value="#2ecc71">Green</option>
+                                <option value="#3498db">Blue</option>
+                                <option value="#9b59b6">Purple</option>
+                                <option value="#f39c12">Yellow</option>
+                                <option value="#1abc9c">Teal</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Icon Preview</label>
+                            <div id="iconPreview" class="preview-icon">
+                                <img id="previewImg" src="" alt="Preview">
+                            </div>
+                        </div>
+
+                        <!-- Last Updated Date -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Last Updated Date (Optional)</label>
+                            <input type="date" name="last_updated" class="form-control">
+                        </div>
+
+                        <!-- Status -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status <span class="text-danger">*</span></label>
+                            <select name="status" class="form-select" required>
+                                <option value="active">Active (Show to students)</option>
+                                <option value="inactive">Inactive (Hide from students)</option>
+                            </select>
+                        </div>
+
+                        <!-- Is New Badge -->
+                        <div class="col-md-12 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" name="is_new" class="form-check-input" id="isNew">
+                                <label class="form-check-label" for="isNew">
+                                    Show "NEW" badge on this update
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Add Update
+                        </button>
+                        <a href="{% url 'main_app:admin_state_counselling_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Icon preview
+    const iconUpload = document.getElementById('iconUpload');
+    const iconUrl = document.getElementById('iconUrl');
+    const iconColor = document.getElementById('iconColor');
+    const iconPreview = document.getElementById('iconPreview');
+    const previewImg = document.getElementById('previewImg');
+    
+    function updatePreview(src) {
+        if (src) {
+            previewImg.src = src;
+            iconPreview.style.display = 'flex';
+            iconPreview.style.background = iconColor.value;
+        } else {
+            iconPreview.style.display = 'none';
+        }
+    }
+    
+    iconUpload.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                updatePreview(e.target.result);
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    iconUrl.addEventListener('input', function() {
+        updatePreview(this.value);
+    });
+    
+    iconColor.addEventListener('change', function() {
+        iconPreview.style.background = this.value;
+    });
+</script>
+{% endblock %}

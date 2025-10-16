@@ -1,0 +1,47 @@
+<!-- templates/admin/tree_node.html -->
+<div class="tree-node">
+    <i class="bi bi-folder text-warning"></i>
+    <strong>{{ node.title }}</strong>
+    
+    <!-- Actions -->
+    <span class="node-actions">
+        {% if node.has_children %}
+            <a href="{% url 'main_app:admin_nested_subcategories' node.id %}" 
+               class="btn btn-sm btn-info">
+                <i class="bi bi-folder-open"></i> View Inside
+            </a>
+        {% else %}
+            <a href="{% url 'main_app:admin_content_pages_by_subcategory' node.id %}" 
+               class="btn btn-sm btn-primary">
+                <i class="bi bi-file-text"></i> View Pages
+            </a>
+        {% endif %}
+        
+        <a href="{% url 'main_app:admin_nested_subcategory_add' node.id %}" 
+           class="btn btn-sm btn-success">
+            <i class="bi bi-plus"></i> Add Child
+        </a>
+    </span>
+    
+    <!-- Count -->
+    <span class="node-count">
+        ({{ node.children.count }} subcategories, {{ node.content_pages.count }} pages)
+    </span>
+    
+    <!-- Child nodes -->
+    {% for child in node.children.all %}
+        {% include 'admin/tree_node.html' with node=child level=level|add:1 %}
+    {% endfor %}
+    
+    <!-- Pages -->
+    {% for page in node.content_pages.all %}
+    <div class="tree-node">
+        <i class="bi bi-file-text text-info"></i>
+        {{ page.title }}
+        <a href="{% url 'main_app:admin_content_page_edit' page.id %}" 
+           class="btn btn-sm btn-warning">
+            <i class="bi bi-pencil"></i>
+        </a>
+    </div>
+    {% endfor %}
+</div>

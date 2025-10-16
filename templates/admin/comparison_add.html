@@ -1,0 +1,193 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Add College Comparison{% endblock %}
+{% block page_title %}Add New College Comparison{% endblock %}
+
+{% block extra_css %}
+<style>
+    .college-checkbox {
+        padding: 10px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .college-checkbox:hover {
+        background: #f8f9fa;
+        border-color: #ED651C;
+    }
+    
+    .college-checkbox input[type="checkbox"]:checked + label {
+        font-weight: 600;
+        color: #ED651C;
+    }
+    
+    .selected-count {
+        background: #ED651C;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-block;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Comparison Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="comparisonForm">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <!-- Comparison Title -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Comparison Title <span class="text-danger">*</span></label>
+                            <input type="text" name="comparison_title" class="form-control" required 
+                                   placeholder="e.g., Top Engineering Colleges in Delhi">
+                            <small class="text-muted">Give a descriptive title for this comparison</small>
+                        </div>
+
+                        <!-- Country -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Target Country <span class="text-danger">*</span></label>
+                            <select name="country" id="country" class="form-select" required>
+                                <option value="">Select Country</option>
+                                {% for country in countries %}
+                                <option value="{{ country.id }}">{{ country.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Students from this country will see this comparison</small>
+                        </div>
+
+                        <!-- State (Optional) -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Target State (Optional)</label>
+                            <select name="state" id="state" class="form-select">
+                                <option value="">All States</option>
+                                {% for state in states %}
+                                <option value="{{ state.id }}" data-country="{{ state.country.id }}">
+                                    {{ state.name }} ({{ state.country.name }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Leave blank to show for all states in the country</small>
+                        </div>
+
+                        <!-- Select Multiple Colleges -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Select Colleges to Compare <span class="text-danger">*</span> (Minimum 2)</label>
+                            <div class="selected-count" id="selectedCount">0 colleges selected</div>
+                            
+                            <div style="max-height: 400px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px;">
+                                {% for college in colleges %}
+                                <div class="college-checkbox">
+                                    <input type="checkbox" name="colleges" value="{{ college.id }}" 
+                                           id="college_{{ college.id }}" class="form-check-input college-check">
+                                    <label for="college_{{ college.id }}" class="form-check-label ms-2" style="cursor: pointer;">
+                                        <strong>{{ college.name }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="bi bi-geo-alt"></i> {{ college.city }}, {{ college.state.name }}, {{ college.country.name }}
+                                            | ₹{{ college.tuition_fees|floatformat:0 }}
+                                        </small>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <small class="text-muted">Select at least 2 colleges to create a comparison</small>
+                        </div>
+
+                        <!-- Comparison Summary -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Comparison Summary (Optional)</label>
+                            <textarea name="comparison_summary" class="form-control" rows="4"
+                                      placeholder="Write a brief summary about this comparison..."></textarea>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Status <span class="text-danger">*</span></label>
+                            <select name="status" class="form-select" required>
+                                <option value="active">Active (Show to students)</option>
+                                <option value="inactive">Inactive (Hide from students)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Create Comparison
+                        </button>
+                        <a href="{% url 'main_app:admin_comparisons_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Filter states based on country
+    document.getElementById('country').addEventListener('change', function() {
+        const countryId = this.value;
+        const stateSelect = document.getElementById('state');
+        const stateOptions = stateSelect.querySelectorAll('option');
+        
+        stateOptions.forEach(option => {
+            if (option.value === '') {
+                option.style.display = 'block';
+                return;
+            }
+            
+            if (option.dataset.country === countryId) {
+                option.style.display = 'block';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+        
+        stateSelect.value = '';
+    });
+
+    // Count selected colleges
+    const checkboxes = document.querySelectorAll('.college-check');
+    const selectedCountEl = document.getElementById('selectedCount');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const selectedCount = document.querySelectorAll('.college-check:checked').length;
+            selectedCountEl.textContent = `${selectedCount} college${selectedCount !== 1 ? 's' : ''} selected`;
+            
+            if (selectedCount < 2) {
+                selectedCountEl.style.background = '#e74c3c';
+            } else {
+                selectedCountEl.style.background = '#27ae60';
+            }
+        });
+    });
+
+    // Form validation
+    document.getElementById('comparisonForm').addEventListener('submit', function(e) {
+        const selectedCount = document.querySelectorAll('.college-check:checked').length;
+        
+        if (selectedCount < 2) {
+            e.preventDefault();
+            alert('Please select at least 2 colleges to compare!');
+            return false;
+        }
+    });
+</script>
+{% endblock %}

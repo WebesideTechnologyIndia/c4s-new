@@ -1,0 +1,358 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{% if node %}Edit{% else %}Add{% endif %} Content Node{% endblock %}
+
+{% block extra_css %}
+<style>
+    .node-form-container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .form-section {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .form-section:last-child {
+        border-bottom: none;
+    }
+    
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 15px;
+        padding-left: 10px;
+        border-left: 4px solid #ED651C;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    label {
+        display: block;
+        font-weight: 500;
+        color: #555;
+        margin-bottom: 6px;
+    }
+    
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    input[type="url"],
+    input[type="color"],
+    input[type="file"],
+    textarea,
+    select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-family: inherit;
+        font-size: 14px;
+    }
+    
+    textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+    
+    input:focus,
+    textarea:focus,
+    select:focus {
+        outline: none;
+        border-color: #ED651C;
+        box-shadow: 0 0 0 3px rgba(237, 101, 28, 0.1);
+    }
+    
+    .checkbox-group {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    input[type="checkbox"] {
+        width: auto;
+        cursor: pointer;
+    }
+    
+    .checkbox-item label {
+        margin: 0;
+        cursor: pointer;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    
+    .breadcrumb-nav {
+        background: #f8f9fa;
+        padding: 10px 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+    
+    .breadcrumb-nav a {
+        color: #ED651C;
+        text-decoration: none;
+    }
+    
+    .breadcrumb-nav a:hover {
+        text-decoration: underline;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.2s;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #ED651C, #ff7f3f);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(237, 101, 28, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #95a5a6;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background: #7f8c8d;
+    }
+    
+    .icon-preview {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    
+    .icon-preview i {
+        font-size: 24px;
+    }
+    
+    .help-text {
+        font-size: 12px;
+        color: #999;
+        margin-top: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="node-form-container">
+    <h1>{% if node %}✏️ Edit{{ else }}➕ Add{% endif %} Content Node</h1>
+    
+    {% if breadcrumb %}
+    <div class="breadcrumb-nav">
+        {% for item in breadcrumb %}
+            <a href="{% url 'main_app:admin_node_edit' item.id %}">{{ item.title }}</a>
+            {% if not forloop.last %}<span> > </span>{% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- Basic Information -->
+        <div class="form-section">
+            <h3 class="section-title">📝 Basic Information</h3>
+            
+            {% if not node %}
+            <div class="form-group">
+                <label for="node_type">Node Type *</label>
+                <select name="node_type" id="node_type" required>
+                    <option value="">Select type...</option>
+                    {% for type_value, type_display in allowed_types %}
+                    <option value="{{ type_value }}">{{ type_display }}</option>
+                    {% endfor %}
+                </select>
+                <p class="help-text">Yeh decide karega ki node kitna important hai aur kya hota hai</p>
+            </div>
+            {% else %}
+            <input type="hidden" name="node_type" value="{{ node.node_type }}">
+            <div class="form-group">
+                <label>Node Type</label>
+                <input type="text" value="{{ node.get_node_type_display }}" disabled>
+            </div>
+            {% endif %}
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="title">Title *</label>
+                    <input type="text" name="title" id="title" value="{{ node.title|default:'' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="slug">Slug (URL-friendly)</label>
+                    <input type="text" name="slug" id="slug" value="{{ node.slug|default:'' }}" placeholder="auto-generated">
+                    <p class="help-text">URL mein kya show hoga (auto-generated agar blank ho)</p>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea name="description" id="description">{{ node.description|default:'' }}</textarea>
+                <p class="help-text">Short description jo SEO aur preview mein show ho</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="content">Content/Article</label>
+                <textarea name="content" id="content">{{ node.content|default:'' }}</textarea>
+                <p class="help-text">Detailed content - mostly articles/pages ke liye</p>
+            </div>
+        </div>
+        
+        <!-- Visual Settings -->
+        <div class="form-section">
+            <h3 class="section-title">🎨 Visual Settings</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="icon">Icon (Bootstrap Icon name)</label>
+                    <input type="text" name="icon" id="icon" value="{{ node.icon|default:'' }}" placeholder="bi-folder">
+                    <p class="help-text">Example: bi-folder, bi-file, bi-home</p>
+                    <div class="icon-preview">
+                        <i id="icon-preview" class="bi bi-folder"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="icon_color">Icon Color</label>
+                    <input type="color" name="icon_color" id="icon_color" value="{{ node.icon_color|default:'#ED651C' }}">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="image">Image Upload</label>
+                    <input type="file" name="image" id="image" accept="image/*">
+                    {% if node.image %}
+                    <p class="help-text">Current: <a href="{{ node.image.url }}">View</a></p>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="image_url">Image URL</label>
+                    <input type="url" name="image_url" id="image_url" value="{{ node.image_url|default:'' }}">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Behavior -->
+        <div class="form-section">
+            <h3 class="section-title">⚙️ Behavior</h3>
+            
+            <div class="form-group">
+                <label for="redirect_url">Redirect URL (optional)</label>
+                <input type="url" name="redirect_url" id="redirect_url" value="{{ node.redirect_url|default:'' }}" placeholder="https://example.com">
+                <p class="help-text">Click karte hi kisi aur URL par jaayega</p>
+            </div>
+            
+            <div class="checkbox-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" name="requires_login" id="requires_login" {% if node.requires_login %}checked{% endif %}>
+                    <label for="requires_login">Requires Login</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" name="is_active" id="is_active" {% if node.is_active or not node %}checked{% endif %}>
+                    <label for="is_active">Active</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" name="is_featured" id="is_featured" {% if node.is_featured %}checked{% endif %}>
+                    <label for="is_featured">Featured</label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Display -->
+        <div class="form-section">
+            <h3 class="section-title">📊 Display</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="order">Display Order</label>
+                    <input type="number" name="order" id="order" value="{{ node.order|default:0 }}">
+                    <p class="help-text">Chhota number = top mein show hoga</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SEO -->
+        <div class="form-section">
+            <h3 class="section-title">🔍 SEO</h3>
+            
+            <div class="form-group">
+                <label for="meta_description">Meta Description</label>
+                <textarea name="meta_description" id="meta_description" rows="3">{{ node.meta_description|default:'' }}</textarea>
+                <p class="help-text">Google search results mein show hoga (max 160 characters)</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="meta_keywords">Meta Keywords</label>
+                <input type="text" name="meta_keywords" id="meta_keywords" value="{{ node.meta_keywords|default:'' }}" placeholder="keyword1, keyword2, keyword3">
+            </div>
+        </div>
+        
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                {% if node %}💾 Update Node{% else %}✅ Add Node{% endif %}
+            </button>
+            <button type="submit" name="add_another" value="1" class="btn btn-primary" style="background: #3498db;">
+                {% if node %}Update & Edit Another{% else %}Add & Add Another{% endif %}
+            </button>
+            <a href="{% url 'main_app:admin_content_tree' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+// Auto-generate slug
+document.getElementById('title').addEventListener('change', function() {
+    if (!document.getElementById('slug').value) {
+        document.getElementById('slug').value = this.value
+            .toLowerCase()
+            .replace(/[^\w\s-]/g, '')
+            .replace(/\s+/g, '-');
+    }
+});
+
+// Icon preview
+document.getElementById('icon').addEventListener('change', function() {
+    const preview = document.getElementById('icon-preview');
+    preview.className = 'bi ' + (this.value || 'bi-folder');
+});
+</script>
+{% endblock %}

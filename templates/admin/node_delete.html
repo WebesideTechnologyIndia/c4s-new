@@ -1,0 +1,111 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Delete Content Node{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-container {
+        max-width: 600px;
+        margin: 50px auto;
+        background: #fff3cd;
+        border: 2px solid #ffc107;
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+    }
+    
+    .delete-container h1 {
+        color: #856404;
+        margin-bottom: 20px;
+    }
+    
+    .delete-info {
+        background: white;
+        padding: 20px;
+        border-radius: 4px;
+        margin: 20px 0;
+        text-align: left;
+    }
+    
+    .delete-warning {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 20px 0;
+    }
+    
+    .breadcrumb-info {
+        font-size: 14px;
+        color: #666;
+        margin: 15px 0;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 30px;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-danger {
+        background: #e74c3c;
+        color: white;
+    }
+    
+    .btn-secondary {
+        background: #95a5a6;
+        color: white;
+    }
+    
+    .btn:hover {
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-container">
+    <h1>⚠️ Delete Content Node?</h1>
+    
+    <div class="delete-info">
+        <strong>Node:</strong> {{ node.title }}<br>
+        <strong>Type:</strong> {{ node.get_node_type_display }}<br>
+        <strong>Status:</strong> {% if node.is_active %}Active{% else %}Inactive{% endif %}<br>
+    </div>
+    
+    {% if breadcrumb %}
+    <div class="breadcrumb-info">
+        <strong>Location:</strong>
+        {% for item in breadcrumb %}
+            {{ item.title }}
+            {% if not forloop.last %}→{% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="delete-warning">
+        🚨 <strong>Careful!</strong> Yeh delete action permanent hai!<br>
+        <strong>{{ total_delete_count }} items</strong> delete ho jayenge (yeh node + sab children)
+    </div>
+    
+    <form method="POST" style="display: inline;">
+        {% csrf_token %}
+        <div class="action-buttons">
+            <button type="submit" class="btn btn-danger">Yes, Delete Everything</button>
+            <a href="{% url 'main_app:admin_content_tree' %}" class="btn btn-secondary">No, Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

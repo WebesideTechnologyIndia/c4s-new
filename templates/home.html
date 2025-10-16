@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}LearnUp - Categories{% endblock %}
+
+{% block content %}
+<!-- Categories Section -->
+<div class="hero_banner home-7 position-relative border-bottom">
+	<div class="container">
+		<div class="row align-items-center justify-content-between g-4">
+			<div class="col-xl-6 col-lg-6 col-md-12">
+
+				<div class="hero-caption mb-2">
+					<div class="d-block mb-3">
+						<div
+							class="d-inline-flex align-items-center justify-content-start bg-white rounded-pill border py-1 px-2 pe-3 gap-2">
+							<div class="new label bg-green rounded-pill"> </div>
+							<div class="capstion">
+								<span class="text-dark">Empower Your Admission Journey</span>
+							</div>
+						</div>
+					</div>
+					<h1 class="big-header-capt fw-bold text-dark mb-0">The #1 Place to Get
+						Counselling and Updates</h1>
+					<p>Real world counselling and updates to take your admission
+						process with ease with our platform.</p>
+				</div>
+
+				<div class="top-features my-4">
+					<ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+						<li class="d-flex flex-row gap-2">
+							<span><i class="bi bi-patch-check-fill text-green"></i></span>
+							<span>Admission India</span>
+						</li>
+						<li class="d-flex flex-row gap-2">
+							<span><i class="bi bi-patch-check-fill text-green"></i></span>
+							<span>Admission Abroad</span>
+						</li>
+						<li class="d-flex flex-row gap-2">
+							<span><i class="bi bi-patch-check-fill text-green"></i></span>
+							<span>Distance Education</span>
+						</li>
+						<li class="d-flex flex-row gap-2">
+							<span><i class="bi bi-patch-check-fill text-green"></i></span>
+							<span>Online Education</span>
+						</li>
+					</ul>
+				</div>
+
+				<div class="d-block mt-2">
+					<div class="d-flex align-items-center justify-content-start gap-3">
+						<a href="#" class="btn btn-main px-4">Join Now</a>
+						<a href="#" class="btn btn-outline-dark ">What You Get</a>
+					</div>
+				</div>
+
+			</div>
+
+			<div class="col-xl-6 col-lg-6 col-md-12">
+				<div class="hero-image position-relative ps-xl-5">
+					<div
+						class="position-absolute bottom-25 start-0 ms-n8 end-0 d-flex flex-column align-items-start">
+						<div
+							class="bg-white rounded-pill py-2 px-3 shadow-sm mb-2 d-inline-block animate-leftright">
+							<span class="text-green me-1"><i class="bi bi-book-half"></i></span>
+							<span class="text-dark fw-medium">World Class Counsellers</span>
+						</div>
+						<div
+							class="bg-white rounded-pill py-2 px-3 shadow-sm mb-2 d-inline-block animate-leftright">
+							<span class="text-info me-1"><i class="bi bi-people"></i></span>
+							<span class="text-dark fw-medium">World Class Colleges</span>
+						</div>
+						<div
+							class="bg-white rounded-pill py-2 px-3 shadow-sm mb-2 d-inline-block animate-leftright">
+							<span class="text-red me-1"><i class="bi bi-shield-fill-check"></i></span>
+							<span class="text-dark fw-medium">
+								Real Time Updates</span>
+						</div>
+					</div>
+
+					<div class="main-hero-image">
+
+						<!-- Div 1: Left Background -->
+						<div class="leaves-section">
+							<div class="orange-circle"
+								style="width: 100%; height: 100%; background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); border-top-right-radius: 50%;border-bottom-left-radius: 50%;">
+							</div>
+						</div>
+
+						<!-- DYNAMIC CARDS FROM ADMIN -->
+						{% for card in cards %}
+						<div class="card-section">
+							<a href="{{ card.redirect_link|default:'#' }}">
+								<div class="service-card bg-white rounded-4 p-4 text-center shadow-sm"
+									style="border: 3px solid {{ card.border_color }}; height: 100%;">
+									<div class="card-image mb-3">
+										<img src="{{ card.get_image }}"
+											alt="{{ card.title_line1 }}" 
+											style="width: 100px; height: 100px;">
+									</div>
+									<h5 class="fw-bold text-uppercase mb-0"
+										style="color: {{ card.title_color }}; font-size: 1rem; line-height: 1.5;">
+										{{ card.title_line1 }}<br>{{ card.title_line2 }}
+									</h5>
+								</div>
+							</a>
+						</div>
+						{% endfor %}
+
+						<!-- Div 4: Right Background -->
+						<div class="background-section">
+							<div class="orange-circle"
+								style="width: 100%; height:100%; background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); border-top-right-radius: 50%;border-bottom-left-radius: 50%;">
+							</div>
+						</div>
+
+					</div>
+
+					<div
+						class="bg-white rounded-4 p-3 pe-4 position-absolute end-0 bottom-0 shadow-sm animate-bounce">
+						<div class="text-dark fw-bold fs-4 m-0">10k+</div>
+						<div class="text-gray-500">Students Counselled with us</div>
+						<div class="avatar-group mt-3">
+							<span class="avatar-single">
+								<img alt="avatar" src="{% static 'img/avatar-1.jpg' %}"
+									class="img-fluid border thumb-sm circle">
+							</span>
+							<span class="avatar-single">
+								<img alt="avatar" src="{% static 'img/avatar-2.jpg' %}"
+									class="img-fluid border thumb-sm circle">
+							</span>
+							<span class="avatar-single">
+								<img alt="avatar" src="{% static 'img/avatar-3.jpg' %}"
+									class="img-fluid border thumb-sm circle">
+							</span>
+							<span class="avatar-single">
+								<img alt="avatar" src="{% static 'img/avatar-5.jpg' %}"
+									class="img-fluid border thumb-sm circle">
+							</span>
+							<span class="avatar-single">
+								<img alt="avatar" src="{% static 'img/avatar-6.jpg' %}"
+									class="img-fluid border thumb-sm circle">
+							</span>
+						</div>
+					</div>
+
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+</div>
+{% endblock %}

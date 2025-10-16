@@ -1,0 +1,217 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}Student Details - {{ student.username }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Student Info -->
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header" style="background: linear-gradient(135deg, #ED651C, #F4800C); color: white;">
+                <h5 class="mb-0"><i class="bi bi-person"></i> Student Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <p><strong>Username:</strong> {{ student.username }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>Email:</strong> {{ student.email }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>Joined:</strong> {{ student.date_joined|date:"d M, Y" }}</p>
+                    </div>
+                </div>
+                <a href="{% url 'main_app:admin_update_status' student.id %}" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i> Update Status
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Counselling Status -->
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Counselling Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <p><strong>Application:</strong> 
+                            {% if status.application_submitted %}
+                                <span class="badge bg-success">✓ Submitted</span>
+                            {% else %}
+                                <span class="badge bg-danger">✗ Not Submitted</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-3">
+                        <p><strong>Documents:</strong> 
+                            {% if status.documents_verified %}
+                                <span class="badge bg-success">✓ Verified</span>
+                            {% else %}
+                                <span class="badge bg-warning">⏳ Pending</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-3">
+                        <p><strong>Choice Filling:</strong> 
+                            {% if status.choice_filling_completed %}
+                                <span class="badge bg-success">✓ Completed</span>
+                            {% else %}
+                                <span class="badge bg-warning">⏳ Pending</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-3">
+                        <p><strong>Stage:</strong> <span class="badge bg-primary">{{ status.get_current_stage_display }}</span></p>
+                    </div>
+                </div>
+                <p><strong>Seat Allotment:</strong> {{ status.seat_allotment_status }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Documents -->
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0"><i class="bi bi-file-earmark"></i> Documents ({{ documents.count }})</h5>
+            </div>
+            <div class="card-body">
+                {% if documents %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Document</th>
+                                <th>Uploaded</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for doc in documents %}
+                            <tr>
+                                <td>{{ doc.get_document_type_display }}</td>
+                                <td>{{ doc.uploaded_at|date:"d M, Y" }}</td>
+                                <td>
+                                    {% if doc.status == 'approved' %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% elif doc.status == 'rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ doc.document_file.url }}" target="_blank" class="btn btn-sm btn-primary">View</a>
+                                    <a href="{% url 'main_app:admin_document_review' doc.id %}" class="btn btn-sm btn-warning">Review</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No documents uploaded.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Choices -->
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-list-ol"></i> Choice Filling ({{ choices.count }})</h5>
+            </div>
+            <div class="card-body">
+                {% if choices %}
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Pref #</th>
+                            <th>College</th>
+                            <th>Course</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for choice in choices %}
+                        <tr>
+                            <td><span class="badge bg-primary">{{ choice.preference_number }}</span></td>
+                            <td>{{ choice.college_name }}</td>
+                            <td>{{ choice.course_name }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-muted">No choices added.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Doubts -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-question-circle"></i> Doubts ({{ doubts.count }})</h5>
+            </div>
+            <div class="card-body">
+                {% if doubts %}
+                <ul class="list-group">
+                    {% for doubt in doubts %}
+                    <li class="list-group-item">
+                        <strong>{{ doubt.subject }}</strong>
+                        <span class="badge {% if doubt.status == 'resolved' %}bg-success{% else %}bg-warning{% endif %} float-end">
+                            {{ doubt.status }}
+                        </span>
+                        <p class="mb-1 text-muted small">{{ doubt.doubt_description|truncatewords:20 }}</p>
+                        <a href="{% url 'main_app:admin_doubt_respond' doubt.id %}" class="btn btn-sm btn-info">Respond</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted">No doubts submitted.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Complaints -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Complaints ({{ complaints.count }})</h5>
+            </div>
+            <div class="card-body">
+                {% if complaints %}
+                <ul class="list-group">
+                    {% for complaint in complaints %}
+                    <li class="list-group-item">
+                        <strong>{{ complaint.complaint_subject }}</strong>
+                        <span class="badge {% if complaint.status == 'resolved' %}bg-success{% elif complaint.status == 'in_progress' %}bg-info{% else %}bg-warning{% endif %} float-end">
+                            {{ complaint.status }}
+                        </span>
+                        <p class="mb-1 text-muted small">{{ complaint.complaint_description|truncatewords:20 }}</p>
+                        <a href="{% url 'main_app:admin_complaint_respond' complaint.id %}" class="btn btn-sm btn-danger">Respond</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted">No complaints registered.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mb-3">
+    <a href="{% url 'main_app:admin_students_list' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Students List
+    </a>
+</div>
+{% endblock %}

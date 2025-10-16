@@ -1,0 +1,228 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}
+{% if current_parent_subcategory %}
+    Sub-Categories - {{ current_parent_subcategory.title }}
+{% elif parent_card %}
+    Sub-Categories - {{ parent_card.title }}
+{% else %}
+    All Sub-Categories
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb Navigation -->
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'main_app:admin_all_india_cards_list' %}">
+                <i class="bi bi-house-door"></i> All India Cards
+            </a>
+        </li>
+        
+        {% if parent_card %}
+            <li class="breadcrumb-item">
+                <a href="{% url 'main_app:admin_sub_categories_by_card' parent_card.id %}">
+                    {{ parent_card.title }}
+                </a>
+            </li>
+        {% endif %}
+        
+        {% if current_parent_subcategory %}
+            {% for ancestor in breadcrumb_path %}
+                <li class="breadcrumb-item">
+                    <a href="{% url 'main_app:admin_nested_subcategories' ancestor.id %}">
+                        {{ ancestor.title }}
+                    </a>
+                </li>
+            {% endfor %}
+        {% endif %}
+        
+        <li class="breadcrumb-item active">Sub-Categories</li>
+    </ol>
+</nav>
+
+<!-- Main Card -->
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-diagram-3 me-2"></i>
+            {% if current_parent_subcategory %}
+                Sub-Categories under: {{ current_parent_subcategory.title }}
+            {% elif parent_card %}
+                Sub-Categories for: {{ parent_card.title }}
+            {% else %}
+                All Sub-Categories
+            {% endif %}
+        </h5>
+        
+        <div>
+            {% if current_parent_subcategory %}
+                <a href="{% url 'main_app:admin_nested_subcategory_add' current_parent_subcategory.id %}" 
+                   class="btn btn-light btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i> Add Child Sub-Category
+                </a>
+            {% elif parent_card %}
+                <a href="{% url 'main_app:admin_sub_category_add_for_card' parent_card.id %}" 
+                   class="btn btn-light btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i> Add Sub-Category
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card-body">
+        {% if sub_categories %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="80">Order</th>
+                            <th width="100">Icon</th>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th width="120">Children</th>
+                            <th width="120">Pages</th>
+                            <th width="100">Status</th>
+                            <th width="200">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sub_cat in sub_categories %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-info">{{ sub_cat.order }}</span>
+                            </td>
+                            
+                            <td>
+                                <div style="width: 60px; height: 60px; background: {{ sub_cat.icon_color }}; 
+                                            border-radius: 10px; display: flex; align-items: center; 
+                                            justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                    <img src="{{ sub_cat.get_icon }}" 
+                                         style="width: 35px; height: 35px; object-fit: contain;">
+                                </div>
+                            </td>
+                            
+                            <td>
+                                <strong class="text-dark">{{ sub_cat.title }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    <i class="bi bi-link-45deg"></i> /{{ sub_cat.slug }}
+                                </small>
+                            </td>
+                            
+                            <td>
+                                <small class="text-muted">
+                                    {{ sub_cat.description|truncatewords:12|default:"No description" }}
+                                </small>
+                            </td>
+                            
+                            <td>
+                                {% if sub_cat.has_children %}
+                                    <a href="{% url 'main_app:admin_nested_subcategories' sub_cat.id %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-diagram-3-fill me-1"></i>
+                                        View ({{ sub_cat.get_children.count }})
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'main_app:admin_nested_subcategory_add' sub_cat.id %}" 
+                                       class="btn btn-sm btn-outline-secondary" title="Add child subcategory">
+                                        <i class="bi bi-plus-circle"></i> Add
+                                    </a>
+                                {% endif %}
+                            </td>
+                            
+                            <td>
+                                <a href="{% url 'main_app:admin_content_pages_by_subcategory' sub_cat.id %}" 
+                                   class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-file-earmark-text me-1"></i>
+                                    Pages ({{ sub_cat.pages_count }})
+                                </a>
+                            </td>
+                            
+                            <td>
+                                {% if sub_cat.is_active %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Active
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-x-circle"></i> Inactive
+                                    </span>
+                                {% endif %}
+                            </td>
+                            
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'main_app:admin_sub_category_edit' sub_cat.id %}"
+                                       class="btn btn-sm btn-warning" title="Edit">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    
+                                    <a href="{% url 'main_app:admin_sub_category_delete' sub_cat.id %}"
+                                       class="btn btn-sm btn-danger" title="Delete"
+                                       onclick="return confirm('⚠️ Delete {{ sub_cat.title }}?\n\nThis will also delete:\n- All child subcategories\n- All pages under it')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        
+        {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-5">
+                <i class="bi bi-folder-x" style="font-size: 4rem; color: #ddd;"></i>
+                <h5 class="text-muted mt-3">No Sub-Categories Found</h5>
+                <p class="text-muted">Create your first sub-category to get started.</p>
+                
+                {% if current_parent_subcategory %}
+                    <a href="{% url 'main_app:admin_nested_subcategory_add' current_parent_subcategory.id %}" 
+                       class="btn btn-primary mt-3">
+                        <i class="bi bi-plus-circle me-2"></i> Add First Child Sub-Category
+                    </a>
+                {% elif parent_card %}
+                    <a href="{% url 'main_app:admin_sub_category_add_for_card' parent_card.id %}" 
+                       class="btn btn-primary mt-3">
+                        <i class="bi bi-plus-circle me-2"></i> Add First Sub-Category
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Info Alert -->
+<div class="alert alert-info mt-3" role="alert">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>Nested System:</strong> 
+    Sub-categories can have unlimited child sub-categories. 
+    Pages are only added at the deepest level (leaf nodes).
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<style>
+    .table td {
+        vertical-align: middle;
+    }
+    .breadcrumb {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .card {
+        border: none;
+    }
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+        transition: background-color 0.2s;
+    }
+</style>
+{% endblock %}

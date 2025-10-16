@@ -1,0 +1,192 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Edit College{% endblock %}
+{% block page_title %}Edit College - {{ college.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .preview-image {
+        max-width: 200px;
+        max-height: 200px;
+        margin-top: 10px;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Edit College Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <!-- College Name -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">College Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" required 
+                                   value="{{ college.name }}">
+                        </div>
+
+                        <!-- Country -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Country <span class="text-danger">*</span></label>
+                            <select name="country" id="country" class="form-select" required>
+                                <option value="">Select Country</option>
+                                {% for country in countries %}
+                                <option value="{{ country.id }}" {% if college.country.id == country.id %}selected{% endif %}>
+                                    {{ country.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- State -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">State <span class="text-danger">*</span></label>
+                            <select name="state" id="state" class="form-select" required>
+                                <option value="">Select State</option>
+                                {% for state in states %}
+                                <option value="{{ state.id }}" 
+                                        data-country="{{ state.country.id }}"
+                                        {% if college.state.id == state.id %}selected{% endif %}>
+                                    {{ state.name }} ({{ state.country.name }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- City -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">City <span class="text-danger">*</span></label>
+                            <input type="text" name="city" class="form-control" required 
+                                   value="{{ college.city }}">
+                        </div>
+
+                        <!-- Ranking -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Ranking (Optional)</label>
+                            <input type="number" name="ranking" class="form-control" 
+                                   value="{{ college.ranking|default:'' }}">
+                        </div>
+
+                        <!-- Tuition Fees -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tuition Fees (Annual) <span class="text-danger">*</span></label>
+                            <input type="number" name="tuition_fees" class="form-control" required 
+                                   value="{{ college.tuition_fees }}" step="0.01">
+                        </div>
+
+                        <!-- Website -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Website URL (Optional)</label>
+                            <input type="url" name="website" class="form-control" 
+                                   value="{{ college.website|default:'' }}">
+                        </div>
+
+                        <!-- Courses Offered -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Courses Offered <span class="text-danger">*</span></label>
+                            <textarea name="courses_offered" class="form-control" rows="3" required>{{ college.courses_offered }}</textarea>
+                        </div>
+
+                        <!-- Facilities -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Facilities (Optional)</label>
+                            <textarea name="facilities" class="form-control" rows="3">{{ college.facilities|default:'' }}</textarea>
+                        </div>
+
+                        <!-- Current Image -->
+                        {% if college.get_image %}
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Current Image</label><br>
+                            <img src="{{ college.get_image }}" class="preview-image" alt="Current Image">
+                        </div>
+                        {% endif %}
+
+                        <!-- Upload New Image -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Upload New Image</label>
+                            <input type="file" name="college_image" class="form-control" 
+                                   accept="image/*" id="imageUpload">
+                            <img id="imagePreview" class="preview-image" style="display: none;" alt="Preview">
+                        </div>
+
+                        <!-- OR Image URL -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">OR Image URL</label>
+                            <input type="url" name="image_url" class="form-control" 
+                                   value="{{ college.image_url|default:'' }}">
+                        </div>
+
+                        <!-- Active Status -->
+                        <div class="col-md-12 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" name="is_active" class="form-check-input" 
+                                       id="isActive" value="true" {% if college.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="isActive">
+                                    Active (Show on website)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Update College
+                        </button>
+                        <a href="{% url 'main_app:admin_colleges_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Image preview
+    document.getElementById('imageUpload').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('imagePreview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Filter states based on country
+    document.getElementById('country').addEventListener('change', function() {
+        const countryId = this.value;
+        const stateSelect = document.getElementById('state');
+        const stateOptions = stateSelect.querySelectorAll('option');
+        
+        stateOptions.forEach(option => {
+            if (option.value === '') {
+                option.style.display = 'block';
+                return;
+            }
+            
+            if (option.dataset.country === countryId) {
+                option.style.display = 'block';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+        
+        stateSelect.value = '';
+    });
+</script>
+{% endblock %}

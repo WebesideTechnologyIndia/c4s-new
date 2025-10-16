@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}{{ node.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .content-page {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+    
+    .content-header {
+        margin-bottom: 40px;
+    }
+    
+    .content-title {
+        font-size: 42px;
+        font-weight: 700;
+        color: #333;
+        margin: 0 0 15px 0;
+        line-height: 1.3;
+    }
+    
+    .content-meta {
+        display: flex;
+        gap: 20px;
+        font-size: 14px;
+        color: #999;
+        margin-bottom: 20px;
+    }
+    
+    .content-description {
+        font-size: 18px;
+        color: #666;
+        line-height: 1.7;
+        font-style: italic;
+    }
+    
+    .hero-image {
+        width: 100%;
+        height: auto;
+        max-height: 400px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 40px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    
+    .article-content {
+        font-size: 16px;
+        line-height: 1.9;
+        color: #444;
+    }
+    
+    .article-content h2 {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 40px 0 20px 0;
+        color: #333;
+        border-bottom: 3px solid #ED651C;
+        padding-bottom: 10px;
+    }
+    
+    .article-content h3 {
+        font-size: 22px;
+        font-weight: 600;
+        margin: 30px 0 15px 0;
+        color: #444;
+    }
+    
+    .article-content p {
+        margin-bottom: 20px;
+    }
+    
+    .article-content ul,
+    .article-content ol {
+        margin: 20px 0;
+        padding-left: 30px;
+    }
+    
+    .article-content li {
+        margin-bottom: 10px;
+    }
+    
+    .article-content img {
+        max-width: 100%;
+        height: auto;
+        margin: 30px 0;
+        border-radius: 8px;
+    }
+    
+    .article-content blockquote {
+        border-left: 5px solid #ED651C;
+        padding: 20px;
+        margin: 30px 0;
+        background: #f9f9f9;
+        font-style: italic;
+        color: #666;
+    }
+    
+    .content-footer {
+        margin-top: 60px;
+        padding-top: 30px;
+        border-top: 2px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .footer-stats {
+        display: flex;
+        gap: 20px;
+        font-size: 14px;
+        color: #999;
+    }
+    
+    .back-link {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .back-link:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-page">
+    <div class="breadcrumb">
+        <a href="/">Home</a>
+        {% for item in breadcrumb %}
+            <span> / </span>
+            <a href="{{ item.get_absolute_url }}">{{ item.title }}</a>
+        {% endfor %}
+    </div>
+    
+    <article class="content-header">
+        <h1 class="content-title">{{ node.title }}</h1>
+        
+        <div class="content-meta">
+            <span>📅 {{ node.created_at|date:"d M, Y" }}</span>
+            <span>👁 {{ node.views_count }} views</span>
+            {% if node.created_by %}
+            <span>✍️ by {{ node.created_by.get_full_name|default:node.created_by.username }}</span>
+            {% endif %}
+        </div>
+        
+        {% if node.description %}
+        <p class="content-description">{{ node.description }}</p>
+        {% endif %}
+    </article>
+    
+    {% if node.image %}
+    <img src="{{ node.image.url }}" alt="{{ node.title }}" class="hero-image">
+    {% elif node.image_url %}
+    <img src="{{ node.image_url }}" alt="{{ node.title }}" class="hero-image">
+    {% endif %}
+    
+    {% if node.content %}
+    <div class="article-content">
+        {{ node.content|safe }}
+    </div>
+    {% endif %}
+    
+    <div class="content-footer">
+        <div class="footer-stats">
+            <span>Updated: {{ node.updated_at|date:"d M, Y" }}</span>
+        </div>
+        {% if node.parent %}
+        <a href="{{ node.parent.get_absolute_url }}" class="back-link">← Back to {{ node.parent.title }}</a>
+        {% else %}
+        <a href="/" class="back-link">← Back to Home</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

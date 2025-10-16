@@ -1,0 +1,48 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}All Students{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">All Registered Students</h5>
+        <span class="badge bg-primary">Total: {{ students.count }}</span>
+    </div>
+    <div class="card-body">
+        {% if students %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Joined Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><strong>{{ student.username }}</strong></td>
+                        <td>{{ student.email }}</td>
+                        <td>{{ student.date_joined|date:"d M, Y" }}</td>
+                        <td>
+                            <a href="{% url 'main_app:admin_student_detail' student.id %}" class="btn btn-sm btn-info">
+                                <i class="bi bi-eye"></i> View Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <p class="text-muted">No students registered yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

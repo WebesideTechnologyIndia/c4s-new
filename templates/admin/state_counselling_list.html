@@ -1,0 +1,105 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}State Counselling Updates{% endblock %}
+{% block page_title %}State Wise Counselling Updates Management{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-12">
+        <a href="{% url 'main_app:admin_state_counselling_add' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i> Add New Update
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">All State Counselling Updates</h5>
+    </div>
+    <div class="card-body">
+        {% if updates %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Icon</th>
+                        <th>State</th>
+                        <th>Title</th>
+                        <th>External Link</th>
+                        <th>Last Updated</th>
+                        <th>Status</th>
+                        <th>Order</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for update in updates %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <div style="width: 50px; height: 50px; background: {{ update.icon_color }}; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                <img src="{{ update.get_icon }}" alt="Icon" style="width: 30px; height: 30px; object-fit: contain;">
+                            </div>
+                        </td>
+                        <td>
+                            <strong>{{ update.state.name }}</strong>
+                            <br>
+                            <small class="text-muted">{{ update.state.country.name }}</small>
+                        </td>
+                        <td>
+                            <strong>{{ update.title }}</strong>
+                            {% if update.is_new %}
+                            <span class="badge bg-danger ms-2">NEW</span>
+                            {% endif %}
+                            {% if update.description %}
+                            <br><small class="text-muted">{{ update.description|truncatewords:10 }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ update.external_link }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-box-arrow-up-right"></i> Open Link
+                            </a>
+                        </td>
+                        <td>
+                            {% if update.last_updated %}
+                            {{ update.last_updated|date:"d M, Y" }}
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if update.status == 'active' %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ update.order }}</span>
+                        </td>
+                        <td>
+                            <a href="{% url 'main_app:admin_state_counselling_edit' update.pk %}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <a href="{% url 'main_app:admin_state_counselling_delete' update.pk %}" 
+                               class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('Are you sure you want to delete this update?')">
+                                <i class="bi bi-trash"></i> Delete
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle me-2"></i>
+            No state counselling updates added yet. Click "Add New Update" to get started.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

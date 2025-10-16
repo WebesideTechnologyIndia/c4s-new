@@ -1,0 +1,549 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ sub_category.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(135deg, #ED651C, #F4800C, #FF8C42);
+        padding: 100px 0 80px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+            radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+    }
+
+    .hero-section::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 100px;
+        background: linear-gradient(to top, #f8f9fa, transparent);
+        opacity: 0.3;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Breadcrumb */
+    .custom-breadcrumb {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(15px);
+        padding: 14px 24px;
+        border-radius: 50px;
+        display: inline-flex;
+        margin-bottom: 35px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .custom-breadcrumb a {
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+    }
+
+    .custom-breadcrumb a:hover {
+        color: #FFE5D0;
+        transform: translateX(-3px);
+    }
+
+    .custom-breadcrumb .separator {
+        margin: 0 12px;
+        opacity: 0.7;
+        font-weight: 300;
+    }
+
+    .custom-breadcrumb .active {
+        opacity: 0.9;
+        font-weight: 500;
+    }
+
+    /* Page Title */
+    .page-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 15px;
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        letter-spacing: -0.5px;
+    }
+
+    .page-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.95;
+        font-weight: 400;
+        line-height: 1.6;
+    }
+
+    /* Section Headers */
+    .section-header {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 30px;
+        position: relative;
+        padding-bottom: 15px;
+    }
+
+    .section-header::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, #ED651C, #F4800C);
+        border-radius: 2px;
+    }
+
+    .section-icon {
+        font-size: 2rem;
+        color: #ED651C;
+    }
+
+    /* Featured Cards */
+    .featured-card {
+        background: white;
+        border-radius: 24px;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid #f7fafc;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        height: 100%;
+        position: relative;
+    }
+
+    .featured-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #ED651C, #F4800C, #FF8C42);
+        transform: scaleX(0);
+        transition: transform 0.4s;
+        transform-origin: left;
+        z-index: 1;
+    }
+
+    .featured-card:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 25px 50px rgba(237, 101, 28, 0.15);
+        border-color: #ED651C;
+    }
+
+    .featured-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .featured-image {
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+        transition: transform 0.4s;
+    }
+
+    .featured-card:hover .featured-image {
+        transform: scale(1.05);
+    }
+
+    .featured-card-body {
+        padding: 25px;
+    }
+
+    .featured-badge {
+        background: linear-gradient(135deg, #FFD700, #FFA500);
+        color: #1a202c;
+        padding: 6px 16px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+    }
+
+    .featured-card-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin: 15px 0;
+        line-height: 1.4;
+        transition: color 0.3s;
+    }
+
+    .featured-card:hover .featured-card-title {
+        color: #ED651C;
+    }
+
+    .featured-card-text {
+        color: #718096;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+
+    .card-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 15px;
+        border-top: 1px solid #e2e8f0;
+        font-size: 0.9rem;
+        color: #718096;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* List Items */
+    .pages-list {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .page-item {
+        padding: 25px;
+        border-bottom: 1px solid #e2e8f0;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .page-item:last-child {
+        border-bottom: none;
+    }
+
+    .page-item:hover {
+        background: linear-gradient(90deg, rgba(237, 101, 28, 0.03), transparent);
+        padding-left: 35px;
+    }
+
+    .page-item-content {
+        flex: 1;
+    }
+
+    .page-item-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 8px;
+        transition: color 0.3s;
+    }
+
+    .page-item:hover .page-item-title {
+        color: #ED651C;
+    }
+
+    .page-item-summary {
+        color: #718096;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .page-item-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+        min-width: 120px;
+    }
+
+    .star-badge {
+        background: linear-gradient(135deg, #FFD700, #FFA500);
+        color: #1a202c;
+        padding: 4px 12px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .views-count {
+        color: #718096;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 100px 20px;
+        text-align: center;
+    }
+
+    .empty-state-icon {
+        font-size: 6rem;
+        color: #FFE5D0;
+        margin-bottom: 25px;
+        opacity: 0.5;
+    }
+
+    .empty-state-text {
+        color: #4a5568;
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+
+    .empty-state-subtext {
+        color: #718096;
+        font-size: 1.1rem;
+        margin-bottom: 35px;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .featured-card {
+        animation: fadeInUp 0.6s ease-out;
+        animation-fill-mode: both;
+    }
+
+    .featured-card:nth-child(1) { animation-delay: 0.1s; }
+    .featured-card:nth-child(2) { animation-delay: 0.2s; }
+
+    .page-item {
+        animation: fadeInUp 0.5s ease-out;
+        animation-fill-mode: both;
+    }
+
+    .page-item:nth-child(1) { animation-delay: 0.1s; }
+    .page-item:nth-child(2) { animation-delay: 0.15s; }
+    .page-item:nth-child(3) { animation-delay: 0.2s; }
+    .page-item:nth-child(4) { animation-delay: 0.25s; }
+    .page-item:nth-child(5) { animation-delay: 0.3s; }
+    .page-item:nth-child(6) { animation-delay: 0.35s; }
+    .page-item:nth-child(7) { animation-delay: 0.4s; }
+    .page-item:nth-child(8) { animation-delay: 0.45s; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 70px 0 50px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .page-subtitle {
+            font-size: 1rem;
+        }
+
+        .section-header {
+            font-size: 1.5rem;
+        }
+
+        .featured-image {
+            height: 180px;
+        }
+
+        .page-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .page-item-meta {
+            flex-direction: row;
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .custom-breadcrumb {
+            padding: 10px 18px;
+            font-size: 0.85rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container hero-content">
+        <!-- Breadcrumb -->
+        <div class="custom-breadcrumb" style="animation: slideInLeft 0.6s;">
+            <a href="{% url 'main_app:all_india_services' %}">
+                <i class="bi bi-house-door me-1"></i>All India Services
+            </a>
+            <span class="separator">›</span>
+            <a href="{% url 'main_app:card_detail' card.get_slug %}">
+                {{ card.title }}
+            </a>
+            <span class="separator">›</span>
+            <span class="active">{{ sub_category.title }}</span>
+        </div>
+
+        <!-- Page Title -->
+        <h1 class="page-title" style="animation: fadeInUp 0.6s;">
+            {{ sub_category.title }}
+        </h1>
+        {% if sub_category.description %}
+        <p class="page-subtitle" style="animation: fadeInUp 0.6s 0.2s both;">
+            {{ sub_category.description }}
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container py-5">
+    <!-- Featured Pages Section -->
+    {% if featured_pages %}
+    <div class="mb-5">
+        <h2 class="section-header">
+            <span class="section-icon">⭐</span>
+            Featured Content
+        </h2>
+        <div class="row g-4">
+            {% for page in featured_pages %}
+            <div class="col-lg-6">
+                <a href="{% url 'main_app:page_detail' card.get_slug sub_category.slug page.slug %}" 
+                   class="text-decoration-none d-block">
+                    <div class="featured-card">
+                        {% if page.get_featured_image %}
+                        <div style="overflow: hidden;">
+                            <img src="{{ page.get_featured_image }}" 
+                                 alt="{{ page.title }}"
+                                 class="featured-image">
+                        </div>
+                        {% endif %}
+                        <div class="featured-card-body">
+                            <span class="featured-badge">
+                                ⭐ Featured
+                            </span>
+                            <h3 class="featured-card-title">{{ page.title }}</h3>
+                            {% if page.summary %}
+                            <p class="featured-card-text">
+                                {{ page.summary|truncatewords:20 }}
+                            </p>
+                            {% endif %}
+                            <div class="card-meta">
+                                <div class="meta-item">
+                                    <i class="bi bi-eye"></i>
+                                    <span>{{ page.views_count }} views</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="bi bi-calendar3"></i>
+                                    <span>{{ page.created_at|date:"d M, Y" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- All Pages Section -->
+    <div>
+        <h2 class="section-header">
+            <span class="section-icon">📄</span>
+            All Pages
+        </h2>
+        {% if pages %}
+        <div class="pages-list">
+            {% for page in pages %}
+            <a href="{% url 'main_app:page_detail' card.get_slug sub_category.slug page.slug %}" 
+               class="text-decoration-none">
+                <div class="page-item">
+                    <div class="page-item-content">
+                        <h3 class="page-item-title">{{ page.title }}</h3>
+                        {% if page.summary %}
+                        <p class="page-item-summary">
+                            {{ page.summary|truncatewords:25 }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    <div class="page-item-meta">
+                        {% if page.is_featured %}
+                        <span class="star-badge">⭐</span>
+                        {% endif %}
+                        <div class="views-count">
+                            <i class="bi bi-eye"></i>
+                            <span>{{ page.views_count }}</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-inbox"></i>
+            </div>
+            <p class="empty-state-text">
+                No pages available yet
+            </p>
+            <p class="empty-state-subtext">
+                New content is being added regularly. Check back soon!
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

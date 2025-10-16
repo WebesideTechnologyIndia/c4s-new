@@ -1,0 +1,204 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}{% if service %}Edit{% else %}Add{% endif %} Career Service - Admin{% endblock %}
+{% block page_title %}{% if service %}Edit{% else %}Add New{% endif %} Career Service{% endblock %}
+
+{% block content %}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'main_app:admin_career_services_list' %}">Career Services</a>
+        </li>
+        <li class="breadcrumb-item active">{% if service %}Edit{% else %}Add{% endif %} Service</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger alert-dismissible fade show">
+                        {{ form.non_field_errors }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endif %}
+
+                    <!-- Title -->
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">
+                            Service Title <span class="text-danger">*</span>
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="text-danger small mt-1">
+                                <i class="bi bi-exclamation-circle me-1"></i>
+                                {{ form.title.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            Description <span class="text-danger">*</span>
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger small mt-1">
+                                <i class="bi bi-exclamation-circle me-1"></i>
+                                {{ form.description.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- SVG Icon -->
+                    <div class="mb-3">
+                        <label for="{{ form.svg_icon.id_for_label }}" class="form-label">
+                            SVG Icon
+                        </label>
+                        {{ form.svg_icon }}
+                        {% if form.svg_icon.errors %}
+                            <div class="text-danger small mt-1">
+                                <i class="bi bi-exclamation-circle me-1"></i>
+                                {{ form.svg_icon.errors }}
+                            </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-1">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Paste complete SVG code for the service icon
+                        </small>
+                    </div>
+
+                    <div class="row">
+                        <!-- Border Color -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.border_color.id_for_label }}" class="form-label">
+                                Border Color
+                            </label>
+                            {{ form.border_color }}
+                            {% if form.border_color.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="bi bi-exclamation-circle me-1"></i>
+                                    {{ form.border_color.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted d-block mt-1">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Top border color on the service card
+                            </small>
+                        </div>
+
+                        <!-- Display Order -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.order.id_for_label }}" class="form-label">
+                                Display Order
+                            </label>
+                            {{ form.order }}
+                            {% if form.order.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="bi bi-exclamation-circle me-1"></i>
+                                    {{ form.order.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted d-block mt-1">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Lower numbers appear first (0, 1, 2, 3...)
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Redirect Link -->
+                    <div class="mb-3">
+                        <label for="{{ form.redirect_link.id_for_label }}" class="form-label">
+                            Redirect Link
+                        </label>
+                        {{ form.redirect_link }}
+                        {% if form.redirect_link.errors %}
+                            <div class="text-danger small mt-1">
+                                <i class="bi bi-exclamation-circle me-1"></i>
+                                {{ form.redirect_link.errors }}
+                            </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-1">
+                            <i class="bi bi-info-circle me-1"></i>
+                            URL to redirect when card is clicked (e.g., https://example.com or /page-url/)
+                        </small>
+                    </div>
+
+                    <!-- Active Status -->
+                    <div class="mb-4">
+                        <div class="form-check">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                Active (Show on website)
+                            </label>
+                        </div>
+                        {% if form.is_active.errors %}
+                            <div class="text-danger small mt-1">
+                                <i class="bi bi-exclamation-circle me-1"></i>
+                                {{ form.is_active.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>
+                            {% if service %}Update{% else %}Create{% endif %} Service
+                        </button>
+                        <a href="{% url 'main_app:admin_career_services_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tips Sidebar -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightbulb text-warning me-2"></i>Tips
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="small mb-0">
+                    <li class="mb-2">
+                        <i class="bi bi-check2 text-success me-1"></i>
+                        Use clear, concise titles that describe the service
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check2 text-success me-1"></i>
+                        Keep descriptions brief but informative
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check2 text-success me-1"></i>
+                        Use SVG icons for scalable, crisp graphics
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check2 text-success me-1"></i>
+                        Choose border colors that align with your brand
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check2 text-success me-1"></i>
+                        Set display order to control card arrangement
+                    </li>
+                    <li class="mb-0">
+                        <i class="bi bi-check2 text-success me-1"></i>
+                        Inactive services won't appear on the public page
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

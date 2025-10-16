@@ -1,0 +1,367 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ comparison.comparison_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        overflow-x: hidden;
+        background: #f8f9fa;
+    }
+
+    .detail-hero {
+        background: linear-gradient(135deg, #ED651C, #F4800C);
+        padding: 60px 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .detail-hero::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: -100px;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 50%;
+        transform: translateY(-50%);
+    }
+
+    .detail-hero h1 {
+        color: #fff;
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .detail-hero p {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1rem;
+    }
+
+    .colleges-count-badge {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 25px;
+        margin-top: 10px;
+        backdrop-filter: blur(10px);
+        font-weight: 600;
+    }
+
+    .back-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 8px 20px;
+        border-radius: 25px;
+        text-decoration: none;
+        display: inline-block;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .comparison-section {
+        padding: 60px 0;
+    }
+
+    .comparison-header {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    .comparison-header h2 {
+        color: #2c3e50;
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+
+    .comparison-header p {
+        color: #7f8c8d;
+        font-size: 1.05rem;
+        line-height: 1.7;
+        margin-bottom: 0;
+    }
+
+    .college-detail-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
+        border-top: 4px solid #ED651C;
+        transition: transform 0.3s ease;
+    }
+
+    .college-detail-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .college-header {
+        text-align: center;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #f0f0f0;
+        margin-bottom: 25px;
+    }
+
+    .college-logo {
+        width: 150px;
+        height: 150px;
+        margin: 0 auto 20px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .college-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .college-name {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #ED651C;
+        margin-bottom: 10px;
+    }
+
+    .college-location {
+        color: #7f8c8d;
+        font-size: 1.05rem;
+    }
+
+    .college-location i {
+        margin-right: 5px;
+    }
+
+    .detail-row {
+        display: flex;
+        padding: 15px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #2c3e50;
+        width: 200px;
+        flex-shrink: 0;
+    }
+
+    .detail-value {
+        color: #7f8c8d;
+        flex: 1;
+    }
+
+    .detail-value.highlight {
+        color: #27ae60;
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+
+    .rank-badge {
+        background: linear-gradient(135deg, #f39c12, #e67e22);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 25px;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .website-link {
+        display: inline-block;
+        background: linear-gradient(135deg, #ED651C, #F4800C);
+        color: white;
+        padding: 10px 25px;
+        border-radius: 25px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        margin-top: 10px;
+    }
+
+    .website-link:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 20px rgba(237, 101, 28, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .courses-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 5px;
+    }
+
+    .course-badge {
+        background: #f0f0f0;
+        color: #2c3e50;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.85rem;
+    }
+
+    @media (max-width: 767px) {
+        .detail-hero h1 {
+            font-size: 1.6rem;
+        }
+
+        .college-name {
+            font-size: 1.3rem;
+        }
+
+        .detail-label {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .detail-row {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="detail-hero">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <a href="{% url 'main_app:student_comparisons_list' %}" class="back-btn">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Comparisons
+                </a>
+                <h1>{{ comparison.comparison_title }}</h1>
+                <p>
+                    <i class="bi bi-geo-alt me-2"></i>
+                    {{ comparison.country.name }}
+                    {% if comparison.state %}• {{ comparison.state.name }}{% endif %}
+                </p>
+                <div class="colleges-count-badge">
+                    <i class="bi bi-building me-2"></i>
+                    Comparing {{ comparison.colleges_count }} College{{ comparison.colleges_count|pluralize:"s" }}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Comparison Detail Section -->
+<section class="comparison-section">
+    <div class="container">
+        {% if comparison.comparison_summary %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="comparison-header">
+                    <h2>Comparison Overview</h2>
+                    <p>{{ comparison.comparison_summary }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <!-- Loop through all colleges -->
+            {% for college_data in colleges_data %}
+            <div class="col-lg-6 col-md-6">
+                <div class="college-detail-card">
+                    <div class="college-header">
+                        <div class="college-logo">
+                            <img src="{{ college_data.college.get_image }}" alt="{{ college_data.college.name }}">
+                        </div>
+                        <h3 class="college-name">{{ college_data.college.name }}</h3>
+                        <p class="college-location">
+                            <i class="bi bi-geo-alt"></i>
+                            {{ college_data.college.city }}, {{ college_data.college.state.name }}
+                        </p>
+                    </div>
+
+                    <div class="college-details">
+                        <!-- Tuition Fees -->
+                        <div class="detail-row">
+                            <div class="detail-label">
+                                <i class="bi bi-currency-rupee me-2"></i>Tuition Fees
+                            </div>
+                            <div class="detail-value highlight">
+                                ₹{{ college_data.college.tuition_fees|floatformat:0 }}
+                            </div>
+                        </div>
+
+                        <!-- Ranking -->
+                        {% if college_data.college.ranking %}
+                        <div class="detail-row">
+                            <div class="detail-label">
+                                <i class="bi bi-trophy me-2"></i>Ranking
+                            </div>
+                            <div class="detail-value">
+                                <span class="rank-badge">Rank {{ college_data.college.ranking }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Courses Offered -->
+                        <div class="detail-row">
+                            <div class="detail-label">
+                                <i class="bi bi-book me-2"></i>Courses Offered
+                            </div>
+                            <div class="detail-value">
+                                <div class="courses-list">
+                                    {% for course in college_data.courses %}
+                                    <span class="course-badge">{{ course }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Facilities -->
+                        {% if college_data.college.facilities %}
+                        <div class="detail-row">
+                            <div class="detail-label">
+                                <i class="bi bi-building me-2"></i>Facilities
+                            </div>
+                            <div class="detail-value">
+                                {{ college_data.college.facilities }}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Website -->
+                        {% if college_data.college.website %}
+                        <div class="detail-row">
+                            <div class="detail-label">
+                                <i class="bi bi-globe me-2"></i>Website
+                            </div>
+                            <div class="detail-value">
+                                <a href="{{ college_data.college.website }}" target="_blank" class="website-link">
+                                    <i class="bi bi-box-arrow-up-right me-2"></i>Visit Website
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

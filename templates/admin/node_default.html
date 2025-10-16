@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}{{ node.title }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto; padding: 40px 20px;">
+    <h1>{{ node.title }}</h1>
+    
+    {% if node.description %}
+    <p style="font-size: 18px; color: #666;">{{ node.description }}</p>
+    {% endif %}
+    
+    {% if node.image %}
+    <img src="{{ node.image.url }}" alt="{{ node.title }}" style="max-width: 100%; height: auto; margin: 20px 0; border-radius: 8px;">
+    {% elif node.image_url %}
+    <img src="{{ node.image_url }}" alt="{{ node.title }}" style="max-width: 100%; height: auto; margin: 20px 0; border-radius: 8px;">
+    {% endif %}
+    
+    {% if node.content %}
+    <div style="line-height: 1.8; color: #555;">
+        {{ node.content|safe }}
+    </div>
+    {% endif %}
+    
+    {% if node.redirect_url %}
+    <p style="margin-top: 20px;">
+        <a href="{{ node.redirect_url }}" style="background: #ED651C; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">
+            Visit Link
+        </a>
+    </p>
+    {% endif %}
+</div>
+{% endblock %}

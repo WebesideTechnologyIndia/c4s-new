@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block page_title %}{{ sub_category.title }} - Pages{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+    
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-light p-3 rounded">
+            <li class="breadcrumb-item">
+                <a href="{% url 'main_app:student_dashboard' %}">
+                    <i class="bi bi-house-door"></i> Home
+                </a>
+            </li>
+            
+            <!-- Add the parent CARD link first -->
+            <li class="breadcrumb-item">
+                <a href="{% url 'main_app:card_detail_view' card.get_slug %}">
+                    {{ card.title }}
+                </a>
+            </li>
+            
+            <!-- Then loop through subcategories ONLY -->
+            {% for item in breadcrumb %}
+                {% if forloop.last %}
+                    <!-- Current item - no link -->
+                    <li class="breadcrumb-item active" aria-current="page">
+                        {{ item.title }}
+                    </li>
+                {% else %}
+                    <!-- Parent subcategory - with link -->
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'main_app:subcategory_detail_view' card.get_slug item.get_full_path %}">
+                            {{ item.title }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-3">
+                <div style="width: 70px; height: 70px; 
+                            background: {{ sub_category.icon_color }}; 
+                            border-radius: 15px; 
+                            display: flex; 
+                            align-items: center; 
+                            justify-content: center;
+                            box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                    <img src="{{ sub_category.get_icon }}" 
+                         alt="{{ sub_category.title }}"
+                         style="width: 40px; height: 40px; object-fit: contain;">
+                </div>
+                <div class="ms-4">
+                    <h1 class="display-6 fw-bold text-primary mb-1">
+                        {{ sub_category.title }}
+                    </h1>
+                    {% if sub_category.description %}
+                        <p class="text-muted mb-0">{{ sub_category.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            <hr class="my-4">
+        </div>
+    </div>
+
+    <!-- Pages List -->
+    {% if pages %}
+        <div class="row">
+            <div class="col-12">
+                <h4 class="mb-4">
+                    <i class="bi bi-book me-2"></i>
+                    Available Content ({{ pages.count }} {% if pages.count == 1 %}Page{% else %}Pages{% endif %})
+                </h4>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            {% for page in pages %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm hover-card">
+                    <!-- Featured Image -->
+                    {% if page.get_featured_image %}
+                    <img src="{{ page.get_featured_image }}" 
+                         class="card-img-top" 
+                         alt="{{ page.title }}"
+                         style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="card-img-top bg-gradient d-flex align-items-center justify-content-center"
+                         style="height: 200px; background: linear-gradient(135deg, {{ sub_category.icon_color }} 0%, #667eea 100%);">
+                        <i class="bi bi-file-earmark-text text-white" style="font-size: 3rem;"></i>
+                    </div>
+                    {% endif %}
+
+                    <div class="card-body d-flex flex-column">
+                        <!-- Title -->
+                        <h5 class="card-title text-dark">
+                            {{ page.title }}
+                        </h5>
+
+                        <!-- Summary -->
+                        {% if page.summary %}
+                        <p class="card-text text-muted small flex-grow-1">
+                            {{ page.summary|truncatewords:20 }}
+                        </p>
+                        {% endif %}
+
+                        <!-- Meta Info -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <small class="text-muted">
+                                <i class="bi bi-eye"></i> {{ page.views_count }} views
+                            </small>
+                            {% if page.is_featured %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="bi bi-star-fill"></i> Featured
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Read Button -->
+                        <a href="{% url 'main_app:page_detail_view' card.get_slug sub_category.get_full_path page.slug %}" 
+                           class="btn btn-primary w-100">
+                            <i class="bi bi-book-open me-2"></i>
+                            Read More
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <!-- No Pages Found -->
+        <div class="alert alert-info text-center py-5" role="alert">
+            <i class="bi bi-info-circle" style="font-size: 3rem;"></i>
+            <h4 class="mt-3">No Content Available Yet</h4>
+            <p class="mb-0">Content for this category is being prepared. Please check back soon!</p>
+        </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hover-card {
+        transition: all 0.3s ease;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.15) !important;
+        border-color: {{ sub_category.icon_color }};
+    }
+    
+    .breadcrumb {
+        font-size: 0.95rem;
+    }
+    
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: "›";
+        font-weight: bold;
+    }
+    
+    .card-img-top {
+        border-bottom: 3px solid {{ sub_category.icon_color }};
+    }
+    
+    .bg-gradient {
+        background: linear-gradient(135deg, {{ sub_category.icon_color }} 0%, #667eea 100%);
+    }
+    
+    .btn-primary {
+        background-color: {{ sub_category.icon_color }};
+        border-color: {{ sub_category.icon_color }};
+    }
+    
+    .btn-primary:hover {
+        filter: brightness(1.1);
+        transform: scale(1.02);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,309 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Add Content Page{% endblock %}
+{% block page_title %}Add New Content Page{% endblock %}
+
+{% block extra_css %}
+<style>
+    .preview-image {
+        max-width: 300px;
+        max-height: 200px;
+        margin-top: 10px;
+        border-radius: 8px;
+        display: none;
+    }
+    
+    .char-counter {
+        font-size: 0.85rem;
+        color: #6c757d;
+        float: right;
+    }
+    
+    .form-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .form-section h6 {
+        color: #495057;
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Content Page Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- BASIC INFO SECTION -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-info-circle me-2"></i>Basic Information</h6>
+                        
+                        <div class="row">
+                            <!-- Sub-Category -->
+                            {% if sub_category %}
+                            <!-- Pre-selected sub-category -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Sub-Category</label>
+                                <input type="text" class="form-control" 
+                                       value="{{ sub_category.parent_card.title }} → {{ sub_category.title }}" readonly>
+                                <input type="hidden" name="sub_category" value="{{ sub_category.id }}">
+                            </div>
+                            {% else %}
+                            <!-- Manual selection -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Sub-Category <span class="text-danger">*</span></label>
+                                <select name="sub_category" class="form-select" required>
+                                    <option value="">Select Sub-Category</option>
+                                    {% for sub_cat in sub_categories %}
+                                    <option value="{{ sub_cat.id }}">
+                                        {{ sub_cat.parent_card.title }} → {{ sub_cat.title }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% endif %}
+
+                            <!-- Title -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Page Title <span class="text-danger">*</span></label>
+                                <input type="text" name="title" id="titleInput" class="form-control" required 
+                                       placeholder="e.g., Top 10 Engineering Colleges in India 2025"
+                                       maxlength="300">
+                                <span class="char-counter">
+                                    <span id="titleCount">0</span>/300 characters
+                                </span>
+                            </div>
+
+                            <!-- Slug (optional) -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">URL Slug (Optional - Auto-generated from title)</label>
+                                <input type="text" name="slug" class="form-control" 
+                                       placeholder="top-10-engineering-colleges-2025">
+                                <small class="text-muted">Leave blank for auto-generation. Used in URL.</small>
+                            </div>
+
+                            <!-- Summary -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Summary (Optional)</label>
+                                <textarea name="summary" id="summaryInput" class="form-control" rows="3"
+                                          placeholder="Brief summary of the page content (will be shown in cards)"
+                                          maxlength="500"></textarea>
+                                <span class="char-counter">
+                                    <span id="summaryCount">0</span>/500 characters
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CONTENT SECTION -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-file-text me-2"></i>Page Content</h6>
+                        
+                        <div class="row">
+                            <!-- Main Content -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Full Content <span class="text-danger">*</span></label>
+                                <textarea name="content" class="form-control" rows="15" required
+                                          placeholder="Write your full page content here. HTML is supported for formatting.
+
+Example:
+<h2>Main Heading</h2>
+<p>This is a paragraph with <strong>bold text</strong>.</p>
+
+<h3>Subheading</h3>
+<ul>
+  <li>Point 1</li>
+  <li>Point 2</li>
+</ul>
+
+<a href='https://example.com'>Link text</a>"></textarea>
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle"></i>
+                                    You can use HTML tags for formatting: &lt;h2&gt;, &lt;p&gt;, &lt;strong&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;a&gt;, etc.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FEATURED IMAGE SECTION -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-image me-2"></i>Featured Image</h6>
+                        
+                        <div class="row">
+                            <!-- Upload Image -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Upload Featured Image</label>
+                                <input type="file" name="featured_image" class="form-control" 
+                                       accept="image/*" id="imageUpload">
+                                <small class="text-muted">Recommended: 800x400px or 16:9 ratio</small>
+                            </div>
+
+                            <!-- OR Image URL -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">OR Image URL</label>
+                                <input type="url" name="featured_image_url" class="form-control" id="imageUrl"
+                                       placeholder="https://example.com/image.jpg">
+                            </div>
+
+                            <!-- Image Preview -->
+                            <div class="col-md-12 mb-3">
+                                <img id="imagePreview" class="preview-image" alt="Preview">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEO SECTION -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-search me-2"></i>SEO Settings (Optional)</h6>
+                        
+                        <div class="row">
+                            <!-- Meta Description -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Meta Description</label>
+                                <input type="text" name="meta_description" id="metaInput" class="form-control" 
+                                       placeholder="Brief description for search engines"
+                                       maxlength="160">
+                                <span class="char-counter">
+                                    <span id="metaCount">0</span>/160 characters
+                                </span>
+                                <small class="text-muted">Appears in search engine results</small>
+                            </div>
+
+                            <!-- Meta Keywords -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Meta Keywords</label>
+                                <input type="text" name="meta_keywords" class="form-control" 
+                                       placeholder="engineering, colleges, admission, india">
+                                <small class="text-muted">Comma separated keywords</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DISPLAY SETTINGS SECTION -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-gear me-2"></i>Display Settings</h6>
+                        
+                        <div class="row">
+                            <!-- Order -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Display Order</label>
+                                <input type="number" name="order" class="form-control" value="0">
+                                <small class="text-muted">Lower numbers appear first</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <!-- Empty space -->
+                            </div>
+
+                            <!-- Active Status -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" name="is_active" class="form-check-input" 
+                                           id="isActive" checked>
+                                    <label class="form-check-label" for="isActive">
+                                        <strong>Active</strong> (Show on website)
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Featured -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" name="is_featured" class="form-check-input" 
+                                           id="isFeatured">
+                                    <label class="form-check-label" for="isFeatured">
+                                        <strong>Featured</strong> (Highlight this page)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BUTTONS -->
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Create Page
+                        </button>
+                        {% if sub_category %}
+                        <a href="{% url 'main_app:admin_content_pages_by_subcategory' sub_category.id %}" 
+                           class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                        {% else %}
+                        <a href="{% url 'main_app:admin_content_pages_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Character counters
+    const titleInput = document.getElementById('titleInput');
+    const titleCount = document.getElementById('titleCount');
+    const summaryInput = document.getElementById('summaryInput');
+    const summaryCount = document.getElementById('summaryCount');
+    const metaInput = document.getElementById('metaInput');
+    const metaCount = document.getElementById('metaCount');
+    
+    titleInput.addEventListener('input', function() {
+        titleCount.textContent = this.value.length;
+    });
+    
+    summaryInput.addEventListener('input', function() {
+        summaryCount.textContent = this.value.length;
+    });
+    
+    metaInput.addEventListener('input', function() {
+        metaCount.textContent = this.value.length;
+    });
+    
+    // Image preview
+    const imageUpload = document.getElementById('imageUpload');
+    const imageUrl = document.getElementById('imageUrl');
+    const imagePreview = document.getElementById('imagePreview');
+    
+    function updatePreview(src) {
+        if (src) {
+            imagePreview.src = src;
+            imagePreview.style.display = 'block';
+        } else {
+            imagePreview.style.display = 'none';
+        }
+    }
+    
+    imageUpload.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                updatePreview(e.target.result);
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    imageUrl.addEventListener('input', function() {
+        updatePreview(this.value);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admission India Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        overflow-x: hidden;
+    }
+    
+    .services-hero {
+        background: linear-gradient(135deg, #ED651C, #F4800C);
+        padding: 120px 0 80px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .services-hero::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: -50px;
+        transform: translateY(-50%);
+        width: 450px;
+        height: 450px;
+        background-image: url("{% static 'img/main_img.png' %}");
+        background-size: contain;
+        background-repeat: no-repeat;
+        opacity: 0.9;
+        z-index: 1;
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .hero-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 25px;
+        filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+    }
+    
+    .services-hero h1 {
+        color: #fff;
+        font-size: 2.8rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    
+    .services-hero p {
+        color: rgba(255,255,255,0.95);
+        font-size: 1.2rem;
+        margin-bottom: 0;
+    }
+    
+    /* Feature Boxes Section */
+    .feature-section {
+        padding: 80px 0;
+    }
+    
+    .feature-box {
+        border-radius: 20px;
+        padding: 20px;
+        height: 100%;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: block;
+        box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    }
+    
+    .feature-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(237, 101, 28, 0.3);
+    }
+    
+    .feature-header {
+        background: linear-gradient(135deg, var(--gradient-start, #ED651C), var(--gradient-end, #F4800C));
+        text-align: center;
+        border-radius: 50px;
+    }
+    
+    .feature-header h3 {
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.5;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 20px;
+    }
+    
+    .feature-content {
+        padding: 35px 25px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    
+    .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .feature-item i {
+        color: #ED651C;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+    
+    .feature-item span {
+        color: black;
+        font-size: 0.9rem;
+        font-weight: 500;
+        line-height: 1.3;
+    }
+    
+    @media (max-width: 991px) {
+        .services-hero {
+            padding: 100px 0 60px;
+        }
+        
+        .services-hero h1 {
+            font-size: 2.2rem;
+        }
+        
+        .services-hero::before {
+            width: 350px;
+            height: 350px;
+            right: -80px;
+        }
+        
+        .feature-section {
+            padding: 60px 0;
+        }
+        
+        .feature-content {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    @media (max-width: 767px) {
+        .services-hero {
+            padding: 80px 0 50px;
+        }
+        
+        .services-hero h1 {
+            font-size: 1.8rem;
+        }
+        
+        .services-hero p {
+            font-size: 1rem;
+        }
+        
+        .services-hero::before {
+            width: 250px;
+            height: 250px;
+            right: -50px;
+            opacity: 0.5;
+        }
+        
+        .feature-content {
+            grid-template-columns: 1fr;
+            padding: 25px 20px;
+        }
+        
+        .feature-header h3 {
+            font-size: 0.9rem;
+            padding: 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Services Hero Section -->
+<section class="services-hero">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10 text-center hero-content">
+                <div class="hero-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" fill="white">
+                        <path d="M320 32c-8.1 0-16.1 1.4-23.7 4.1L15.8 137.4C6.3 140.9 0 149.9 0 160s6.3 19.1 15.8 22.6l57.9 20.9C57.3 229.3 48 259.8 48 291.9v28.1c0 28.4-10.8 57.7-22.3 80.8c-6.5 13-13.9 25.8-22.5 37.6C0 442.7-.9 448.3 .9 453.4s6 8.9 11.2 10.2l64 16c4.2 1.1 8.7 .3 12.4-2s6.3-6.1 7.1-10.4c8.6-42.8 4.3-81.2-2.1-108.7C90.3 344.3 86 329.8 80 316.5V291.9c0-30.2 10.2-58.7 27.9-81.5c12.9-15.5 29.6-28 49.2-35.7l157-61.7c8.2-3.2 17.5 .8 20.7 9s-.8 17.5-9 20.7l-157 61.7c-12.4 4.9-23.3 12.4-32.2 21.6l159.6 57.6c7.6 2.7 15.6 4.1 23.7 4.1s16.1-1.4 23.7-4.1L624.2 182.6c9.5-3.4 15.8-12.5 15.8-22.6s-6.3-19.1-15.8-22.6L343.7 36.1C336.1 33.4 328.1 32 320 32zM128 408c0 35.3 86 72 192 72s192-36.7 192-72L496.7 262.6 354.5 314c-11.1 4-22.8 6-34.5 6s-23.5-2-34.5-6L143.3 262.6 128 408z"/>
+                    </svg>
+                </div>
+                <h1>Admission India Services</h1>
+                <p>Welcome, {{ request.user.username }}! Expert Guidance for Your Educational Journey</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Feature Cards Section -->
+<section class="feature-section">
+    <div class="container">
+        <div class="row g-4">
+            {% for card in cards %}
+            <div class="col-lg-4 col-md-12">
+                <a href="{{ card.redirect_link }}">
+                    <div class="feature-box" style="--gradient-start: {{ card.border_gradient_start }}; --gradient-end: {{ card.border_gradient_end }}">
+                        <div class="feature-header">
+                            <h3>{{ card.title }}</h3>
+                        </div>
+                        <div class="feature-content">
+                            <div class="feature-item">
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>{{ card.feature_1 }}</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>{{ card.feature_2 }}</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>{{ card.feature_3 }}</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>{{ card.feature_4 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <p>No services available at the moment.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

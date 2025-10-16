@@ -1,0 +1,99 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}Sub-Categories - {{ parent_card.title }}{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'main_app:admin_all_india_cards_list' %}">All India Cards</a>
+        </li>
+        <li class="breadcrumb-item active">{{ parent_card.title }} - Sub-Categories</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-diagram-3 me-2"></i>
+            Sub-Categories for: {{ parent_card.title }}
+        </h5>
+        <a href="{% url 'main_app:admin_sub_category_add_for_card' parent_card.id %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i> Add Sub-Category
+        </a>
+    </div>
+    <div class="card-body">
+        {% if sub_categories %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Icon</th>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Pages</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub_cat in sub_categories %}
+                    <tr>
+                        <td><span class="badge bg-info">{{ sub_cat.order }}</span></td>
+                        <td>
+                            <div style="width: 50px; height: 50px; background: {{ sub_cat.icon_color }}; 
+                                        border-radius: 8px; display: flex; align-items: center; 
+                                        justify-content: center;">
+                                <img src="{{ sub_cat.get_icon }}" style="width: 30px; height: 30px;">
+                            </div>
+                        </td>
+                        <td><strong>{{ sub_cat.title }}</strong></td>
+                        <td>{{ sub_cat.description|truncatewords:10 }}</td>
+                        <td>
+                            <!-- PAGES COUNT & MANAGE BUTTON -->
+                            <a href="{% url 'main_app:admin_content_pages_by_subcategory' sub_cat.id %}" 
+                               class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-file-earmark-text me-1"></i>
+                                Pages ({{ sub_cat.pages_count }})
+                            </a>
+                        </td>
+                        <td>
+                            {% if sub_cat.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'main_app:admin_sub_category_edit' sub_cat.id %}"
+                                    class="btn btn-sm btn-warning" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'main_app:admin_sub_category_delete' sub_cat.id %}"
+                                    class="btn btn-sm btn-danger" title="Delete"
+                                    onclick="return confirm('Delete this sub-category and all its pages?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 3rem; color: #ddd;"></i>
+            <p class="text-muted mt-3">No sub-categories found for this card.</p>
+            <a href="{% url 'main_app:admin_sub_category_add_for_card' parent_card.id %}" 
+               class="btn btn-primary mt-2">
+                Add First Sub-Category
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

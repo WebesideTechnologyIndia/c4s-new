@@ -1,0 +1,1202 @@
+from django.db import models
+from django.contrib.auth.models import User
+
+class HomeSectionCard(models.Model):
+    """Model for managing home page service cards"""
+    
+    # Card Content
+    title_line1 = models.CharField(max_length=100, help_text="First line (REQUIRED - e.g., CAREER COUNSELLING)")
+    title_line2 = models.CharField(max_length=100, blank=True, help_text="Second line (OPTIONAL - e.g., SERVICES)")
+    
+    # Image - Admin can upload ya URL paste kar sakta hai
+    card_image = models.ImageField(upload_to='home_cards/', blank=True, null=True, help_text="Upload image")
+    image_url = models.URLField(max_length=500, blank=True, help_text="OR paste image URL (Icons8, etc)")
+    
+    # Link/Redirect
+    redirect_link = models.CharField(max_length=500, blank=True, help_text="Card click pe kaha redirect ho?")
+    
+    # Styling
+    border_color = models.CharField(max_length=7, default="#ff6b35", help_text="Border color (hex code)")
+    title_color = models.CharField(max_length=7, default="#ff6b35", help_text="Title color (hex code)")
+    
+    # Display Settings
+    order = models.IntegerField(default=0, help_text="Display order (0, 1, 2...)")
+    is_active = models.BooleanField(default=True, help_text="Show on homepage?")
+    
+    # Meta Info
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = "Home Section Card"
+        verbose_name_plural = "Home Section Cards"
+    
+    def __str__(self):
+        if self.title_line2:
+            return f"{self.title_line1} - {self.title_line2}"
+        return self.title_line1
+    
+    def get_image(self):
+        """Returns image URL - uploaded ya external"""
+        if self.card_image:
+            return self.card_image.url
+        return self.image_url if self.image_url else 'https://via.placeholder.com/100'
+
+
+class CollegeCounsellingCard(models.Model):
+    """Model for College Admission Counselling Services Page Cards"""
+    
+    BORDER_COLOR_CHOICES = [
+        ('#f39c12', 'Orange'),
+        ('#e74c3c', 'Red'),
+        ('#2ecc71', 'Green'),
+        ('#3498db', 'Blue'),
+    ]
+    
+    # Card Content
+    title = models.CharField(max_length=100, help_text="Card title (e.g., Admission India)")
+    description = models.TextField(max_length=200, help_text="Short description")
+    
+    # Image
+    card_image = models.ImageField(upload_to='counselling_cards/', blank=True, null=True, help_text="Upload image")
+    image_url = models.URLField(max_length=500, blank=True, help_text="OR paste image URL")
+    
+    # Link/Redirect
+    redirect_link = models.CharField(max_length=500, blank=True, help_text="Card click pe kaha redirect ho?")
+    
+    # Styling
+    border_color = models.CharField(max_length=7, default="#f39c12", choices=BORDER_COLOR_CHOICES, help_text="Border color")
+    
+    # Display Settings
+    order = models.IntegerField(default=0, help_text="Display order (0, 1, 2...)")
+    is_active = models.BooleanField(default=True, help_text="Show on counselling page?")
+    
+    # Meta Info
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = "College Counselling Card"
+        verbose_name_plural = "College Counselling Cards"
+    
+    def __str__(self):
+        return self.title
+    
+    def get_image(self):
+        """Returns image URL - uploaded ya external"""
+        if self.card_image:
+            return self.card_image.url
+        return self.image_url if self.image_url else 'https://via.placeholder.com/100'
+    
+
+# models.py mein YE MODEL ADD KARO (existing models ke NEECHE)
+
+class CareerCounsellingService(models.Model):
+    """Model for Career Counselling Services Page"""
+    
+    BORDER_COLOR_CHOICES = [
+        ('#f39c12', 'Orange'),
+        ('#e74c3c', 'Red'),
+        ('#9b59b6', 'Purple'),
+        ('#2ecc71', 'Green'),
+        ('#3498db', 'Blue'),
+    ]
+    
+    title = models.CharField(max_length=150, help_text="Service title")
+    description = models.TextField(max_length=200, help_text="Short description")
+    
+    # SVG Icon (text field for SVG code)
+    svg_icon = models.TextField(blank=True, help_text="Paste SVG code here")
+    
+    redirect_link = models.CharField(max_length=500, blank=True, help_text="Redirect URL")
+    border_color = models.CharField(max_length=7, default="#f39c12", choices=BORDER_COLOR_CHOICES)
+    
+    order = models.IntegerField(default=0, help_text="Display order")
+    is_active = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = "Career Counselling Service"
+        verbose_name_plural = "Career Counselling Services"
+    
+    def __str__(self):
+        return self.title
+    
+# models.py mein YE MODEL ADD KARO
+
+class AdmissionIndiaCard(models.Model):
+    """Model for Admission India Services Page Cards"""
+    
+    BORDER_COLOR_CHOICES = [
+        ('#f39c12', 'Orange'),
+        ('#e74c3c', 'Red'),
+        ('#2ecc71', 'Green'),
+        ('#3498db', 'Blue'),
+        ('#9b59b6', 'Purple'),
+    ]
+    
+    # Card Content
+    title = models.CharField(max_length=200, help_text="Card title (e.g., ALL INDIA STATE WISE COUNSELLING)")
+    
+    # Features (4 items)
+    feature_1 = models.CharField(max_length=100, default="State wise Updates", help_text="Feature 1")
+    feature_2 = models.CharField(max_length=100, default="Verified Information", help_text="Feature 2")
+    feature_3 = models.CharField(max_length=100, default="Real time Information", help_text="Feature 3")
+    feature_4 = models.CharField(max_length=100, default="Expert Counselling", help_text="Feature 4")
+    
+    # Link/Redirect
+    redirect_link = models.CharField(max_length=500, blank=True, help_text="Card click pe kaha redirect ho?")
+    
+    # Styling
+    border_gradient_start = models.CharField(max_length=7, default="#ED651C", help_text="Gradient start color")
+    border_gradient_end = models.CharField(max_length=7, default="#F4800C", help_text="Gradient end color")
+    
+    # Display Settings
+    order = models.IntegerField(default=0, help_text="Display order (0, 1, 2...)")
+    is_active = models.BooleanField(default=True, help_text="Show on page?")
+    
+    # Meta Info
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = "Admission India Card"
+        verbose_name_plural = "Admission India Cards"
+    
+    def __str__(self):
+        return self.title
+    
+
+class AllIndiaServiceCard(models.Model):
+    """Model for All India State Wise Counselling Services Page"""
+    
+    CATEGORY_CHOICES = [
+        ('cat-1', 'Orange'),
+        ('cat-2', 'Red'),
+        ('cat-3', 'Yellow'),
+        ('cat-4', 'Green'),
+        ('cat-5', 'Blue'),
+        ('cat-6', 'Purple'),
+        ('cat-7', 'Pink'),
+        ('cat-8', 'Teal'),
+        ('cat-9', 'Indigo'),
+        ('cat-10', 'Cyan'),
+    ]
+    
+    # Card Content
+    title = models.CharField(max_length=200, help_text="Service title (e.g., COLLEGE COMPARISON)")
+    
+    # Icon/Image
+    card_image = models.ImageField(upload_to='all_india_services/', blank=True, null=True, help_text="Upload icon/image")
+    image_url = models.URLField(max_length=500, blank=True, help_text="OR paste image URL")
+    
+    # Link/Redirect
+    redirect_link = models.CharField(max_length=500, blank=True, help_text="Card click pe kaha redirect ho?")
+    
+    # Category Color
+    category_class = models.CharField(max_length=20, default='cat-1', choices=CATEGORY_CHOICES, help_text="Card color category")
+    
+    # Display Settings
+    order = models.IntegerField(default=0, help_text="Display order (1, 2, 3...)")
+    is_active = models.BooleanField(default=True, help_text="Show on page?")
+    
+    # Meta Info
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = "All India Service Card"
+        verbose_name_plural = "All India Service Cards"
+    
+    def __str__(self):
+        return f"{self.order}. {self.title}"
+    
+    def get_image(self):
+        """Returns image URL - uploaded ya external"""
+        if self.card_image:
+            return self.card_image.url
+        return self.image_url if self.image_url else 'https://via.placeholder.com/100'
+    
+    def get_slug(self):
+        """Extract slug from redirect_link"""
+        # Example: redirect_link = "/rti/" → slug = "rti"
+        slug = self.redirect_link.strip('/').split('/')[-1]
+        return slug if slug else 'card'
+    
+    def get_absolute_url(self):
+        """Get card detail URL"""
+        return f"/{self.get_slug()}/"
+    
+
+
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+
+# ==================== PROFESSIONAL COUNSELLING CARD MODEL ====================
+class ProfessionalCounsellingCard(models.Model):
+    """Cards displayed on Professional Counselling page"""
+    
+    BORDER_COLOR_CHOICES = [
+        ('#f39c12', 'Orange'),
+        ('#e74c3c', 'Red'),
+        ('#2ecc71', 'Green'),
+        ('#9b59b6', 'Purple'),
+        ('#3498db', 'Blue'),
+    ]
+    
+    title = models.CharField(max_length=200, help_text="Card title")
+    description = models.TextField(max_length=300, help_text="Card description")
+    
+    # Icon/Image
+    card_image = models.ImageField(upload_to='counselling_cards/', blank=True, null=True)
+    image_url = models.URLField(max_length=500, blank=True)
+    
+    # Redirect (internal section)
+    section_id = models.CharField(max_length=50, help_text="Section ID (documents, choices, status, doubts, complaints)")
+    
+    # Styling
+    border_color = models.CharField(max_length=7, default='#f39c12', choices=BORDER_COLOR_CHOICES)
+    
+    # Display
+    order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = "Professional Counselling Card"
+        verbose_name_plural = "Professional Counselling Cards"
+    
+    def __str__(self):
+        return f"{self.order}. {self.title}"
+    
+    def get_image(self):
+        if self.card_image:
+            return self.card_image.url
+        return self.image_url if self.image_url else 'https://via.placeholder.com/100'
+
+
+# ==================== STUDENT DOCUMENT MODEL ====================
+class StudentDocument(models.Model):
+    """Documents uploaded by students"""
+    
+    DOCUMENT_TYPE_CHOICES = [
+        # Mandatory
+        ('PHOTO', 'PHOTO *'),
+        ('SIGNATURE', 'SIGNATURE *'),
+        ('10TH', '10TH MARKSHEET *'),
+        ('12TH', '12TH MARKSHEET *'),
+        ('FAMILY_ID', 'FAMILY ID * (Haryana Students)'),
+        ('MIGRATION', 'MIGRATION CERTIFICATE *'),
+        ('CHARACTER_CERTIFICATE', 'CHARACTER CERTIFICATE *'),
+        ('AADHAR_CARD', 'AADHAR CARD *'),
+        ('COMPETITIVE_EXAM_ADMIT_CARD', 'COMPETITIVE EXAM ADMIT CARD *'),
+        ('COMPETITIVE_EXAM_RESULT_CARD', 'COMPETITIVE EXAM RESULT CARD *'),
+        
+        # Optional
+        ('INCOME_CERTIFICATE', 'INCOME CERTIFICATE'),
+        ('DOMICILE', 'DOMICILE CERTIFICATE'),
+        ('BIRTH_CERTIFICATE', 'BIRTH CERTIFICATE'),
+        
+        # Caste Certificates
+        ('SC', 'SC - Scheduled Caste Certificate'),
+        ('ST', 'ST - Scheduled Tribe Certificate'),
+        ('OBC', 'OBC - Other Backward Class Certificate'),
+        ('BC_A', 'BC-A - Backward Class A Certificate'),
+        ('BC_B', 'BC-B - Backward Class B Certificate'),
+        ('PH', 'PH - Physically Handicapped Certificate'),
+        ('ESM', 'ESM - Ex-Serviceman Certificate'),
+        ('EWS', 'EWS - Economically Weaker Section Certificate'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='documents')
+    document_type = models.CharField(max_length=50, choices=DOCUMENT_TYPE_CHOICES)
+    document_file = models.FileField(upload_to='student_documents/')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    admin_remarks = models.TextField(blank=True)
+    
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-uploaded_at']
+        unique_together = ['student', 'document_type']
+    
+    def __str__(self):
+        return f"{self.student.username} - {self.document_type}"
+
+
+# ==================== CHOICE FILLING MODEL ====================
+class ChoiceFilling(models.Model):
+    """Student's college and course preferences"""
+    
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='choices')
+    preference_number = models.IntegerField()
+    college_name = models.CharField(max_length=200)
+    course_name = models.CharField(max_length=200)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['preference_number']
+        unique_together = ['student', 'preference_number']
+    
+    def __str__(self):
+        return f"{self.student.username} - Pref {self.preference_number}"
+
+
+# ==================== COUNSELLING STATUS MODEL ====================
+class CounsellingStatus(models.Model):
+    """Track student's counselling process"""
+    
+    STAGE_CHOICES = [
+        ('registration', 'Registration Completed'),
+        ('documents_upload', 'Documents Upload in Progress'),
+        ('documents_verification', 'Documents Under Verification'),
+        ('choice_filling', 'Choice Filling in Progress'),
+        ('seat_allotment', 'Waiting for Seat Allotment'),
+        ('seat_allocated', 'Seat Allocated'),
+        ('admission_completed', 'Admission Completed'),
+    ]
+    
+    student = models.OneToOneField(User, on_delete=models.CASCADE, related_name='counselling_status')
+    
+    application_submitted = models.BooleanField(default=False)
+    documents_verified = models.BooleanField(default=False)
+    choice_filling_completed = models.BooleanField(default=False)
+    
+    seat_allotment_status = models.CharField(max_length=100, default='Pending')
+    current_stage = models.CharField(max_length=50, choices=STAGE_CHOICES, default='registration')
+    
+    last_updated = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.student.username} - {self.current_stage}"
+
+
+# ==================== DOUBT SESSION MODEL ====================
+class DoubtSession(models.Model):
+    """Student doubts and queries"""
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('resolved', 'Resolved'),
+    ]
+    
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='doubts')
+    subject = models.CharField(max_length=200)
+    doubt_description = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    response = models.TextField(blank=True)
+    responded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='resolved_doubts')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.student.username} - {self.subject}"
+
+
+# ==================== COMPLAINT MODEL ====================
+class Complaint(models.Model):
+    """Student complaints"""
+    
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('normal', 'Normal'),
+        ('high', 'High'),
+        ('urgent', 'Urgent'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
+        ('resolved', 'Resolved'),
+        ('closed', 'Closed'),
+    ]
+    
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='complaints')
+    complaint_type = models.CharField(max_length=100)
+    complaint_subject = models.CharField(max_length=200)
+    complaint_description = models.TextField()
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='normal')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    admin_response = models.TextField(blank=True)
+    responded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='handled_complaints')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.student.username} - {self.complaint_subject}"
+    
+
+
+class AdmissionAbroadCard(models.Model):
+    """Model for Admission Abroad Services Page"""
+    
+    BORDER_COLOR_CHOICES = [
+        ('#f39c12', 'Orange'),
+        ('#e74c3c', 'Red'),
+        ('#3498db', 'Blue'),
+        ('#2ecc71', 'Green'),
+    ]
+    
+    # Card Content
+    title = models.CharField(max_length=200, help_text="Service title")
+    description = models.TextField(max_length=300, help_text="Short description")
+    
+    # Icon/Image
+    card_image = models.ImageField(upload_to='admission_abroad/', blank=True, null=True)
+    image_url = models.URLField(max_length=500, blank=True)
+    
+    # Link/Redirect
+    redirect_link = models.CharField(max_length=500, blank=True)
+    
+    # Styling
+    border_color = models.CharField(max_length=7, default='#f39c12', choices=BORDER_COLOR_CHOICES)
+    
+    # Display
+    order = models.IntegerField(default=0, help_text="Display order")
+    is_active = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = "Admission Abroad Card"
+        verbose_name_plural = "Admission Abroad Cards"
+    
+    def __str__(self):
+        return f"{self.order}. {self.title}"
+    
+    def get_image(self):
+        if self.card_image:
+            return self.card_image.url
+        return self.image_url if self.image_url else 'https://via.placeholder.com/100'
+    
+# models.py mein ye add karo
+
+
+# ==================== DISTANCE EDUCATION MODEL ====================
+class DistanceEducationCard(models.Model):
+    """Model for Distance Education Services Page"""
+    
+    BORDER_COLOR_CHOICES = [
+        ('#f39c12', 'Orange'),
+        ('#e74c3c', 'Red'),
+        ('#3498db', 'Blue'),
+        ('#2ecc71', 'Green'),
+    ]
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField(max_length=300)
+    
+    card_image = models.ImageField(upload_to='distance_education/', blank=True, null=True)
+    image_url = models.URLField(max_length=500, blank=True)
+    
+    redirect_link = models.CharField(max_length=500, blank=True)
+    border_color = models.CharField(max_length=7, default='#f39c12', choices=BORDER_COLOR_CHOICES)
+    
+    order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = "Distance Education Card"
+        verbose_name_plural = "Distance Education Cards"
+    
+    def __str__(self):
+        return f"{self.order}. {self.title}"
+    
+    def get_image(self):
+        if self.card_image:
+            return self.card_image.url
+        return self.image_url if self.image_url else 'https://via.placeholder.com/100'
+
+
+# ==================== ONLINE EDUCATION MODEL ====================
+class OnlineEducationCard(models.Model):
+    """Model for Online Education Services Page"""
+    
+    BORDER_COLOR_CHOICES = [
+        ('#f39c12', 'Orange'),
+        ('#e74c3c', 'Red'),
+        ('#3498db', 'Blue'),
+        ('#2ecc71', 'Green'),
+    ]
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField(max_length=300)
+    
+    card_image = models.ImageField(upload_to='online_education/', blank=True, null=True)
+    image_url = models.URLField(max_length=500, blank=True)
+    
+    redirect_link = models.CharField(max_length=500, blank=True)
+    border_color = models.CharField(max_length=7, default='#f39c12', choices=BORDER_COLOR_CHOICES)
+    
+    order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = "Online Education Card"
+        verbose_name_plural = "Online Education Cards"
+    
+    def __str__(self):
+        return f"{self.order}. {self.title}"
+    
+    def get_image(self):
+        if self.card_image:
+            return self.card_image.url
+        return self.image_url if self.image_url else 'https://via.placeholder.com/100'
+    
+
+from django.db import models
+from django.contrib.auth.models import User
+
+# ==================== COUNTRY MODEL ====================
+class Country(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    code = models.CharField(max_length=10, unique=True)  # IN, US, UK
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name_plural = "Countries"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+
+
+# ==================== STATE MODEL ====================
+class State(models.Model):
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='states')
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=10, blank=True, null=True)  # HR, UP, CA
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('country', 'name')
+        ordering = ['name']
+    
+    def __str__(self):
+        return f"{self.name} ({self.country.name})"
+
+
+# ==================== USER REGISTRATION MODEL ====================
+class UserRegistration(models.Model):
+    COURSE_CHOICES = [
+        ('B.TECH', 'B.TECH'),
+        ('MBBS', 'MBBS'),
+        ('B.COM', 'B.COM'),
+        ('BBA', 'BBA'),
+        ('BCA', 'BCA'),
+        ('BSC NURSING', 'BSC NURSING'),
+        ('BAMS', 'BAMS'),
+        ('LLB [ 5 YEARS ]', 'LLB [ 5 YEARS ]'),
+        ('MBA', 'MBA'),
+        ('BSC COMP SCIENCE', 'BSC COMP SCIENCE'),
+        ('B.PHARMA', 'B.PHARMA'),
+        ('D.PHARMA', 'D.PHARMA'),
+        ('ANM', 'ANM'),
+        ('GNM', 'GNM'),
+        ('BDS', 'BDS'),
+        ('BSC BIOTECH', 'BSC BIOTECH'),
+        ('B.TECH BIOTECH', 'B.TECH BIOTECH'),
+        ('B.ED', 'B.ED'),
+        ('MCA', 'MCA'),
+        ('PHD', 'PHD'),
+        ('M.COM', 'M.COM'),
+        ('BA JMC', 'BA JMC'),
+        ('BSC PCM', 'BSC PCM'),
+        ('BSC CHEMISTRY', 'BSC CHEMISTRY'),
+        ('BSC PHYSICS', 'BSC PHYSICS'),
+        ('BSC MATHEMATICS', 'BSC MATHEMATICS'),
+        ('BA CORE', 'BA CORE'),
+        ('BA PSYCOLOGY', 'BA PSYCOLOGY'),
+        ('BPT', 'BPT'),
+        ('BUMS', 'BUMS'),
+        ('BHMS', 'BHMS'),
+        ('BSC OPERATION THEATER', 'BSC OPERATION THEATER'),
+        ('HOTEL MANAGEMENT', 'HOTEL MANAGEMENT'),
+        ('BSC ZOOLOGY', 'BSC ZOOLOGY'),
+        ('BSC FOOD TECHNOLOGY', 'BSC FOOD TECHNOLOGY'),
+        ('BSC ANIMATION AND MULTIMEDIA', 'BSC ANIMATION AND MULTIMEDIA'),
+        ('BA SOCIAL WORK', 'BA SOCIAL WORK'),
+        ('B.DESIGN', 'B.DESIGN'),
+        ('BMS', 'BMS'),
+        ('B.ARCH', 'B.ARCH'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+    name = models.CharField(max_length=100)
+    father_name = models.CharField(max_length=100)
+    mobile = models.CharField(max_length=15)
+    whatsapp_mobile = models.CharField(max_length=15)
+    email = models.EmailField(unique=True)
+    course = models.CharField(max_length=100, choices=COURSE_CHOICES)
+    
+    # Foreign Keys
+    country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True)
+    state = models.ForeignKey(State, on_delete=models.SET_NULL, null=True)
+    city = models.CharField(max_length=100)
+    
+    # Password fields
+    password = models.CharField(max_length=128)
+    
+    otp = models.CharField(max_length=6, blank=True, null=True)
+    is_verified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.email}"
+
+    class Meta:
+        verbose_name = "User Registration"
+        verbose_name_plural = "User Registrations"
+
+# ==================== COLLEGE MODEL ====================
+class College(models.Model):
+    """Colleges database"""
+    
+    name = models.CharField(max_length=255)
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='colleges')
+    state = models.ForeignKey(State, on_delete=models.CASCADE, related_name='colleges')
+    city = models.CharField(max_length=100)
+    
+    ranking = models.IntegerField(null=True, blank=True)
+    tuition_fees = models.DecimalField(max_digits=10, decimal_places=2)
+    courses_offered = models.TextField(help_text="Comma separated courses")
+    facilities = models.TextField(blank=True)
+    
+    # Images
+    college_image = models.ImageField(upload_to='colleges/', blank=True, null=True)
+    image_url = models.URLField(max_length=500, blank=True)
+    
+    website = models.URLField(max_length=500, blank=True)
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['country', 'state', 'name']
+        verbose_name = "College"
+        verbose_name_plural = "Colleges"
+    
+    def __str__(self):
+        return f"{self.name} - {self.state.name}, {self.country.name}"
+    
+    def get_image(self):
+        if self.college_image:
+            return self.college_image.url
+        return self.image_url if self.image_url else 'https://via.placeholder.com/300x200'
+
+
+# ==================== COLLEGE COMPARISON MODEL (UPDATED) ====================
+class CollegeComparison(models.Model):
+    """College Comparisons created by Admin - Support Multiple Colleges"""
+    
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+    ]
+    
+    comparison_title = models.CharField(max_length=255, help_text="e.g., Top Engineering Colleges in Haryana")
+    
+    # CHANGE: ManyToMany for multiple colleges
+    colleges = models.ManyToManyField(College, related_name='comparisons', help_text="Select 2 or more colleges to compare")
+    
+    # Filter fields - ye match karega UserRegistration ke country/state se
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='comparisons')
+    state = models.ForeignKey(State, on_delete=models.CASCADE, null=True, blank=True, related_name='comparisons')
+    
+    # Comparison details
+    comparison_summary = models.TextField(blank=True, help_text="Short summary of comparison")
+    
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
+    
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_comparisons')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "College Comparison"
+        verbose_name_plural = "College Comparisons"
+    
+    def __str__(self):
+        return f"{self.comparison_title} ({self.country.name})"
+    
+    def get_colleges_list(self):
+        """Return list of colleges in this comparison"""
+        return self.colleges.all()
+    
+    def colleges_count(self):
+        """Return number of colleges in comparison"""
+        return self.colleges.count()
+    
+
+# ==================== STATE WISE COUNSELLING UPDATE MODEL ====================
+class StateWiseCounsellingUpdate(models.Model):
+    """Links to external state counselling websites"""
+    
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+    ]
+    
+    ICON_COLOR_CHOICES = [
+        ('#ED651C', 'Orange'),
+        ('#e74c3c', 'Red'),
+        ('#2ecc71', 'Green'),
+        ('#3498db', 'Blue'),
+        ('#9b59b6', 'Purple'),
+        ('#f39c12', 'Yellow'),
+        ('#1abc9c', 'Teal'),
+    ]
+    
+    # State Info
+    state = models.ForeignKey(State, on_delete=models.CASCADE, related_name='counselling_updates')
+    title = models.CharField(max_length=200, help_text="e.g., Haryana NEET Counselling 2025")
+    description = models.TextField(max_length=300, blank=True, help_text="Short description about the counselling")
+    
+    # External Link
+    external_link = models.URLField(max_length=500, help_text="External counselling website URL")
+    
+    # Icon/Image
+    icon_image = models.ImageField(upload_to='counselling_updates/', blank=True, null=True, help_text="Upload icon")
+    icon_url = models.URLField(max_length=500, blank=True, help_text="OR paste icon URL")
+    icon_color = models.CharField(max_length=7, default='#ED651C', choices=ICON_COLOR_CHOICES, help_text="Icon background color")
+    
+    # Additional Info
+    last_updated = models.DateField(blank=True, null=True, help_text="Last update date")
+    is_new = models.BooleanField(default=False, help_text="Show 'NEW' badge?")
+    
+    # Display Settings
+    order = models.IntegerField(default=0, help_text="Display order")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
+    
+    # Meta
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['state', 'order', '-created_at']
+        verbose_name = "State Wise Counselling Update"
+        verbose_name_plural = "State Wise Counselling Updates"
+    
+    def __str__(self):
+        return f"{self.state.name} - {self.title}"
+    
+    def get_icon(self):
+        """Returns icon URL - uploaded ya external"""
+        if self.icon_image:
+            return self.icon_image.url
+        return self.icon_url if self.icon_url else 'https://via.placeholder.com/100'
+    
+
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils.text import slugify
+
+
+
+# In your SubCategory model in models.py, REPLACE the entire class with this:
+
+class SubCategory(models.Model):
+    """Sub-categories - UNLIMITED NESTING support"""
+    
+    ICON_COLOR_CHOICES = [
+        ('#f39c12', 'Orange'),
+        ('#e74c3c', 'Red'),
+        ('#2ecc71', 'Green'),
+        ('#3498db', 'Blue'),
+        ('#9b59b6', 'Purple'),
+    ]
+    
+    # Parent References
+    parent_card = models.ForeignKey('AllIndiaServiceCard', on_delete=models.CASCADE, 
+                                    related_name='sub_categories', null=True, blank=True)
+    parent_subcategory = models.ForeignKey('self', on_delete=models.CASCADE, 
+                                          related_name='children', null=True, blank=True)
+    
+    # Sub-Category Info
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=200, unique=True, blank=True)
+    description = models.TextField(max_length=300, blank=True)
+    
+    # Icon/Image
+    icon_image = models.ImageField(upload_to='sub_categories/', blank=True, null=True)
+    icon_url = models.URLField(max_length=500, blank=True)
+    icon_color = models.CharField(max_length=7, default='#f39c12', choices=ICON_COLOR_CHOICES)
+    
+    # Display Settings
+    order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    
+    # Meta
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = "Sub Category"
+        verbose_name_plural = "Sub Categories"
+    
+    def __str__(self):
+        if self.parent_subcategory:
+            return f"{self.parent_subcategory.title} → {self.title}"
+        return f"{self.parent_card.title} → {self.title}"
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+    
+    def get_icon(self):
+        if self.icon_image:
+            return self.icon_image.url
+        return self.icon_url if self.icon_url else 'https://via.placeholder.com/100'
+    
+    def has_children(self):
+        """Check if has child subcategories"""
+        return self.children.filter(is_active=True).exists()
+    
+    def get_children(self):
+        """Get all active children"""
+        return self.children.filter(is_active=True).order_by('order')
+    
+    def pages_count(self):
+        """Get pages count"""
+        return self.content_pages.filter(is_active=True).count()
+    
+    def get_breadcrumb(self):
+        """
+        Get ONLY the subcategory chain WITHOUT the parent card
+        Returns list: [parent_subcategory, ..., self]
+        """
+        path = [self]
+        current = self.parent_subcategory
+        
+        # Navigate up through parent subcategories ONLY
+        while current:
+            path.insert(0, current)
+            current = current.parent_subcategory
+        
+        return path
+    
+    def get_full_path(self):
+        """Get URL path: engineering/government/delhi"""
+        path = [self.slug]
+        current = self.parent_subcategory
+        
+        while current:
+            path.insert(0, current.slug)
+            current = current.parent_subcategory
+        
+        return '/'.join(path)
+    
+    
+# ==================== CONTENT PAGE MODEL (Level 3) ====================
+class ContentPage(models.Model):
+    """Individual content pages under SubCategory"""
+    
+    # Parent Sub-Category
+    sub_category = models.ForeignKey(SubCategory, on_delete=models.CASCADE, related_name='content_pages')
+    
+    # Page Info
+    title = models.CharField(max_length=300, help_text="e.g., Top 10 Engineering Colleges in India")
+    slug = models.SlugField(max_length=300, unique=True, blank=True)
+    
+    # Content
+    summary = models.TextField(max_length=500, blank=True, help_text="Short summary (optional)")
+    content = models.TextField(help_text="Full page content (HTML supported)")
+    
+    # Featured Image
+    featured_image = models.ImageField(upload_to='content_pages/', blank=True, null=True)
+    featured_image_url = models.URLField(max_length=500, blank=True)
+    
+    # SEO
+    meta_description = models.CharField(max_length=160, blank=True, help_text="SEO meta description")
+    meta_keywords = models.CharField(max_length=255, blank=True, help_text="Comma separated keywords")
+    
+    # Display Settings
+    order = models.IntegerField(default=0, help_text="Display order")
+    is_active = models.BooleanField(default=True)
+    is_featured = models.BooleanField(default=False, help_text="Show as featured content?")
+    
+    # Stats
+    views_count = models.IntegerField(default=0, help_text="Page view count")
+    
+    # Meta
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['sub_category', 'order', '-created_at']
+        verbose_name = "Content Page"
+        verbose_name_plural = "Content Pages"
+        unique_together = ['sub_category', 'slug']
+    
+    def __str__(self):
+        return f"{self.sub_category.title} → {self.title}"
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+    
+    def get_featured_image(self):
+        if self.featured_image:
+            return self.featured_image.url
+        return self.featured_image_url if self.featured_image_url else 'https://via.placeholder.com/800x400'
+    
+    def increment_views(self):
+        """Increment view count"""
+        self.views_count += 1
+        self.save(update_fields=['views_count'])
+
+
+
+
+# models.py mein ye add karo
+# **DELETE THE SECOND DEFINITION** - Keep only ONE copy of AdmissionAbroadSubCategory and AdmissionAbroadPage
+
+# The duplicate appears around line 450-550 in your file
+# You have:
+# 1. First definition: lines ~320-380
+# 2. Second definition: lines ~450-550 (DELETE THIS ONE)
+
+# Here's the SINGLE correct version of AdmissionAbroadSubCategory:
+
+class AdmissionAbroadSubCategory(models.Model):
+    """Sub-categories for Admission Abroad - UNLIMITED NESTING"""
+    
+    ICON_COLOR_CHOICES = [
+        ('#f39c12', 'Orange'),
+        ('#e74c3c', 'Red'),
+        ('#2ecc71', 'Green'),
+        ('#3498db', 'Blue'),
+        ('#9b59b6', 'Purple'),
+    ]
+    
+    # Parent References
+    parent_card = models.ForeignKey('AdmissionAbroadCard', on_delete=models.CASCADE, 
+                                    related_name='sub_categories', null=True, blank=True)
+    parent_subcategory = models.ForeignKey('self', on_delete=models.CASCADE, 
+                                          related_name='children', null=True, blank=True)
+    
+    # Sub-Category Info
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=200, unique=True, blank=True)
+    description = models.TextField(max_length=300, blank=True)
+    
+    # Icon/Image
+    icon_image = models.ImageField(upload_to='admission_abroad_sub/', blank=True, null=True)
+    icon_url = models.URLField(max_length=500, blank=True)
+    icon_color = models.CharField(max_length=7, default='#f39c12', choices=ICON_COLOR_CHOICES)
+    
+    # Display Settings
+    order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    
+    # Meta
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = "Admission Abroad Sub Category"
+        
+    def __str__(self):
+        if self.parent_subcategory:
+            return f"{self.parent_subcategory.title} → {self.title}"
+        return f"{self.parent_card.title} → {self.title}"
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+    
+    def get_icon(self):
+        if self.icon_image:
+            return self.icon_image.url
+        return self.icon_url if self.icon_url else 'https://via.placeholder.com/100'
+    
+    def has_children(self):
+        """Check if this subcategory has any children"""
+        return self.children.exists()  # Assuming you have related_name='children'
+    
+    def children_count(self):
+        """Count direct children"""
+        return self.children.count()
+    
+    def get_all_children(self):
+        """Get all direct children"""
+        return AdmissionAbroadSubCategory.objects.filter(parent_subcategory=self)
+
+    def get_children(self):
+        return self.children.filter(is_active=True).order_by('order')
+
+    def get_root_card(self):
+        """Get the root AdmissionAbroadCard for this subcategory"""
+        if self.parent_card:
+            return self.parent_card
+        elif self.parent_subcategory:
+            return self.parent_subcategory.get_root_card()
+        return None
+    
+    def get_breadcrumb(self):
+        """Build breadcrumb trail from root to current subcategory"""
+        breadcrumb = []
+        current = self
+        
+        while current:
+            breadcrumb.insert(0, {'id': current.id, 'title': current.title})
+            current = current.parent_subcategory
+        
+        # Add root card at the beginning
+        root_card = self.get_root_card()
+        if root_card:
+            breadcrumb.insert(0, {'id': root_card.id, 'title': root_card.title})
+        
+        return breadcrumb
+    
+# Same for AdmissionAbroadPage - Keep only ONE copy
+class AdmissionAbroadPage(models.Model):
+    """Content pages for Admission Abroad"""
+    
+    # Parent Sub-Category
+    sub_category = models.ForeignKey(AdmissionAbroadSubCategory, on_delete=models.CASCADE, 
+                                     related_name='content_pages')
+    
+    # Page Info
+    title = models.CharField(max_length=300)
+    slug = models.SlugField(max_length=300, unique=True, blank=True)
+    
+    # Content
+    summary = models.TextField(max_length=500, blank=True)
+    content = models.TextField(help_text="Full page content (HTML supported)")
+    
+    # Featured Image
+    featured_image = models.ImageField(upload_to='admission_abroad_pages/', blank=True, null=True)
+    featured_image_url = models.URLField(max_length=500, blank=True)
+    
+    # Display Settings
+    order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    is_featured = models.BooleanField(default=False)
+    
+    # Stats
+    views_count = models.IntegerField(default=0)
+    
+    # Meta
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['sub_category', 'order', '-created_at']
+        
+    def __str__(self):
+        return f"{self.sub_category.title} → {self.title}"
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
+
+class AdmissionAbroadPage(models.Model):
+    """Content pages for Admission Abroad"""
+    
+    # Parent Sub-Category
+    sub_category = models.ForeignKey(AdmissionAbroadSubCategory, on_delete=models.CASCADE, 
+                                     related_name='content_pages')
+    
+    # Page Info
+    title = models.CharField(max_length=300)
+    slug = models.SlugField(max_length=300, unique=True, blank=True)
+    
+    # Content
+    summary = models.TextField(max_length=500, blank=True)
+    content = models.TextField(help_text="Full page content (HTML supported)")
+    
+    # Featured Image
+    featured_image = models.ImageField(upload_to='admission_abroad_pages/', blank=True, null=True)
+    featured_image_url = models.URLField(max_length=500, blank=True)
+    
+    # Display Settings
+    order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    is_featured = models.BooleanField(default=False)
+    
+    # Stats
+    views_count = models.IntegerField(default=0)
+    
+    # Meta
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['sub_category', 'order', '-created_at']
+        
+    def __str__(self):
+        return f"{self.sub_category.title} → {self.title}"
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)

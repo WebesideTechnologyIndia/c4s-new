@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'main_app:all_india_services' %}">All India Services</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'main_app:card_detail' card.get_slug %}">{{ card.title }}</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'main_app:subcategory_detail' card.get_slug sub_category.slug %}">
+                    {{ sub_category.title }}
+                </a>
+            </li>
+            <li class="breadcrumb-item active">{{ page.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <article>
+                <!-- Featured Image -->
+                {% if page.get_featured_image %}
+                <img src="{{ page.get_featured_image }}" 
+                     class="img-fluid rounded mb-4" 
+                     alt="{{ page.title }}">
+                {% endif %}
+
+                <!-- Title -->
+                <h1 class="mb-3">{{ page.title }}</h1>
+
+                <!-- Meta Info -->
+                <div class="d-flex gap-3 mb-4 text-muted">
+                    <small>
+                        <i class="bi bi-calendar3 me-1"></i>
+                        {{ page.created_at|date:"F d, Y" }}
+                    </small>
+                    <small>
+                        <i class="bi bi-eye me-1"></i>
+                        {{ page.views_count }} views
+                    </small>
+                    {% if page.is_featured %}
+                    <small>
+                        <span class="badge bg-warning">⭐ Featured</span>
+                    </small>
+                    {% endif %}
+                </div>
+
+                <!-- Summary -->
+                {% if page.summary %}
+                <div class="alert alert-info">
+                    <strong>Summary:</strong> {{ page.summary }}
+                </div>
+                {% endif %}
+
+                <!-- Main Content -->
+                <div class="content-body">
+                    {{ page.content|safe }}
+                </div>
+
+                <!-- Last Updated -->
+                <div class="mt-5 pt-4 border-top">
+                    <small class="text-muted">
+                        Last updated: {{ page.updated_at|date:"F d, Y" }}
+                    </small>
+                </div>
+            </article>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Related Pages -->
+            {% if related_pages %}
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Related Pages</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for related in related_pages %}
+                    <a href="{% url 'main_app:page_detail' card.get_slug sub_category.slug related.slug %}" 
+                       class="list-group-item list-group-item-action">
+                        <h6 class="mb-1">{{ related.title|truncatewords:10 }}</h6>
+                        <small class="text-muted">
+                            <i class="bi bi-eye me-1"></i>{{ related.views_count }} views
+                        </small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Back to Category -->
+            <div class="card">
+                <div class="card-body">
+                    <a href="{% url 'main_app:subcategory_detail' card.get_slug sub_category.slug %}" 
+                       class="btn btn-outline-primary w-100">
+                        <i class="bi bi-arrow-left me-2"></i>
+                        Back to {{ sub_category.title }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .content-body {
+        font-size: 1.1rem;
+        line-height: 1.8;
+    }
+    
+    .content-body h2 {
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .content-body h3 {
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .content-body p {
+        margin-bottom: 1rem;
+    }
+    
+    .content-body ul, .content-body ol {
+        margin-bottom: 1rem;
+        padding-left: 2rem;
+    }
+    
+    .content-body li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .content-body a {
+        color: #0d6efd;
+        text-decoration: underline;
+    }
+    
+    .content-body img {
+        max-width: 100%;
+        height: auto;
+        margin: 1rem 0;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+
+{% block page_title %}{{ sub_category.title }}{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+    
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-light p-3 rounded">
+            <li class="breadcrumb-item">
+                <a href="{% url 'main_app:student_dashboard' %}">
+                    <i class="bi bi-house-door"></i> Home
+                </a>
+            </li>
+            
+            <!-- Add the parent CARD link first -->
+            <li class="breadcrumb-item">
+                <a href="{% url 'main_app:card_detail_view' card.get_slug %}">
+                    {{ card.title }}
+                </a>
+            </li>
+            
+            <!-- Then loop through subcategories ONLY (breadcrumb will never include card) -->
+            {% for item in breadcrumb %}
+                {% if forloop.last %}
+                    <!-- Current item - no link -->
+                    <li class="breadcrumb-item active" aria-current="page">
+                        {{ item.title }}
+                    </li>
+                {% else %}
+                    <!-- Parent subcategory - with link -->
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'main_app:subcategory_detail_view' card.get_slug item.get_full_path %}">
+                            {{ item.title }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h1 class="display-5 fw-bold text-primary mb-3">
+                <i class="bi bi-folder-open me-2"></i>
+                {{ sub_category.title }}
+            </h1>
+            {% if sub_category.description %}
+                <p class="lead text-muted">{{ sub_category.description }}</p>
+            {% endif %}
+            <hr class="my-4">
+        </div>
+    </div>
+
+    <!-- CHILD SUB-CATEGORIES SECTION -->
+    {% if sub_categories %}
+        <div class="mb-5">
+            <h3 class="mb-4">
+                <i class="bi bi-folder2-open text-warning me-2"></i>
+                Sub-Categories
+            </h3>
+            <div class="row g-4">
+                {% for sub_cat in sub_categories %}
+                <div class="col-md-6 col-lg-4">
+                    <a href="{% url 'main_app:subcategory_detail_view' card.get_slug sub_cat.get_full_path %}" 
+                       class="text-decoration-none">
+                        <div class="card h-100 shadow-sm hover-card" 
+                             style="border-left: 4px solid {{ sub_cat.icon_color }};">
+                            <div class="card-body">
+                                <!-- Icon -->
+                                <div class="d-flex align-items-center mb-3">
+                                    <div style="width: 60px; height: 60px; 
+                                                background: {{ sub_cat.icon_color }}; 
+                                                border-radius: 12px; 
+                                                display: flex; 
+                                                align-items: center; 
+                                                justify-content: center;
+                                                box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                                        <img src="{{ sub_cat.get_icon }}" 
+                                             alt="{{ sub_cat.title }}"
+                                             style="width: 35px; height: 35px; object-fit: contain;">
+                                    </div>
+                                    <div class="ms-3">
+                                        <h5 class="card-title mb-0 text-dark">
+                                            {{ sub_cat.title }}
+                                        </h5>
+                                    </div>
+                                </div>
+
+                                <!-- Description -->
+                                {% if sub_cat.description %}
+                                <p class="card-text text-muted small">
+                                    {{ sub_cat.description|truncatewords:15 }}
+                                </p>
+                                {% endif %}
+
+                                <!-- Stats Badge -->
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    {% if sub_cat.has_children %}
+                                        <span class="badge bg-primary">
+                                            <i class="bi bi-folder"></i>
+                                            {{ sub_cat.get_children.count }} Sub-Categories
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-file-earmark-text"></i>
+                                            {{ sub_cat.pages_count }} Pages
+                                        </span>
+                                    {% endif %}
+                                    
+                                    <i class="bi bi-arrow-right-circle text-primary" style="font-size: 1.2rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- PAGES SECTION -->
+    {% if pages %}
+        <div>
+            <h3 class="mb-4">
+                <i class="bi bi-file-earmark-text text-success me-2"></i>
+                Available Pages ({{ pages.count }})
+            </h3>
+            <div class="row g-4">
+                {% for page in pages %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm hover-card page-card">
+                        <!-- Featured Image -->
+                        {% if page.get_featured_image %}
+                        <img src="{{ page.get_featured_image }}" 
+                             class="card-img-top" 
+                             alt="{{ page.title }}"
+                             style="height: 200px; object-fit: cover;">
+                        {% else %}
+                        <div class="card-img-top bg-gradient d-flex align-items-center justify-content-center"
+                             style="height: 200px; background: linear-gradient(135deg, {{ sub_category.icon_color }} 0%, #667eea 100%);">
+                            <i class="bi bi-file-earmark-text text-white" style="font-size: 3rem;"></i>
+                        </div>
+                        {% endif %}
+
+                        <div class="card-body d-flex flex-column">
+                            <!-- Title -->
+                            <h5 class="card-title text-dark">
+                                {{ page.title }}
+                            </h5>
+
+                            <!-- Summary -->
+                            {% if page.summary %}
+                            <p class="card-text text-muted small flex-grow-1">
+                                {{ page.summary|truncatewords:20 }}
+                            </p>
+                            {% endif %}
+
+                            <!-- Meta Info -->
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-eye"></i> {{ page.views_count }} views
+                                </small>
+                                {% if page.is_featured %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-star-fill"></i> Featured
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Read Button -->
+                            <a href="{% url 'main_app:page_detail_view' card.get_slug sub_category.get_full_path page.slug %}" 
+                               class="btn btn-primary w-100">
+                                <i class="bi bi-book-open me-2"></i>
+                                Read More
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- EMPTY STATE - When no subcategories AND no pages -->
+    {% if not sub_categories and not pages %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 4rem; color: #ddd;"></i>
+            <h4 class="text-muted mt-3">No content available</h4>
+            <p class="text-muted">Check back later for updates.</p>
+        </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hover-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+    }
+    
+    .page-card:hover {
+        border-color: {{ sub_category.icon_color }};
+    }
+    
+    .breadcrumb {
+        font-size: 0.95rem;
+    }
+    
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: "›";
+        font-weight: bold;
+    }
+    
+    .card {
+        border: 1px solid #e0e0e0;
+    }
+    
+    .badge {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
+    
+    .card-img-top {
+        border-bottom: 3px solid {{ sub_category.icon_color }};
+    }
+    
+    .bg-gradient {
+        background: linear-gradient(135deg, {{ sub_category.icon_color }} 0%, #667eea 100%);
+    }
+    
+    .btn-primary {
+        background-color: {{ sub_category.icon_color }};
+        border-color: {{ sub_category.icon_color }};
+    }
+    
+    .btn-primary:hover {
+        filter: brightness(1.1);
+        transform: scale(1.02);
+    }
+</style>
+{% endblock %}
