@@ -21,6 +21,26 @@
         max-height: 60px;
         object-fit: contain;
     }
+    
+    .filter-info-box {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+    }
+    
+    .filter-info-box h6 {
+        color: #1976d2;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+    
+    .filter-info-box p {
+        margin: 0;
+        color: #555;
+        font-size: 14px;
+    }
 </style>
 {% endblock %}
 
@@ -77,6 +97,42 @@
                             <label class="form-label">Description (Optional)</label>
                             <textarea name="description" class="form-control" rows="3"
                                       placeholder="Short description about this sub-category"></textarea>
+                        </div>
+
+                        <!-- ✅ NEW SECTION: State & Course Filters -->
+                        <div class="col-md-12 mb-3">
+                            <div class="filter-info-box">
+                                <h6><i class="bi bi-funnel me-2"></i>Target Audience Filter</h6>
+                                <p>Select state and course to show this subcategory only to relevant students. Leave blank to show to everyone.</p>
+                            </div>
+                        </div>
+
+                        <!-- State Selection -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-geo-alt me-1"></i>Target State
+                            </label>
+                            <select name="state" id="stateSelect" class="form-select">
+                                <option value="">All States (No Filter)</option>
+                                {% for state in states %}
+                                <option value="{{ state.id }}">{{ state.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Show only to students from this state</small>
+                        </div>
+
+                        <!-- Course Selection -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-book me-1"></i>Target Course
+                            </label>
+                            <select name="course" id="courseSelect" class="form-select">
+                                <option value="">All Courses (No Filter)</option>
+                                {% for code, name in courses %}
+                                <option value="{{ code }}">{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Show only to students enrolled in this course</small>
                         </div>
 
                         <!-- Upload Icon -->
@@ -189,5 +245,31 @@
     iconColor.addEventListener('change', function() {
         iconPreview.style.background = this.value;
     });
+
+    // ✅ Filter Selection Feedback
+    const stateSelect = document.getElementById('stateSelect');
+    const courseSelect = document.getElementById('courseSelect');
+    
+    function updateFilterInfo() {
+        const state = stateSelect.options[stateSelect.selectedIndex].text;
+        const course = courseSelect.options[courseSelect.selectedIndex].text;
+        
+        let filterText = 'Visible to: ';
+        
+        if (stateSelect.value && courseSelect.value) {
+            filterText += `Students from ${state} enrolled in ${course}`;
+        } else if (stateSelect.value) {
+            filterText += `All students from ${state}`;
+        } else if (courseSelect.value) {
+            filterText += `All students enrolled in ${course}`;
+        } else {
+            filterText += 'All students (no filter)';
+        }
+        
+        console.log(filterText);
+    }
+    
+    stateSelect.addEventListener('change', updateFilterInfo);
+    courseSelect.addEventListener('change', updateFilterInfo);
 </script>
 {% endblock %}

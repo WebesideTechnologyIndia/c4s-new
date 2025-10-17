@@ -55,6 +55,55 @@
                                       rows="3">{% if is_edit %}{{ subcategory.description }}{% endif %}</textarea>
                         </div>
 
+                        <!-- ✅ NEW: Country, State & Course Fields -->
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Target Country</label>
+                                    <select name="target_country" class="form-control">
+                                        <option value="">All Countries</option>
+                                        {% for country in countries %}
+                                            <option value="{{ country.id }}" 
+                                                {% if is_edit and subcategory.target_country.id == country.id %}selected{% endif %}>
+                                                {{ country.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="text-muted">Leave blank for all countries</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Student State</label>
+                                    <select name="student_state" class="form-control">
+                                        <option value="">All States</option>
+                                        {% for state in states %}
+                                            <option value="{{ state.id }}" 
+                                                {% if is_edit and subcategory.student_state.id == state.id %}selected{% endif %}>
+                                                {{ state.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="text-muted">Student's home state</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Course</label>
+                                    <select name="course" class="form-control">
+                                        <option value="">All Courses</option>
+                                        {% for value, label in courses %}
+                                            <option value="{{ value }}" 
+                                                {% if is_edit and subcategory.course == value %}selected{% endif %}>
+                                                {{ label }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="text-muted">Leave blank for all courses</small>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">

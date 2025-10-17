@@ -46,6 +46,21 @@
         color: rgba(255,255,255,0.6);
     }
     
+    /* ✅ NEW: User Filter Badge */
+    .filter-badge {
+        display: inline-block;
+        background: rgba(255,255,255,0.2);
+        padding: 8px 15px;
+        border-radius: 20px;
+        margin-right: 10px;
+        margin-top: 10px;
+        font-size: 0.9rem;
+    }
+    
+    .filter-badge i {
+        margin-right: 5px;
+    }
+    
     .category-card {
         background: white;
         border-radius: 15px;
@@ -58,6 +73,7 @@
         text-decoration: none;
         display: block;
         color: inherit;
+        position: relative;
     }
     
     .category-card:hover {
@@ -65,6 +81,19 @@
         box-shadow: 0 10px 30px rgba(0,0,0,0.15);
         text-decoration: none;
         color: inherit;
+    }
+    
+    /* ✅ NEW: Filter Match Badge */
+    .match-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: #2ecc71;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: 600;
     }
     
     .category-icon {
@@ -104,6 +133,21 @@
         margin-bottom: 20px;
         opacity: 0.5;
     }
+    
+    /* ✅ NEW: Info Alert */
+    .filter-info {
+        background: rgba(255,255,255,0.95);
+        border-left: 4px solid #3498db;
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .filter-info i {
+        color: #3498db;
+        margin-right: 10px;
+    }
 </style>
 {% endblock %}
 
@@ -128,12 +172,47 @@
         
         <h1>{{ card.title }}</h1>
         <p>{{ card.description }}</p>
+        
+        <!-- ✅ NEW: User Profile Filters -->
+        {% if user_country or user_state or user_course %}
+        <div class="mt-3">
+            <small style="opacity: 0.8;">Showing results for:</small><br>
+            {% if user_country %}
+                <span class="filter-badge">
+                    <i class="fas fa-globe"></i> {{ user_country.name }}
+                </span>
+            {% endif %}
+            {% if user_state %}
+                <span class="filter-badge">
+                    <i class="fas fa-map-marker-alt"></i> {{ user_state.name }}
+                </span>
+            {% endif %}
+            {% if user_course %}
+                <span class="filter-badge">
+                    <i class="fas fa-graduation-cap"></i> {{ user_course }}
+                </span>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
 </section>
 
 <!-- Subcategories Section -->
 <section class="py-5">
     <div class="container">
+        <!-- ✅ NEW: Filter Info Alert (Optional) -->
+        {% if user_country or user_state or user_course %}
+        <div class="filter-info">
+            <i class="fas fa-info-circle"></i>
+            <strong>Personalized Results:</strong> 
+            We're showing categories relevant to your profile. 
+            Some categories may be hidden if they don't match your location or course.
+            <small class="d-block mt-1 text-muted">
+                (Showing {{ filtered_count }} of {{ total_subcategories }} available categories)
+            </small>
+        </div>
+        {% endif %}
+        
         {% if subcategories %}
             <div class="row">
                 {% for subcategory in subcategories %}
@@ -141,6 +220,13 @@
                     <a href="{% url 'main_app:online_education_subcategory_detail' card.slug subcategory.slug %}" 
                        class="category-card" 
                        style="border-left-color: {{ subcategory.icon_color }};">
+                        
+                        <!-- ✅ NEW: Match Badge (optional) -->
+                        {% if subcategory.target_country or subcategory.student_state or subcategory.course %}
+                        <span class="match-badge">
+                            <i class="fas fa-check"></i> Match
+                        </span>
+                        {% endif %}
                         
                         <div class="category-icon">
                             <img src="{{ subcategory.get_icon }}" alt="{{ subcategory.title }}">
@@ -158,6 +244,27 @@
                                     {{ subcategory.content_pages.count }} pages
                                 {% endif %}
                             </small>
+                            
+                            <!-- ✅ NEW: Show filter tags if set -->
+                            {% if subcategory.target_country or subcategory.student_state or subcategory.course %}
+                            <div class="mt-2">
+                                {% if subcategory.target_country %}
+                                    <small class="badge bg-info me-1">
+                                        <i class="fas fa-globe"></i> {{ subcategory.target_country.name }}
+                                    </small>
+                                {% endif %}
+                                {% if subcategory.student_state %}
+                                    <small class="badge bg-success me-1">
+                                        <i class="fas fa-map-marker-alt"></i> {{ subcategory.student_state.name }}
+                                    </small>
+                                {% endif %}
+                                {% if subcategory.course %}
+                                    <small class="badge bg-warning text-dark">
+                                        <i class="fas fa-book"></i> {{ subcategory.course }}
+                                    </small>
+                                {% endif %}
+                            </div>
+                            {% endif %}
                         </div>
                     </a>
                 </div>
@@ -167,7 +274,18 @@
             <div class="empty-state">
                 <i class="fas fa-folder-open"></i>
                 <h4>No Categories Available</h4>
-                <p>Categories will be added soon. Please check back later.</p>
+                {% if user_country or user_state or user_course %}
+                    <p>No categories match your profile at the moment.</p>
+                    <p class="text-muted">
+                        <small>Your filters: 
+                            {% if user_country %}{{ user_country.name }}{% endif %}
+                            {% if user_state %}, {{ user_state.name }}{% endif %}
+                            {% if user_course %}, {{ user_course }}{% endif %}
+                        </small>
+                    </p>
+                {% else %}
+                    <p>Categories will be added soon. Please check back later.</p>
+                {% endif %}
             </div>
         {% endif %}
     </div>

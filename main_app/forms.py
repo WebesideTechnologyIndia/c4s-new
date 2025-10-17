@@ -513,16 +513,48 @@ class OnlineEducationCardForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['slug'].required = False
 
+# 
+# forms.py mein OnlineEducationSubCategoryForm update karo:
 
+from django import forms
+from .models import OnlineEducationSubCategory, Country, State, UserRegistration
+# 
 class OnlineEducationSubCategoryForm(forms.ModelForm):
+    COURSE_CHOICES = UserRegistration.COURSE_CHOICES
+     
     class Meta:
         model = OnlineEducationSubCategory
-        fields = ['parent_card', 'parent_subcategory', 'title', 'slug', 'description', 
+        fields = ['parent_card', 'parent_subcategory', 'title', 'slug', 'description',
+                  'target_country', 'student_state', 'course',  # ✅ NEW
                   'icon_image', 'icon_url', 'icon_color', 'order', 'is_active']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
             'icon_color': forms.TextInput(attrs={'type': 'color'}),
+            'target_country': forms.Select(attrs={'class': 'form-control'}),
+            'student_state': forms.Select(attrs={'class': 'form-control'}),
+            'course': forms.Select(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Set country queryset
+        self.fields['target_country'].queryset = Country.objects.filter(is_active=True).order_by('name')
+        self.fields['target_country'].required = False
+        
+        # Set state queryset
+        self.fields['student_state'].queryset = State.objects.filter(is_active=True).order_by('name')
+        self.fields['student_state'].required = False
+#         
+#         # Add course choices
+        self.fields['course'].widget = forms.Select(
+            attrs={'class': 'form-control'},
+            choices=[('', 'All Courses')] + list(self.COURSE_CHOICES)
+        )
+        self.fields['course'].required = False
+
+
+
 
 
 class OnlineEducationPageForm(forms.ModelForm):
@@ -618,23 +650,49 @@ class UserRegistrationForm(forms.ModelForm):
 from django import forms
 from .models import SubCategory, ContentPage
 
-# ==================== SUB CATEGORY FORM ====================
+# forms.py mein UPDATE karo
+
+from django import forms
+from .models import SubCategory, State, UserRegistration
+
 class SubCategoryForm(forms.ModelForm):
+    # Get course choices from UserRegistration model
+    COURSE_CHOICES = UserRegistration.COURSE_CHOICES
+    
     class Meta:
         model = SubCategory
-        fields = ['parent_card', 'title', 'slug', 'description', 'icon_image', 'icon_url', 'icon_color', 'order', 'is_active']
+        fields = ['parent_card', 'title', 'slug', 'description', 'state', 'course',
+                  'icon_image', 'icon_url', 'icon_color', 'order', 'is_active']
         
         widgets = {
             'parent_card': forms.Select(attrs={'class': 'form-control'}),
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Engineering Colleges'}),
             'slug': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'engineering-colleges'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Short description'}),
+            
+            # NEW: State & Course dropdowns
+            'state': forms.Select(attrs={'class': 'form-control'}),
+            'course': forms.Select(attrs={'class': 'form-control'}),
+            
             'icon_image': forms.FileInput(attrs={'class': 'form-control'}),
             'icon_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://example.com/icon.png'}),
             'icon_color': forms.Select(attrs={'class': 'form-select'}),
             'order': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set state queryset - only active states
+        self.fields['state'].queryset = State.objects.filter(is_active=True).order_by('name')
+        self.fields['state'].required = False  # Optional field
+        
+        # Add course choices
+        self.fields['course'].widget = forms.Select(
+            attrs={'class': 'form-control'},
+            choices=[('', 'All Courses')] + list(self.COURSE_CHOICES)
+        )
+        self.fields['course'].required = False  # Optional field
 
 
 # ==================== CONTENT PAGE FORM ====================
@@ -705,24 +763,59 @@ class AdmissionAbroadPageForm(forms.ModelForm):
 
 # forms.py mein add karo
 
+# forms.py mein AdmissionAbroadSubCategoryForm UPDATE karo
+
+from django import forms
+from .models import AdmissionAbroadSubCategory, Country, State, UserRegistration
+
 class AdmissionAbroadSubCategoryForm(forms.ModelForm):
+    # Get course choices from UserRegistration model
+    COURSE_CHOICES = UserRegistration.COURSE_CHOICES
+    
     class Meta:
         model = AdmissionAbroadSubCategory
-        fields = ['parent_card', 'parent_subcategory', 'title', 'slug', 'description', 
+        fields = ['parent_card', 'parent_subcategory', 'title', 'slug', 'description',
+                  'target_country', 'student_state', 'course',  # ✅ NEW FIELDS
                   'icon_image', 'icon_url', 'icon_color', 'order', 'is_active']
         
         widgets = {
             'parent_card': forms.Select(attrs={'class': 'form-control'}),
             'parent_subcategory': forms.Select(attrs={'class': 'form-control'}),
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
-            'slug': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Engineering Universities in Russia'}),
+            'slug': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'engineering-russia'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Short description'}),
+            
+            # ✅ NEW: Country, State & Course dropdowns
+            'target_country': forms.Select(attrs={'class': 'form-control'}),
+            'student_state': forms.Select(attrs={'class': 'form-control'}),
+            'course': forms.Select(attrs={'class': 'form-control'}),
+            
             'icon_image': forms.FileInput(attrs={'class': 'form-control'}),
-            'icon_url': forms.URLInput(attrs={'class': 'form-control'}),
+            'icon_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://example.com/icon.png'}),
             'icon_color': forms.Select(attrs={'class': 'form-select'}),
-            'order': forms.NumberInput(attrs={'class': 'form-control'}),
+            'order': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Set country queryset - only active countries
+        self.fields['target_country'].queryset = Country.objects.filter(is_active=True).order_by('name')
+        self.fields['target_country'].required = False  # Optional field
+        
+        # Set state queryset - only active states (student's home state)
+        self.fields['student_state'].queryset = State.objects.filter(is_active=True).order_by('name')
+        self.fields['student_state'].required = False  # Optional field
+        
+        # Add course choices
+        self.fields['course'].widget = forms.Select(
+            attrs={'class': 'form-control'},
+            choices=[('', 'All Courses')] + list(self.COURSE_CHOICES)
+        )
+        self.fields['course'].required = False  # Optional field
+
+
 
 class AdmissionAbroadPageForm(forms.ModelForm):
     class Meta:
@@ -745,15 +838,47 @@ class AdmissionAbroadPageForm(forms.ModelForm):
 
 from .models import DistanceEducationSubCategory, DistanceEducationPage
 
+
+# forms.py mein DistanceEducationSubCategoryForm UPDATE karo
+
+from django import forms
+from .models import DistanceEducationSubCategory, Country, State, UserRegistration
+
 class DistanceEducationSubCategoryForm(forms.ModelForm):
+    COURSE_CHOICES = UserRegistration.COURSE_CHOICES
+    
     class Meta:
         model = DistanceEducationSubCategory
-        fields = ['parent_card', 'parent_subcategory', 'title', 'slug', 'description', 
+        fields = ['parent_card', 'parent_subcategory', 'title', 'slug', 'description',
+                  'target_country', 'student_state', 'course',  # ✅ NEW
                   'icon_image', 'icon_url', 'icon_color', 'order', 'is_active']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
             'icon_color': forms.TextInput(attrs={'type': 'color'}),
+            'target_country': forms.Select(attrs={'class': 'form-control'}),
+            'student_state': forms.Select(attrs={'class': 'form-control'}),
+            'course': forms.Select(attrs={'class': 'form-control'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Set country queryset
+        self.fields['target_country'].queryset = Country.objects.filter(is_active=True).order_by('name')
+        self.fields['target_country'].required = False
+        
+        # Set state queryset
+        self.fields['student_state'].queryset = State.objects.filter(is_active=True).order_by('name')
+        self.fields['student_state'].required = False
+        
+        # Add course choices
+        self.fields['course'].widget = forms.Select(
+            attrs={'class': 'form-control'},
+            choices=[('', 'All Courses')] + list(self.COURSE_CHOICES)
+        )
+        self.fields['course'].required = False
+
+
 
 class DistanceEducationPageForm(forms.ModelForm):
     class Meta:

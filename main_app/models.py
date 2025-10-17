@@ -577,6 +577,15 @@ class DistanceEducationSubCategory(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True)
     description = models.TextField(blank=True)
+     # ✅ NEW FIELDS - Country, State & Course Filter
+    target_country = models.ForeignKey('Country', on_delete=models.SET_NULL, null=True, blank=True,
+                                      related_name='distance_education_subcategories',
+                                      help_text="Target country (for international programs)")
+    student_state = models.ForeignKey('State', on_delete=models.SET_NULL, null=True, blank=True, 
+                                     related_name='distance_education_sub_categories',
+                                     help_text="Student's home state (leave blank for all states)")
+    course = models.CharField(max_length=100, blank=True, null=True,
+                             help_text="Select course (leave blank for all courses)")
     
     # Icon options
     icon_image = models.ImageField(upload_to='distance_education/icons/', blank=True, null=True)
@@ -735,6 +744,7 @@ class OnlineEducationCard(models.Model):
 
 
 # ✅ ADD NEW MODELS
+# models.py mein OnlineEducationSubCategory UPDATE karo
 
 class OnlineEducationSubCategory(models.Model):
     """Nested subcategories for Online Education (infinite levels)"""
@@ -756,6 +766,30 @@ class OnlineEducationSubCategory(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True)
     description = models.TextField(blank=True)
+    
+    # ✅ NEW FIELDS - Country, State & Course Filter
+    target_country = models.ForeignKey(
+        'Country', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='online_education_subcategories',
+        help_text="Target country (for international programs)"
+    )
+    student_state = models.ForeignKey(
+        'State', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='online_education_sub_categories',
+        help_text="Student's home state (leave blank for all states)"
+    )
+    course = models.CharField(
+        max_length=100, 
+        blank=True, 
+        null=True,
+        help_text="Select course (leave blank for all courses)"
+    )
     
     # Icon options
     icon_image = models.ImageField(upload_to='online_education/icons/', blank=True, null=True)
@@ -785,12 +819,15 @@ class OnlineEducationSubCategory(models.Model):
         return '/static/img/default-icon.png'
     
     def get_children(self):
+        """Get all active children"""
         return self.children.filter(is_active=True).order_by('order')
     
     def has_children(self):
+        """Check if has child subcategories"""
         return self.children.filter(is_active=True).exists()
     
     def get_breadcrumb(self):
+        """Get breadcrumb trail"""
         breadcrumb = []
         current = self
         while current:
@@ -799,12 +836,39 @@ class OnlineEducationSubCategory(models.Model):
         return breadcrumb
     
     def get_root_card(self):
+        """Get the root card by traversing up"""
         current = self
         while current.parent_subcategory:
             current = current.parent_subcategory
         return current.parent_card
-
-
+    
+    # ✅ NEW METHOD - Check if visible to user
+    def is_visible_to_user(self, user_registration):
+        """
+        Check if this subcategory should be visible to the given user
+        based on their country, state, and course
+        """
+        if not user_registration:
+            return True  # Show all if no registration
+        
+        # Check country filter
+        if self.target_country:
+            if self.target_country != user_registration.country:
+                return False
+        
+        # Check state filter
+        if self.student_state:
+            if self.student_state != user_registration.state:
+                return False
+        
+        # Check course filter
+        if self.course:
+            if self.course != user_registration.course:
+                return False
+        
+        return True  # All filters passed
+    
+    
 class OnlineEducationPage(models.Model):
     """Content pages for Online Education subcategories"""
     sub_category = models.ForeignKey(
@@ -1114,6 +1178,8 @@ from django.utils.text import slugify
 
 # In your SubCategory model in models.py, REPLACE the entire class with this:
 
+# models.py mein SubCategory model UPDATE karo
+
 class SubCategory(models.Model):
     """Sub-categories - UNLIMITED NESTING support"""
     
@@ -1135,6 +1201,13 @@ class SubCategory(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200, unique=True, blank=True)
     description = models.TextField(max_length=300, blank=True)
+    
+    # ✅ NEW FIELDS - State & Course Filter
+    state = models.ForeignKey('State', on_delete=models.SET_NULL, null=True, blank=True, 
+                              related_name='sub_categories',
+                              help_text="Select state (leave blank for all states)")
+    course = models.CharField(max_length=100, blank=True, null=True,
+                             help_text="Select course (leave blank for all courses)")
     
     # Icon/Image
     icon_image = models.ImageField(upload_to='sub_categories/', blank=True, null=True)
@@ -1160,10 +1233,7 @@ class SubCategory(models.Model):
             return f"{self.parent_subcategory.title} → {self.title}"
         return f"{self.parent_card.title} → {self.title}"
     
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.title)
-        super().save(*args, **kwargs)
+    # Rest of your existing methods...
     
     def get_icon(self):
         if self.icon_image:
@@ -1282,6 +1352,9 @@ class ContentPage(models.Model):
 
 # Here's the SINGLE correct version of AdmissionAbroadSubCategory:
 
+
+# models.py mein AdmissionAbroadSubCategory UPDATE karo
+
 class AdmissionAbroadSubCategory(models.Model):
     """Sub-categories for Admission Abroad - UNLIMITED NESTING"""
     
@@ -1304,6 +1377,16 @@ class AdmissionAbroadSubCategory(models.Model):
     slug = models.SlugField(max_length=200, unique=True, blank=True)
     description = models.TextField(max_length=300, blank=True)
     
+    # ✅ NEW FIELDS - Country, State & Course Filter
+    target_country = models.ForeignKey('Country', on_delete=models.SET_NULL, null=True, blank=True,
+                                      related_name='admission_abroad_subcategories',
+                                      help_text="Target country (e.g., Russia, USA)")
+    student_state = models.ForeignKey('State', on_delete=models.SET_NULL, null=True, blank=True, 
+                                     related_name='admission_abroad_sub_categories',
+                                     help_text="Student's home state (leave blank for all states)")
+    course = models.CharField(max_length=100, blank=True, null=True,
+                             help_text="Select course (leave blank for all courses)")
+    
     # Icon/Image
     icon_image = models.ImageField(upload_to='admission_abroad_sub/', blank=True, null=True)
     icon_url = models.URLField(max_length=500, blank=True)
@@ -1321,7 +1404,8 @@ class AdmissionAbroadSubCategory(models.Model):
     class Meta:
         ordering = ['order', 'id']
         verbose_name = "Admission Abroad Sub Category"
-        
+        verbose_name_plural = "Admission Abroad Sub Categories"
+    
     def __str__(self):
         if self.parent_subcategory:
             return f"{self.parent_subcategory.title} → {self.title}"
@@ -1339,22 +1423,12 @@ class AdmissionAbroadSubCategory(models.Model):
         return self.icon_url if self.icon_url else 'https://via.placeholder.com/100'
     
     def has_children(self):
-        """Check if this subcategory has any children"""
-        return self.children.exists()  # Assuming you have related_name='children'
+        return self.children.filter(is_active=True).exists()
     
-    def children_count(self):
-        """Count direct children"""
-        return self.children.count()
-    
-    def get_all_children(self):
-        """Get all direct children"""
-        return AdmissionAbroadSubCategory.objects.filter(parent_subcategory=self)
-
     def get_children(self):
         return self.children.filter(is_active=True).order_by('order')
-
+    
     def get_root_card(self):
-        """Get the root AdmissionAbroadCard for this subcategory"""
         if self.parent_card:
             return self.parent_card
         elif self.parent_subcategory:
@@ -1362,7 +1436,6 @@ class AdmissionAbroadSubCategory(models.Model):
         return None
     
     def get_breadcrumb(self):
-        """Build breadcrumb trail from root to current subcategory"""
         breadcrumb = []
         current = self
         
@@ -1370,14 +1443,13 @@ class AdmissionAbroadSubCategory(models.Model):
             breadcrumb.insert(0, {'id': current.id, 'title': current.title})
             current = current.parent_subcategory
         
-        # Add root card at the beginning
         root_card = self.get_root_card()
         if root_card:
             breadcrumb.insert(0, {'id': root_card.id, 'title': root_card.title})
         
         return breadcrumb
+    
     def get_full_path(self):
-        """Get complete URL path: parent/child/grandchild"""
         path = [self.slug]
         current = self.parent_subcategory
         
@@ -1386,6 +1458,9 @@ class AdmissionAbroadSubCategory(models.Model):
             current = current.parent_subcategory
         
         return '/'.join(path)
+    
+
+
 # Same for AdmissionAbroadPage - Keep only ONE copy
 class AdmissionAbroadPage(models.Model):
     """Content pages for Admission Abroad"""

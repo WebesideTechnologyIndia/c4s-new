@@ -79,6 +79,48 @@
         font-weight: 500;
     }
 
+    /* ✅ NEW: Filter Info Box */
+    .filter-info-box {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        padding: 20px 30px;
+        margin-top: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        display: inline-block;
+        animation: fadeInUp 0.6s 0.4s both;
+    }
+
+    .filter-info-box .filter-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-bottom: 10px;
+        font-weight: 500;
+    }
+
+    .filter-badges {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .filter-badge {
+        background: white;
+        color: #ED651C;
+        padding: 10px 20px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .filter-badge i {
+        font-size: 1.1rem;
+    }
+
     /* Sub-Category Cards */
     .subcategory-card {
         background: white;
@@ -189,6 +231,25 @@
         font-size: 1.1rem;
     }
 
+    /* ✅ NEW: Results Count Badge */
+    .results-count {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 15px 30px;
+        border-radius: 15px;
+        display: inline-block;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        font-weight: 600;
+        color: #2d3748;
+    }
+
+    .results-count .count-number {
+        color: #ED651C;
+        font-size: 1.3rem;
+        font-weight: 800;
+    }
+
     /* Empty State */
     .empty-state {
         padding: 100px 20px;
@@ -213,6 +274,48 @@
         color: #718096;
         font-size: 1.1rem;
         margin-bottom: 35px;
+        line-height: 1.6;
+    }
+
+    /* ✅ NEW: Profile Prompt Box */
+    .profile-prompt {
+        background: linear-gradient(135deg, #fef5e7 0%, #fdebd0 100%);
+        border: 2px dashed #f39c12;
+        border-radius: 20px;
+        padding: 30px;
+        margin-top: 30px;
+        text-align: center;
+    }
+
+    .profile-prompt h5 {
+        color: #e67e22;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+
+    .profile-prompt p {
+        color: #7f8c8d;
+        margin-bottom: 20px;
+    }
+
+    .btn-complete-profile {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        color: white;
+        padding: 12px 30px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+    }
+
+    .btn-complete-profile:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(243, 156, 18, 0.4);
+        color: white;
     }
 
     .btn-add {
@@ -330,6 +433,14 @@
         .empty-state-icon {
             font-size: 4rem;
         }
+
+        .filter-info-box {
+            padding: 15px 20px;
+        }
+
+        .filter-badges {
+            justify-content: center;
+        }
     }
 
     /* Grid Layout Enhancement */
@@ -369,65 +480,128 @@
         <p class="page-subtitle" style="animation: fadeInUp 0.6s 0.2s both;">
             Select a category below to explore detailed information and resources
         </p>
+
+        <!-- ✅ NEW: Filter Info Display -->
+        {% if user_state or user_course %}
+        <div class="filter-info-box">
+            <div class="filter-label">
+                <i class="bi bi-funnel-fill me-2"></i>Personalized Content For You
+            </div>
+            <div class="filter-badges">
+                {% if user_state %}
+                <span class="filter-badge">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    {{ user_state.name }}
+                </span>
+                {% endif %}
+                {% if user_course %}
+                <span class="filter-badge">
+                    <i class="bi bi-book-fill"></i>
+                    {{ user_course }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
 <!-- Main Content -->
 <div class="container py-5">
     {% if sub_categories %}
-    <div class="subcategories-grid">
-        {% for sub_cat in sub_categories %}
-<a href="{% url 'main_app:subcategory_detail_view' card.get_slug sub_cat.get_full_path %}" class="text-decoration-none d-block">
-          class="text-decoration-none d-block">
-         class="text-decoration-none d-block">
-            <div class="subcategory-card">
-                <!-- Icon -->
-                <div class="icon-wrapper" style="background: {{ sub_cat.icon_color }}20; border: 3px solid {{ sub_cat.icon_color }}40;">
-                    <img src="{{ sub_cat.get_icon }}" alt="{{ sub_cat.title }}">
-                </div>
-                
-                <!-- Title -->
-                <h5 class="card-title">{{ sub_cat.title }}</h5>
-                
-                <!-- Description -->
-                {% if sub_cat.description %}
-                <p class="card-description">
-                    {{ sub_cat.description|truncatewords:20 }}
-                </p>
-                {% else %}
-                <p class="card-description">
-                    Explore detailed information and comprehensive resources
-                </p>
+        <!-- ✅ Results Count -->
+        <div class="text-center">
+            <div class="results-count">
+                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                Showing <span class="count-number">{{ total_filtered }}</span> 
+                relevant categor{{ total_filtered|pluralize:"y,ies" }}
+                {% if user_state or user_course %}
+                    matching your profile
                 {% endif %}
-                
-                <!-- Pages Count -->
-                <div class="mt-auto">
-                    <span class="pages-badge">
-                        <i class="bi bi-file-earmark-text"></i>
-                        {{ sub_cat.pages_count }} Page{{ sub_cat.pages_count|pluralize }}
-                    </span>
-                </div>
             </div>
-        </a>
-        {% endfor %}
-    </div>
-    {% else %}
-    <!-- Empty State -->
-    <div class="empty-state">
-        <div class="empty-state-icon">
-            <i class="bi bi-inbox"></i>
         </div>
-        <p class="empty-state-text">
-            No sub-categories available yet
-        </p>
-        <p class="empty-state-subtext">
-            New content is being added regularly. Check back soon!
-        </p>
-        <a href="{% url 'main_app:all_india_services' %}" class="btn-add">
-            <i class="bi bi-arrow-left"></i>
-            Back to All Services
-        </a>
-    </div>
+
+        <!-- Subcategories Grid -->
+        <div class="subcategories-grid">
+            {% for sub_cat in sub_categories %}
+            <a href="{% url 'main_app:subcategory_detail_view' card.get_slug sub_cat.get_full_path %}" 
+               class="text-decoration-none d-block">
+                <div class="subcategory-card">
+                    <!-- Icon -->
+                    <div class="icon-wrapper" style="background: {{ sub_cat.icon_color }}20; border: 3px solid {{ sub_cat.icon_color }}40;">
+                        <img src="{{ sub_cat.get_icon }}" alt="{{ sub_cat.title }}">
+                    </div>
+                    
+                    <!-- Title -->
+                    <h5 class="card-title">{{ sub_cat.title }}</h5>
+                    
+                    <!-- Description -->
+                    {% if sub_cat.description %}
+                    <p class="card-description">
+                        {{ sub_cat.description|truncatewords:20 }}
+                    </p>
+                    {% else %}
+                    <p class="card-description">
+                        Explore detailed information and comprehensive resources
+                    </p>
+                    {% endif %}
+                    
+                    <!-- Pages Count -->
+                    <div class="mt-auto">
+                        <span class="pages-badge">
+                            <i class="bi bi-file-earmark-text"></i>
+                            {{ sub_cat.pages_count }} Page{{ sub_cat.pages_count|pluralize }}
+                        </span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- ✅ UPDATED Empty State -->
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-inbox"></i>
+            </div>
+            <p class="empty-state-text">
+                {% if user_state or user_course %}
+                    No matching categories found
+                {% else %}
+                    No sub-categories available yet
+                {% endif %}
+            </p>
+            <p class="empty-state-subtext">
+                {% if user_state or user_course %}
+                    We couldn't find any categories matching your state 
+                    {% if user_state %}<strong>({{ user_state.name }})</strong>{% endif %}
+                    {% if user_course %}and course <strong>({{ user_course }})</strong>{% endif %}.<br>
+                    Check back soon as new content is added regularly!
+                {% else %}
+                    New content is being added regularly. Check back soon!
+                {% endif %}
+            </p>
+
+            <!-- ✅ Profile Completion Prompt (if no state/course) -->
+            {% if not user_state or not user_course %}
+            <div class="profile-prompt">
+                <h5><i class="bi bi-person-circle me-2"></i>Complete Your Profile</h5>
+                <p>
+                    Get personalized content by completing your profile with state and course information.
+                </p>
+                <a href="{% url 'main_app:user_profile' %}" class="btn-complete-profile">
+                    <i class="bi bi-pencil-square"></i>
+                    Complete Profile
+                </a>
+            </div>
+            {% endif %}
+
+            <div class="mt-4">
+                <a href="{% url 'main_app:all_india_services' %}" class="btn-add">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to All Services
+                </a>
+            </div>
+        </div>
     {% endif %}
 </div>
 {% endblock %}

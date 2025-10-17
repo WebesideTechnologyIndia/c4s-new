@@ -2053,18 +2053,31 @@ def admin_sub_categories_by_card(request, card_id):
     }
     return render(request, 'admin/sub_categories_by_card.html', context)
 
+# views.py mein UPDATE karo
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+from .models import AllIndiaServiceCard, SubCategory, State, UserRegistration
+
+def is_admin_or_staff(user):
+    return user.is_staff or user.is_superuser
 
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_sub_category_add_for_card(request, card_id):
-    """Admin dashboard - Add sub-category for specific card"""
+    """Admin dashboard - Add sub-category for specific card with State & Course filters"""
     parent_card = get_object_or_404(AllIndiaServiceCard, pk=card_id)
     
     if request.method == 'POST':
-        # Same as admin_sub_category_add but parent_card is pre-selected
         title = request.POST.get('title')
         slug = request.POST.get('slug')
         description = request.POST.get('description')
+        
+        # ✅ NEW: Get State & Course
+        state_id = request.POST.get('state')
+        course = request.POST.get('course')
+        
         icon_url = request.POST.get('icon_url')
         icon_color = request.POST.get('icon_color')
         order = request.POST.get('order') or 0
@@ -2077,11 +2090,19 @@ def admin_sub_category_add_for_card(request, card_id):
                 from django.utils.text import slugify
                 slug = slugify(title)
             
+            # ✅ Handle State (optional)
+            state = None
+            if state_id:
+                state = State.objects.get(pk=state_id)
+            
+            # ✅ Create SubCategory with State & Course
             sub_category = SubCategory.objects.create(
                 parent_card=parent_card,
                 title=title,
                 slug=slug,
                 description=description,
+                state=state,  # ✅ NEW
+                course=course if course else None,  # ✅ NEW
                 icon_image=icon_image,
                 icon_url=icon_url,
                 icon_color=icon_color,
@@ -2096,11 +2117,13 @@ def admin_sub_category_add_for_card(request, card_id):
         except Exception as e:
             messages.error(request, f"Error: {str(e)}")
     
+    # ✅ Pass states and courses to template
     context = {
         'parent_card': parent_card,
+        'states': State.objects.filter(is_active=True).order_by('name'),
+        'courses': UserRegistration.COURSE_CHOICES,  # Course choices
     }
     return render(request, 'admin/sub_category_add.html', context)
-
 
 # ==================== ADMIN: CONTENT PAGES BY SUB-CATEGORY ====================
 @login_required(login_url='main_app:admin_login')
@@ -2177,11 +2200,21 @@ from django.contrib.auth.decorators import login_required
 from .models import AllIndiaServiceCard, SubCategory, ContentPage
 
 # ==================== STUDENT: CARD DETAIL (SUB-CATEGORIES LIST) ====================
+# views.py mein YE VIEW UPDATE KARO
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.db.models import Q
+from .models import AllIndiaServiceCard, SubCategory, UserRegistration
+
 @login_required(login_url='main_app:user_login')
 def card_detail_view(request, card_slug):
     """
-    Student side - Show sub-categories for a card
+    Student side - Show FILTERED sub-categories for a card
     URL: /all-india-services/rti/
+    
+    ✅ Shows only subcategories matching student's STATE and COURSE
     """
     # Check if admin
     if request.user.is_staff or request.user.is_superuser:
@@ -2193,18 +2226,55 @@ def card_detail_view(request, card_slug):
                             redirect_link__icontains=card_slug, 
                             is_active=True)
     
-    # Get all active sub-categories for this card
+    # ✅ STEP 1: Get logged-in user's STATE and COURSE
+    try:
+        user_registration = UserRegistration.objects.get(user=request.user)
+        user_state = user_registration.state
+        user_course = user_registration.course
+    except UserRegistration.DoesNotExist:
+        # If user hasn't completed registration, show all subcategories
+        user_state = None
+        user_course = None
+    
+    # ✅ STEP 2: Filter sub-categories by STATE and COURSE
     sub_categories = SubCategory.objects.filter(
         parent_card=card, 
         is_active=True
-    ).order_by('order')
+    )
     
+    # ✅ FILTER BY STATE: Show if (matches user's state) OR (no state filter set)
+    if user_state:
+        sub_categories = sub_categories.filter(
+            Q(state=user_state) | Q(state__isnull=True)
+        )
+    else:
+        # If user has no state, show only subcategories with no state filter
+        sub_categories = sub_categories.filter(state__isnull=True)
+    
+    # ✅ FILTER BY COURSE: Show if (matches user's course) OR (no course filter set)
+    if user_course:
+        sub_categories = sub_categories.filter(
+            Q(course=user_course) | Q(course__isnull=True) | Q(course='')
+        )
+    else:
+        # If user has no course, show only subcategories with no course filter
+        sub_categories = sub_categories.filter(
+            Q(course__isnull=True) | Q(course='')
+        )
+    
+    # Order by display order
+    sub_categories = sub_categories.order_by('order')
+    
+    # ✅ STEP 3: Pass to template
     context = {
         'card': card,
         'sub_categories': sub_categories,
+        'user_state': user_state,
+        'user_course': user_course,
+        'total_filtered': sub_categories.count(),
     }
+    
     return render(request, 'student/card_detail.html', context)
-
 
 # ==================== STUDENT: SUB-CATEGORY DETAIL (PAGES LIST) ====================
 @login_required(login_url='main_app:user_login')
@@ -2720,30 +2790,81 @@ def admin_admission_abroad_page_add(request, subcategory_id):
 # ==================== STUDENT: FRONTEND VIEWS ====================
 
 
+# views.py mein YE VIEW UPDATE KARO
+
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from .models import AdmissionAbroadCard, AdmissionAbroadSubCategory, UserRegistration
+
 @login_required(login_url='main_app:user_login')
 def admission_abroad_card_detail(request, card_slug):
-    """Student: Display main card with its subcategories"""
+    """
+    Student: Display main card with FILTERED subcategories
+    ✅ Filters by: Student State + Course
+    """
     card = get_object_or_404(AdmissionAbroadCard, 
                             slug=card_slug, 
                             is_active=True)
     
-    # ✅ Get TOP-LEVEL subcategories only
+    # ✅ STEP 1: Get logged-in user's STATE and COURSE
+    try:
+        user_registration = UserRegistration.objects.get(user=request.user)
+        user_state = user_registration.state
+        user_course = user_registration.course
+    except UserRegistration.DoesNotExist:
+        # If user hasn't completed registration, show all subcategories
+        user_state = None
+        user_course = None
+    
+    # ✅ STEP 2: Get TOP-LEVEL subcategories with FILTERING
     subcategories = card.sub_categories.filter(
         is_active=True, 
-        parent_subcategory__isnull=True  # ✅ Important: only top-level
-    ).order_by('order')
+        parent_subcategory__isnull=True  # Only top-level
+    )
+    
+    # ✅ FILTER BY STUDENT STATE: Show if (matches user's state) OR (no state filter)
+    if user_state:
+        subcategories = subcategories.filter(
+            Q(student_state=user_state) | Q(student_state__isnull=True)
+        )
+    else:
+        # If user has no state, show only subcategories with no state filter
+        subcategories = subcategories.filter(student_state__isnull=True)
+    
+    # ✅ FILTER BY COURSE: Show if (matches user's course) OR (no course filter)
+    if user_course:
+        subcategories = subcategories.filter(
+            Q(course=user_course) | Q(course__isnull=True) | Q(course='')
+        )
+    else:
+        # If user has no course, show only subcategories with no course filter
+        subcategories = subcategories.filter(
+            Q(course__isnull=True) | Q(course='')
+        )
+    
+    # Order by display order
+    subcategories = subcategories.order_by('order')
     
     # ✅ DEBUG: Print karo
     print(f"Card: {card.title}")
-    print(f"Subcategories found: {subcategories.count()}")
+    print(f"User State: {user_state}")
+    print(f"User Course: {user_course}")
+    print(f"Filtered Subcategories: {subcategories.count()}")
     for sub in subcategories:
         print(f"  - {sub.title} (slug: {sub.slug})")
     
+    # ✅ STEP 3: Pass to template
     context = {
         'card': card,
         'subcategories': subcategories,
+        'user_state': user_state,
+        'user_course': user_course,
+        'total_filtered': subcategories.count(),
     }
+    
     return render(request, 'student/admission_abroad_card_detail.html', context)
+
 
 @login_required(login_url='main_app:user_login')
 def admission_abroad_subcategory_detail(request, card_slug, subcategory_path):
@@ -2834,10 +2955,20 @@ def admission_abroad_page_detail(request, card_slug, subcategory_path, page_slug
     return render(request, 'student/admission_abroad_page_detail.html', context)
 
 
+
+# views.py mein UPDATE karo
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.utils.text import slugify
+from .models import AdmissionAbroadCard, AdmissionAbroadSubCategory, Country, State, UserRegistration
+
 @login_required(login_url='main_app:admin_login')
 def admin_admission_abroad_nested_subcategory_add(request, parent_id):
     """
     Add a new subcategory under either a Card or another Subcategory
+    with Country, State & Course filtering
     """
     parent_card = None
     parent_subcategory = None
@@ -2859,6 +2990,12 @@ def admin_admission_abroad_nested_subcategory_add(request, parent_id):
         title = request.POST.get('title')
         slug = request.POST.get('slug', '').strip()
         description = request.POST.get('description', '')
+        
+        # ✅ NEW: Get Country, State & Course
+        target_country_id = request.POST.get('target_country')
+        student_state_id = request.POST.get('student_state')
+        course = request.POST.get('course')
+        
         icon_image = request.FILES.get('icon_image')
         icon_url = request.POST.get('icon_url', '')
         icon_color = request.POST.get('icon_color', '#007bff')
@@ -2869,6 +3006,22 @@ def admin_admission_abroad_nested_subcategory_add(request, parent_id):
         if not slug:
             slug = slugify(title)
         
+        # ✅ Handle Country (optional)
+        target_country = None
+        if target_country_id:
+            try:
+                target_country = Country.objects.get(pk=target_country_id)
+            except Country.DoesNotExist:
+                pass
+        
+        # ✅ Handle State (optional)
+        student_state = None
+        if student_state_id:
+            try:
+                student_state = State.objects.get(pk=student_state_id)
+            except State.DoesNotExist:
+                pass
+        
         # Create subcategory
         subcategory = AdmissionAbroadSubCategory.objects.create(
             parent_card=parent_card,
@@ -2876,11 +3029,15 @@ def admin_admission_abroad_nested_subcategory_add(request, parent_id):
             title=title,
             slug=slug,
             description=description,
+            target_country=target_country,  # ✅ NEW
+            student_state=student_state,    # ✅ NEW
+            course=course if course else None,  # ✅ NEW
             icon_image=icon_image,
             icon_url=icon_url,
             icon_color=icon_color,
             order=order or 0,
-            is_active=is_active
+            is_active=is_active,
+            created_by=request.user
         )
         
         messages.success(request, f"Subcategory '{title}' added successfully!")
@@ -2898,16 +3055,16 @@ def admin_admission_abroad_nested_subcategory_add(request, parent_id):
     elif parent_card:
         breadcrumb = [{'id': parent_card.id, 'title': parent_card.title}]
     
+    # ✅ Pass Countries, States & Courses to template
     context = {
         'parent_card': parent_card,
         'parent_subcategory': parent_subcategory,
         'breadcrumb': breadcrumb,
-        'card_id': parent_card.id if parent_card else None,  # ✅ Added
-        'parent_id': parent_subcategory.id if parent_subcategory else None,  # ✅ Added
-        'form': {'initial': {  # ✅ Added initial values
-            'parent_card': parent_card,
-            'parent_subcategory': parent_subcategory,
-        }},
+        'card_id': parent_card.id if parent_card else None,
+        'parent_id': parent_subcategory.id if parent_subcategory else None,
+        'countries': Country.objects.filter(is_active=True).order_by('name'),  # ✅ NEW
+        'states': State.objects.filter(is_active=True).order_by('name'),       # ✅ NEW
+        'courses': UserRegistration.COURSE_CHOICES,                            # ✅ NEW
     }
     
     return render(request, 'admin/admission_abroad_subcategory_form.html', context)
@@ -3042,6 +3199,8 @@ def admin_distance_education_nested_subcategories(request, parent_id):
     return render(request, 'admin/distance_education_nested_subcategories.html', context)
 
 
+# views.py mein admin_distance_education_nested_subcategory_add UPDATE karo
+
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_distance_education_nested_subcategory_add(request, parent_id):
@@ -3049,7 +3208,7 @@ def admin_distance_education_nested_subcategory_add(request, parent_id):
     parent_card = None
     parent_subcategory = None
     
-    # ✅ FIX: First check if it's a subcategory (most common case)
+    # Check if it's a subcategory
     try:
         parent_subcategory = DistanceEducationSubCategory.objects.get(id=parent_id)
         parent_card = parent_subcategory.get_root_card()
@@ -3065,6 +3224,12 @@ def admin_distance_education_nested_subcategory_add(request, parent_id):
         title = request.POST.get('title')
         slug = request.POST.get('slug', '').strip()
         description = request.POST.get('description', '')
+        
+        # ✅ NEW: Get Country, State & Course
+        target_country_id = request.POST.get('target_country')
+        student_state_id = request.POST.get('student_state')
+        course = request.POST.get('course')
+        
         icon_image = request.FILES.get('icon_image')
         icon_url = request.POST.get('icon_url', '')
         icon_color = request.POST.get('icon_color', '#007bff')
@@ -3076,13 +3241,32 @@ def admin_distance_education_nested_subcategory_add(request, parent_id):
             from django.utils.text import slugify
             slug = slugify(title)
         
-        # ✅ CRITICAL FIX: Properly set parent relationships
+        # ✅ Handle Country & State
+        target_country = None
+        student_state = None
+        
+        if target_country_id:
+            try:
+                target_country = Country.objects.get(pk=target_country_id)
+            except Country.DoesNotExist:
+                pass
+        
+        if student_state_id:
+            try:
+                student_state = State.objects.get(pk=student_state_id)
+            except State.DoesNotExist:
+                pass
+        
+        # Create subcategory
         new_subcategory = DistanceEducationSubCategory.objects.create(
-            parent_card=parent_card if not parent_subcategory else None,  # ✅ Only set if top-level
-            parent_subcategory=parent_subcategory,  # ✅ Set if nested
+            parent_card=parent_card if not parent_subcategory else None,
+            parent_subcategory=parent_subcategory,
             title=title,
             slug=slug,
             description=description,
+            target_country=target_country,  # ✅ NEW
+            student_state=student_state,    # ✅ NEW
+            course=course if course else None,  # ✅ NEW
             icon_image=icon_image,
             icon_url=icon_url,
             icon_color=icon_color,
@@ -3093,7 +3277,7 @@ def admin_distance_education_nested_subcategory_add(request, parent_id):
         
         messages.success(request, f"✓ Subcategory '{title}' added successfully!")
         
-        # Redirect back to the parent view
+        # Redirect back
         if parent_subcategory:
             return redirect('main_app:admin_distance_education_nested_subcategories', parent_id=parent_subcategory.id)
         else:
@@ -3106,12 +3290,16 @@ def admin_distance_education_nested_subcategory_add(request, parent_id):
     elif parent_card:
         breadcrumb = [{'id': parent_card.id, 'title': parent_card.title}]
     
+    # ✅ Pass Countries, States & Courses to template
     context = {
         'parent_card': parent_card,
         'parent_subcategory': parent_subcategory,
         'breadcrumb': breadcrumb,
         'card_id': parent_card.id if parent_card else None,
         'parent_id': parent_subcategory.id if parent_subcategory else None,
+        'countries': Country.objects.filter(is_active=True).order_by('name'),  # ✅ NEW
+        'states': State.objects.filter(is_active=True).order_by('name'),       # ✅ NEW
+        'courses': UserRegistration.COURSE_CHOICES,                            # ✅ NEW
     }
     
     return render(request, 'admin/distance_education_subcategory_form.html', context)
@@ -3229,21 +3417,75 @@ def admin_distance_education_page_add(request, subcategory_id):
 
 # ==================== STUDENT: FRONTEND VIEWS ====================
 
+# views.py mein distance_education_card_detail UPDATE karo
+# views.py mein distance_education_card_detail UPDATE karo
+
 @login_required(login_url='main_app:user_login')
 def distance_education_card_detail(request, card_slug):
-    """Student: Display main card with its subcategories"""
+    """Student: Display main card with FILTERED subcategories"""
     card = get_object_or_404(DistanceEducationCard, slug=card_slug, is_active=True)
     
+    # ✅ STEP 1: Get logged-in user's STATE and COURSE
+    try:
+        user_registration = UserRegistration.objects.get(user=request.user)
+        user_state = user_registration.state
+        user_course = user_registration.course
+    except UserRegistration.DoesNotExist:
+        user_state = None
+        user_course = None
+    
+    # ✅ STEP 2: Get TOP-LEVEL subcategories with FILTERING
     subcategories = card.sub_categories.filter(
         is_active=True, 
         parent_subcategory__isnull=True
-    ).order_by('order')
+    )
     
+    # ✅ FILTER BY STUDENT STATE
+    if user_state:
+        from django.db.models import Q
+        subcategories = subcategories.filter(
+            Q(student_state=user_state) | Q(student_state__isnull=True)
+        )
+    else:
+        subcategories = subcategories.filter(student_state__isnull=True)
+    
+    # ✅ FILTER BY COURSE
+    if user_course:
+        from django.db.models import Q
+        subcategories = subcategories.filter(
+            Q(course=user_course) | Q(course__isnull=True) | Q(course='')
+        )
+    else:
+        subcategories = subcategories.filter(
+            Q(course__isnull=True) | Q(course='')
+        )
+    
+    subcategories = subcategories.order_by('order')
+    
+    # ✅ Get unique target countries for filter dropdown
+    unique_countries = subcategories.exclude(
+        target_country__isnull=True
+    ).values_list('target_country__name', flat=True).distinct().order_by('target_country__name')
+    
+    # ✅ DEBUG: Print karo
+    print(f"Card: {card.title}")
+    print(f"User State: {user_state}")
+    print(f"User Course: {user_course}")
+    print(f"Filtered Subcategories: {subcategories.count()}")
+    print(f"Unique Countries: {list(unique_countries)}")
+    
+    # ✅ STEP 3: Pass to template
     context = {
         'card': card,
         'subcategories': subcategories,
+        'user_state': user_state,
+        'user_course': user_course,
+        'total_filtered': subcategories.count(),
+        'unique_countries': unique_countries,  # ✅ NEW
     }
+    
     return render(request, 'student/distance_education_card_detail.html', context)
+
 
 
 @login_required(login_url='main_app:user_login')
@@ -3385,10 +3627,12 @@ def admin_online_education_nested_subcategory_add(request, parent_id):
     parent_card = None
     parent_subcategory = None
     
+    # Check if it's a subcategory
     try:
         parent_subcategory = OnlineEducationSubCategory.objects.get(id=parent_id)
         parent_card = parent_subcategory.get_root_card()
     except OnlineEducationSubCategory.DoesNotExist:
+        # If not a subcategory, then it must be a card
         try:
             parent_card = OnlineEducationCard.objects.get(id=parent_id)
         except OnlineEducationCard.DoesNotExist:
@@ -3399,22 +3643,49 @@ def admin_online_education_nested_subcategory_add(request, parent_id):
         title = request.POST.get('title')
         slug = request.POST.get('slug', '').strip()
         description = request.POST.get('description', '')
+        
+        # ✅ NEW: Get Country, State & Course
+        target_country_id = request.POST.get('target_country')
+        student_state_id = request.POST.get('student_state')
+        course = request.POST.get('course')
+        
         icon_image = request.FILES.get('icon_image')
         icon_url = request.POST.get('icon_url', '')
         icon_color = request.POST.get('icon_color', '#007bff')
         order = request.POST.get('order', 0)
         is_active = request.POST.get('is_active') == 'on'
         
+        # Auto-generate slug if empty
         if not slug:
             from django.utils.text import slugify
             slug = slugify(title)
         
+        # ✅ Handle Country & State
+        target_country = None
+        student_state = None
+        
+        if target_country_id:
+            try:
+                target_country = Country.objects.get(pk=target_country_id)
+            except Country.DoesNotExist:
+                pass
+        
+        if student_state_id:
+            try:
+                student_state = State.objects.get(pk=student_state_id)
+            except State.DoesNotExist:
+                pass
+        
+        # Create subcategory
         new_subcategory = OnlineEducationSubCategory.objects.create(
             parent_card=parent_card if not parent_subcategory else None,
             parent_subcategory=parent_subcategory,
             title=title,
             slug=slug,
             description=description,
+            target_country=target_country,  # ✅ NEW
+            student_state=student_state,    # ✅ NEW
+            course=course if course else None,  # ✅ NEW
             icon_image=icon_image,
             icon_url=icon_url,
             icon_color=icon_color,
@@ -3425,23 +3696,29 @@ def admin_online_education_nested_subcategory_add(request, parent_id):
         
         messages.success(request, f"✓ Subcategory '{title}' added successfully!")
         
+        # Redirect back
         if parent_subcategory:
             return redirect('main_app:admin_online_education_nested_subcategories', parent_id=parent_subcategory.id)
         else:
             return redirect('main_app:admin_online_education_subcategories', card_id=parent_card.id)
     
+    # Build breadcrumb
     breadcrumb = []
     if parent_subcategory:
         breadcrumb = parent_subcategory.get_breadcrumb()
     elif parent_card:
         breadcrumb = [{'id': parent_card.id, 'title': parent_card.title}]
     
+    # ✅ Pass Countries, States & Courses to template
     context = {
         'parent_card': parent_card,
         'parent_subcategory': parent_subcategory,
         'breadcrumb': breadcrumb,
         'card_id': parent_card.id if parent_card else None,
         'parent_id': parent_subcategory.id if parent_subcategory else None,
+        'countries': Country.objects.filter(is_active=True).order_by('name'),  # ✅ NEW
+        'states': State.objects.filter(is_active=True).order_by('name'),       # ✅ NEW
+        'courses': UserRegistration.COURSE_CHOICES,                            # ✅ NEW
     }
     
     return render(request, 'admin/online_education_subcategory_form.html', context)
@@ -3559,20 +3836,73 @@ def admin_online_education_page_add(request, subcategory_id):
 
 # ==================== STUDENT: FRONTEND VIEWS ====================
 
+from django.db.models import Q
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+
 @login_required(login_url='main_app:user_login')
 def online_education_card_detail(request, card_slug):
-    """Student: Display main card with its subcategories"""
+    """
+    Student: Display main card with its subcategories
+    ✅ FILTERED by user's Country, State & Course
+    """
+    
+    # Get the card
     card = get_object_or_404(OnlineEducationCard, slug=card_slug, is_active=True)
     
-    subcategories = card.sub_categories.filter(
-        is_active=True, 
-        parent_subcategory__isnull=True
-    ).order_by('order')
+    # ✅ Get student's registration info
+    try:
+        user_registration = UserRegistration.objects.get(user=request.user)
+        user_country = user_registration.country
+        user_state = user_registration.state
+        user_course = user_registration.course
+    except UserRegistration.DoesNotExist:
+        # If no registration found, show all subcategories
+        user_country = None
+        user_state = None
+        user_course = None
+    
+    # ✅ BUILD SMART FILTER QUERY
+    # Base filter: Only active, top-level subcategories under this card
+    filter_query = Q(
+        parent_card=card,
+        parent_subcategory__isnull=True,
+        is_active=True
+    )
+    
+    # ✅ Country Filter
+    # Show if: No country set (available to all) OR matches user's country
+    if user_country:
+        filter_query &= (Q(target_country__isnull=True) | Q(target_country=user_country))
+    
+    # ✅ State Filter
+    # Show if: No state set (available to all) OR matches user's state
+    if user_state:
+        filter_query &= (Q(student_state__isnull=True) | Q(student_state=user_state))
+    
+    # ✅ Course Filter
+    # Show if: No course set (available to all) OR matches user's course
+    if user_course:
+        filter_query &= (Q(course__isnull=True) | Q(course='') | Q(course=user_course))
+    
+    # Get filtered subcategories
+    subcategories = OnlineEducationSubCategory.objects.filter(filter_query).order_by('order')
     
     context = {
         'card': card,
         'subcategories': subcategories,
+        'user_country': user_country,
+        'user_state': user_state,
+        'user_course': user_course,
+        # ✅ Add debug info (optional - remove in production)
+        'total_subcategories': card.sub_categories.filter(
+            is_active=True, 
+            parent_subcategory__isnull=True
+        ).count(),
+        'filtered_count': subcategories.count(),
     }
+    
     return render(request, 'student/online_education_card_detail.html', context)
 
 

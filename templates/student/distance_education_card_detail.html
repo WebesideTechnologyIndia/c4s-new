@@ -45,6 +45,65 @@
     .breadcrumb-item + .breadcrumb-item::before {
         color: rgba(255,255,255,0.6);
     }
+
+    /* ✅ NEW: Filter Info Box */
+    .filter-info-box {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(15px);
+        border-radius: 15px;
+        padding: 15px 25px;
+        margin-top: 20px;
+        display: inline-block;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .filter-info-box .filter-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .filter-badges {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .filter-badge {
+        background: white;
+        color: #ED651C;
+        padding: 8px 18px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .filter-badge i {
+        font-size: 1rem;
+    }
+
+    /* ✅ NEW: Results Count */
+    .results-count {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 12px 25px;
+        border-radius: 12px;
+        display: inline-block;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        font-weight: 600;
+        color: #2d3748;
+    }
+
+    .results-count .count-number {
+        color: #ED651C;
+        font-size: 1.2rem;
+        font-weight: 800;
+    }
     
     .category-card {
         background: white;
@@ -104,6 +163,78 @@
         margin-bottom: 20px;
         opacity: 0.5;
     }
+
+    .empty-state h4 {
+        color: #4a5568;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+
+    .empty-state p {
+        color: #718096;
+        font-size: 1.05rem;
+        line-height: 1.6;
+    }
+
+    /* ✅ NEW: Profile Prompt Box */
+    .profile-prompt {
+        background: linear-gradient(135deg, #fef5e7 0%, #fdebd0 100%);
+        border: 2px dashed #f39c12;
+        border-radius: 15px;
+        padding: 25px;
+        margin-top: 25px;
+        text-align: center;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .profile-prompt h5 {
+        color: #e67e22;
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+
+    .profile-prompt p {
+        color: #7f8c8d;
+        margin-bottom: 18px;
+    }
+
+    .btn-complete-profile {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        color: white;
+        padding: 10px 25px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+    }
+
+    .btn-complete-profile:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+        .page-header h1 {
+            font-size: 1.8rem;
+        }
+
+        .filter-info-box {
+            padding: 12px 18px;
+        }
+
+        .filter-badges {
+            justify-content: center;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -128,6 +259,29 @@
         
         <h1>{{ card.title }}</h1>
         <p>{{ card.description }}</p>
+
+        <!-- ✅ NEW: Filter Info Display -->
+        {% if user_state or user_course %}
+        <div class="filter-info-box">
+            <div class="filter-label">
+                <i class="fas fa-filter me-2"></i>Personalized Content For You
+            </div>
+            <div class="filter-badges">
+                {% if user_state %}
+                <span class="filter-badge">
+                    <i class="fas fa-map-marker-alt"></i>
+                    {{ user_state.name }}
+                </span>
+                {% endif %}
+                {% if user_course %}
+                <span class="filter-badge">
+                    <i class="fas fa-graduation-cap"></i>
+                    {{ user_course }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 </section>
 
@@ -135,12 +289,50 @@
 <section class="py-5">
     <div class="container">
         {% if subcategories %}
-            <div class="row">
+            <!-- ✅ Results Count -->
+            <div class="text-center">
+                <div class="results-count">
+                    <i class="fas fa-check-circle text-success me-2"></i>
+                    Showing <span class="count-number">{{ total_filtered }}</span> 
+                    relevant categor{{ total_filtered|pluralize:"y,ies" }}
+                    {% if user_state or user_course %}
+                        matching your profile
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- ✅ NEW: Target Country Filter Dropdown -->
+            <div class="row mb-4">
+                <div class="col-md-6 mx-auto">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">
+                            <i class="fas fa-globe text-primary"></i>
+                        </span>
+                        <select id="countryFilter" class="form-select">
+                            <option value="">All Countries</option>
+                            {% for country in unique_countries %}
+                                <option value="{{ country }}">{{ country }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" id="subcategoriesContainer">
                 {% for subcategory in subcategories %}
-                <div class="col-lg-4 col-md-6">
+                <div class="col-lg-4 col-md-6 subcategory-item" data-country="{{ subcategory.target_country.name|default:'All' }}">
                     <a href="{% url 'main_app:distance_education_subcategory_detail' card.slug subcategory.slug %}" 
                        class="category-card" 
                        style="border-left-color: {{ subcategory.icon_color }};">
+                        
+                        <!-- ✅ NEW: Target Country Badge -->
+                        {% if subcategory.target_country %}
+                        <div class="mb-2">
+                            <span class="badge" style="background: {{ subcategory.icon_color }}; color: white; font-size: 0.85rem; padding: 6px 14px;">
+                                <i class="fas fa-globe me-1"></i>{{ subcategory.target_country.name }}
+                            </span>
+                        </div>
+                        {% endif %}
                         
                         <div class="category-icon">
                             <img src="{{ subcategory.get_icon }}" alt="{{ subcategory.title }}">
@@ -149,7 +341,7 @@
                         <h4>{{ subcategory.title }}</h4>
                         <p>{{ subcategory.description|truncatewords:20 }}</p>
                         
-                        <div class="mt-3">
+                        <div class="mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <small class="text-muted">
                                 <i class="fas fa-folder"></i> 
                                 {% if subcategory.has_children %}
@@ -158,18 +350,97 @@
                                     {{ subcategory.content_pages.count }} pages
                                 {% endif %}
                             </small>
+                            
+                            <!-- ✅ NEW: Student State & Course Tags -->
+                            <div class="d-flex gap-1 flex-wrap">
+                                {% if subcategory.student_state %}
+                                <span class="badge bg-info" style="font-size: 0.75rem;">
+                                    <i class="fas fa-map-marker-alt"></i> {{ subcategory.student_state.name }}
+                                </span>
+                                {% endif %}
+                                {% if subcategory.course %}
+                                <span class="badge bg-success" style="font-size: 0.75rem;">
+                                    <i class="fas fa-graduation-cap"></i> {{ subcategory.course }}
+                                </span>
+                                {% endif %}
+                            </div>
                         </div>
                     </a>
                 </div>
                 {% endfor %}
             </div>
         {% else %}
+            <!-- ✅ UPDATED Empty State -->
             <div class="empty-state">
                 <i class="fas fa-folder-open"></i>
-                <h4>No Categories Available</h4>
-                <p>Categories will be added soon. Please check back later.</p>
+                <h4>
+                    {% if user_state or user_course %}
+                        No Matching Categories Found
+                    {% else %}
+                        No Categories Available
+                    {% endif %}
+                </h4>
+                <p>
+                    {% if user_state or user_course %}
+                        We couldn't find any categories matching your profile 
+                        {% if user_state %}<strong>({{ user_state.name }})</strong>{% endif %}
+                        {% if user_course %}and course <strong>({{ user_course }})</strong>{% endif %}.<br>
+                        Check back soon as new content is added regularly!
+                    {% else %}
+                        Categories will be added soon. Please check back later.
+                    {% endif %}
+                </p>
+
+                <!-- ✅ Profile Completion Prompt (if no state/course) -->
+                {% if not user_state or not user_course %}
+                <div class="profile-prompt">
+                    <h5><i class="fas fa-user-circle me-2"></i>Complete Your Profile</h5>
+                    <p>
+                        Get personalized distance education recommendations by completing your profile.
+                    </p>
+                    <a href="{% url 'main_app:user_profile' %}" class="btn-complete-profile">
+                        <i class="fas fa-edit"></i>
+                        Complete Profile
+                    </a>
+                </div>
+                {% endif %}
             </div>
         {% endif %}
     </div>
 </section>
+
+{% block extra_js %}
+<script>
+    // ✅ Country Filter Functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const countryFilter = document.getElementById('countryFilter');
+        const subcategoryItems = document.querySelectorAll('.subcategory-item');
+        
+        // Filter functionality
+        if (countryFilter) {
+            countryFilter.addEventListener('change', function() {
+                const selectedCountry = this.value;
+                let visibleCount = 0;
+                
+                subcategoryItems.forEach(item => {
+                    const itemCountry = item.getAttribute('data-country');
+                    
+                    if (selectedCountry === '' || itemCountry === selectedCountry || itemCountry === 'All') {
+                        item.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                
+                // Update count
+                const countNumber = document.querySelector('.count-number');
+                if (countNumber) {
+                    countNumber.textContent = visibleCount;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
 {% endblock %}
