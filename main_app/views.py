@@ -15,7 +15,7 @@ from .forms import (
     CareerCounsellingServiceForm,
     AdmissionIndiaCardForm
 )
-
+from django.views.decorators.cache import never_cache
 # ==================== HELPER FUNCTION ====================
 def is_admin_or_staff(user):
     """Check if user is staff or superuser"""
@@ -92,12 +92,19 @@ def user_login_view(request):
     return render(request, 'admin/login.html')
 
 
+@never_cache  # ✅ YE ADD KARO
 def user_logout_view(request):
     """Universal Logout"""
     logout(request)
     messages.success(request, 'Logged out successfully!')
-    return redirect('main_app:user_login')
-
+    response = redirect('main_app:user_login')
+    
+    # ✅ Cache headers add karo
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    
+    return response
 
 # ✅ ALIAS: admin_login aur admin_logout same hain user_login ke
 admin_login_view = user_login_view
@@ -105,7 +112,7 @@ admin_logout_view = user_logout_view
 
 
 # ==================== ADMISSION INDIA (LOGIN REQUIRED) ====================
-
+@never_cache
 @login_required(login_url='main_app:user_login')
 def admission_india_services_view(request):
     """Admission India Services Page - LOGIN REQUIRED (Normal Users)"""
@@ -123,7 +130,7 @@ def admission_india_services_view(request):
 
 
 # ==================== ADMIN DASHBOARD ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_dashboard_view(request):
@@ -154,7 +161,7 @@ def admin_dashboard_view(request):
 
 
 # ==================== HOME SECTION CARD MANAGEMENT ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_cards_list(request):
@@ -163,7 +170,7 @@ def admin_cards_list(request):
     context = {'cards': cards}
     return render(request, 'admin/cards_list.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_card_add(request):
@@ -182,7 +189,7 @@ def admin_card_add(request):
     context = {'form': form}
     return render(request, 'admin/card_form.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_card_edit(request, card_id):
@@ -201,7 +208,7 @@ def admin_card_edit(request, card_id):
     context = {'form': form, 'card': card}
     return render(request, 'admin/card_form.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_card_delete(request, card_id):
@@ -218,7 +225,7 @@ def admin_card_delete(request, card_id):
 
 
 # ==================== COLLEGE COUNSELLING CARD MANAGEMENT ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_counselling_cards_list(request):
@@ -227,7 +234,7 @@ def admin_counselling_cards_list(request):
     context = {'cards': cards, 'card_type': 'counselling'}
     return render(request, 'admin/counselling_cards_list.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_counselling_card_add(request):
@@ -246,7 +253,7 @@ def admin_counselling_card_add(request):
     context = {'form': form, 'card_type': 'counselling'}
     return render(request, 'admin/counselling_card_form.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_counselling_card_edit(request, card_id):
@@ -265,7 +272,7 @@ def admin_counselling_card_edit(request, card_id):
     context = {'form': form, 'card': card, 'card_type': 'counselling'}
     return render(request, 'admin/counselling_card_form.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_counselling_card_delete(request, card_id):
@@ -282,7 +289,7 @@ def admin_counselling_card_delete(request, card_id):
 
 
 # ==================== CAREER COUNSELLING SERVICE MANAGEMENT ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_career_services_list(request):
@@ -290,7 +297,7 @@ def admin_career_services_list(request):
     services = CareerCounsellingService.objects.all()
     return render(request, 'admin/career_services_list.html', {'services': services})
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_career_service_add(request):
@@ -309,7 +316,7 @@ def admin_career_service_add(request):
         form = CareerCounsellingServiceForm()
     return render(request, 'admin/career_service_form.html', {'form': form})
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_career_service_edit(request, service_id):
@@ -325,7 +332,7 @@ def admin_career_service_edit(request, service_id):
         form = CareerCounsellingServiceForm(instance=service)
     return render(request, 'admin/career_service_form.html', {'form': form, 'service': service})
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_career_service_delete(request, service_id):
@@ -339,7 +346,7 @@ def admin_career_service_delete(request, service_id):
 
 
 # ==================== ADMISSION INDIA CARD MANAGEMENT ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_admission_cards_list(request):
@@ -347,7 +354,7 @@ def admin_admission_cards_list(request):
     cards = AdmissionIndiaCard.objects.all()
     return render(request, 'admin/admission_cards_list.html', {'cards': cards})
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_admission_card_add(request):
@@ -365,7 +372,7 @@ def admin_admission_card_add(request):
     
     return render(request, 'admin/admission_card_form.html', {'form': form})
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_admission_card_edit(request, card_id):
@@ -383,7 +390,7 @@ def admin_admission_card_edit(request, card_id):
     
     return render(request, 'admin/admission_card_form.html', {'form': form, 'card': card})
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_admission_card_delete(request, card_id):
@@ -409,7 +416,7 @@ from .models import AllIndiaServiceCard
 from .forms import AllIndiaServiceCardForm
 
 # ==================== PUBLIC VIEW ====================
-
+@never_cache
 @login_required(login_url='main_app:user_login')
 def all_india_services_view(request):
     """All India State Wise Counselling Page - LOGIN REQUIRED"""
@@ -423,7 +430,7 @@ def all_india_services_view(request):
 
 
 # ==================== ADMIN VIEWS ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_all_india_cards_list(request):
@@ -431,7 +438,7 @@ def admin_all_india_cards_list(request):
     cards = AllIndiaServiceCard.objects.all()
     return render(request, 'admin/all_india_cards_list.html', {'cards': cards})
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_all_india_card_add(request):
@@ -449,7 +456,7 @@ def admin_all_india_card_add(request):
     
     return render(request, 'admin/all_india_card_form.html', {'form': form})
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_all_india_card_edit(request, card_id):
@@ -467,7 +474,7 @@ def admin_all_india_card_edit(request, card_id):
     
     return render(request, 'admin/all_india_card_form.html', {'form': form, 'card': card})
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_all_india_card_delete(request, card_id):
@@ -505,7 +512,7 @@ from .forms import (
 )
 
 # ==================== STUDENT DASHBOARD VIEW ====================
-
+@never_cache
 @login_required(login_url='main_app:user_login')
 def student_dashboard_view(request):
     """Student Dashboard - Professional Counselling by Experts"""
@@ -631,7 +638,7 @@ def student_dashboard_view(request):
 
 
 # ==================== ADMIN - PROFESSIONAL COUNSELLING CARDS MANAGEMENT ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_pro_counselling_cards_list(request):
@@ -639,7 +646,7 @@ def admin_pro_counselling_cards_list(request):
     cards = ProfessionalCounsellingCard.objects.all()
     return render(request, 'admin/pro_counselling_cards_list.html', {'cards': cards})
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_pro_counselling_card_add(request):
@@ -657,7 +664,7 @@ def admin_pro_counselling_card_add(request):
     
     return render(request, 'admin/pro_counselling_card_form.html', {'form': form})
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_pro_counselling_card_edit(request, card_id):
@@ -675,7 +682,7 @@ def admin_pro_counselling_card_edit(request, card_id):
     
     return render(request, 'admin/pro_counselling_card_form.html', {'form': form, 'card': card})
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_pro_counselling_card_delete(request, card_id):
@@ -692,6 +699,7 @@ def admin_pro_counselling_card_delete(request, card_id):
 
 # ==================== ADMIN - VIEW ALL STUDENTS ====================
 from .forms import *
+
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_students_list(request):
@@ -702,7 +710,7 @@ def admin_students_list(request):
     context = {'students': students}
     return render(request, 'admin/students_list.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_student_detail(request, student_id):
@@ -729,7 +737,7 @@ def admin_student_detail(request, student_id):
 
 
 # ==================== ADMIN - DOCUMENT APPROVAL ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_documents_list(request):
@@ -744,7 +752,7 @@ def admin_documents_list(request):
     context = {'documents': documents}
     return render(request, 'admin/documents_list.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_document_review(request, doc_id):
@@ -775,7 +783,7 @@ def admin_document_review(request, doc_id):
 
 
 # ==================== ADMIN - DOUBTS MANAGEMENT ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_doubts_list(request):
@@ -790,7 +798,7 @@ def admin_doubts_list(request):
     context = {'doubts': doubts}
     return render(request, 'admin/doubts_list.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_doubt_respond(request, doubt_id):
@@ -813,7 +821,7 @@ def admin_doubt_respond(request, doubt_id):
 
 
 # ==================== ADMIN - COMPLAINTS MANAGEMENT ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_complaints_list(request):
@@ -828,7 +836,7 @@ def admin_complaints_list(request):
     context = {'complaints': complaints}
     return render(request, 'admin/complaints_list.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_complaint_respond(request, complaint_id):
@@ -851,7 +859,7 @@ def admin_complaint_respond(request, complaint_id):
 
 
 # ==================== ADMIN - UPDATE COUNSELLING STATUS ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_update_status(request, student_id):
@@ -878,7 +886,7 @@ from .models import DistanceEducationCard, OnlineEducationCard
 from .forms import DistanceEducationCardForm, OnlineEducationCardForm
 
 # ==================== DISTANCE EDUCATION ====================
-
+@never_cache
 @login_required(login_url='main_app:user_login')
 def distance_education_view(request):
     """Distance Education Page - LOGIN REQUIRED"""
@@ -889,14 +897,14 @@ def distance_education_view(request):
     return render(request, 'distance_education.html', {'cards': cards})
 
 
-# ADMIN - Distance Education
+#@never_cache ADMIN - Distance Education
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_distance_education_cards_list(request):
     cards = DistanceEducationCard.objects.all()
     return render(request, 'admin/distance_education_cards_list.html', {'cards': cards})
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_distance_education_card_add(request):
@@ -919,7 +927,7 @@ def admin_distance_education_card_add(request):
     
     return render(request, 'admin/distance_education_card_form.html', {'form': form})
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_distance_education_card_edit(request, card_id):
@@ -933,7 +941,7 @@ def admin_distance_education_card_edit(request, card_id):
     else:
         form = DistanceEducationCardForm(instance=card)
     return render(request, 'admin/distance_education_card_form.html', {'form': form, 'card': card})
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_distance_education_card_delete(request, card_id):
@@ -946,7 +954,7 @@ def admin_distance_education_card_delete(request, card_id):
 
 
 # ==================== ONLINE EDUCATION ====================
-
+@never_cache
 @login_required(login_url='main_app:user_login')
 def online_education_view(request):
     """Online Education Page - LOGIN REQUIRED"""
@@ -957,13 +965,13 @@ def online_education_view(request):
     return render(request, 'online_education.html', {'cards': cards})
 
 
-# ADMIN - Online Education
+#@never_cache ADMIN - Online Education
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_online_education_cards_list(request):
     cards = OnlineEducationCard.objects.all()
     return render(request, 'admin/online_education_cards_list.html', {'cards': cards})
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_online_education_card_add(request):
@@ -978,7 +986,7 @@ def admin_online_education_card_add(request):
     else:
         form = OnlineEducationCardForm()
     return render(request, 'admin/online_education_card_form.html', {'form': form})
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_online_education_card_edit(request, card_id):
@@ -992,7 +1000,7 @@ def admin_online_education_card_edit(request, card_id):
     else:
         form = OnlineEducationCardForm(instance=card)
     return render(request, 'admin/online_education_card_form.html', {'form': form, 'card': card})
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_online_education_card_delete(request, card_id):
@@ -1010,7 +1018,7 @@ from .models import DistanceEducationCard, OnlineEducationCard
 from .forms import DistanceEducationCardForm, OnlineEducationCardForm
 
 # ==================== DISTANCE EDUCATION ====================
-
+@never_cache
 @login_required(login_url='main_app:user_login')
 def distance_education_view(request):
     """Distance Education Page - LOGIN REQUIRED"""
@@ -1021,13 +1029,13 @@ def distance_education_view(request):
     return render(request, 'distance_education.html', {'cards': cards})
 
 
-# ADMIN - Distance Education
+#@never_cache ADMIN - Distance Education
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_distance_education_cards_list(request):
     cards = DistanceEducationCard.objects.all()
     return render(request, 'admin/distance_education_cards_list.html', {'cards': cards})
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_distance_education_card_add(request):
@@ -1042,7 +1050,7 @@ def admin_distance_education_card_add(request):
     else:
         form = DistanceEducationCardForm()
     return render(request, 'admin/distance_education_card_form.html', {'form': form})
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_distance_education_card_edit(request, card_id):
@@ -1056,7 +1064,7 @@ def admin_distance_education_card_edit(request, card_id):
     else:
         form = DistanceEducationCardForm(instance=card)
     return render(request, 'admin/distance_education_card_form.html', {'form': form, 'card': card})
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_distance_education_card_delete(request, card_id):
@@ -1069,7 +1077,7 @@ def admin_distance_education_card_delete(request, card_id):
 
 
 # ==================== ONLINE EDUCATION ====================
-
+@never_cache
 @login_required(login_url='main_app:user_login')
 def online_education_view(request):
     """Online Education Page - LOGIN REQUIRED"""
@@ -1080,13 +1088,13 @@ def online_education_view(request):
     return render(request, 'online_education.html', {'cards': cards})
 
 
-# ADMIN - Online Education
+#@never_cache ADMIN - Online Education
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_online_education_cards_list(request):
     cards = OnlineEducationCard.objects.all()
     return render(request, 'admin/online_education_cards_list.html', {'cards': cards})
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_online_education_card_add(request):
@@ -1101,7 +1109,7 @@ def admin_online_education_card_add(request):
     else:
         form = OnlineEducationCardForm()
     return render(request, 'admin/online_education_card_form.html', {'form': form})
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_online_education_card_edit(request, card_id):
@@ -1115,7 +1123,7 @@ def admin_online_education_card_edit(request, card_id):
     else:
         form = OnlineEducationCardForm(instance=card)
     return render(request, 'admin/online_education_card_form.html', {'form': form, 'card': card})
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_online_education_card_delete(request, card_id):
@@ -1178,13 +1186,13 @@ def user_register_view(request):
     return render(request, 'user/register.html', {'form': form})
 
 
-# ==================== ADMIN - COUNTRIES ====================
+#@never_cache ==================== ADMIN - COUNTRIES ====================
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_countries_list(request):
     countries = Country.objects.all()
     return render(request, 'admin/countries_list.html', {'countries': countries})
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_country_add(request):
@@ -1197,7 +1205,7 @@ def admin_country_add(request):
     else:
         form = CountryForm()
     return render(request, 'admin/country_form.html', {'form': form})
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_country_edit(request, country_id):
@@ -1211,7 +1219,7 @@ def admin_country_edit(request, country_id):
     else:
         form = CountryForm(instance=country)
     return render(request, 'admin/country_form.html', {'form': form, 'country': country})
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_country_delete(request, country_id):
@@ -1223,13 +1231,13 @@ def admin_country_delete(request, country_id):
     return render(request, 'admin/country_delete.html', {'country': country})
 
 
-# ==================== ADMIN - STATES ====================
+#@never_cache ==================== ADMIN - STATES ====================
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_states_list(request):
     states = State.objects.all()
     return render(request, 'admin/states_list.html', {'states': states})
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_state_add(request):
@@ -1242,7 +1250,7 @@ def admin_state_add(request):
     else:
         form = StateForm()
     return render(request, 'admin/state_form.html', {'form': form})
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_state_edit(request, state_id):
@@ -1256,7 +1264,7 @@ def admin_state_edit(request, state_id):
     else:
         form = StateForm(instance=state)
     return render(request, 'admin/state_form.html', {'form': form, 'state': state})
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_state_delete(request, state_id):
@@ -1274,7 +1282,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import College, CollegeComparison, Country, State, UserRegistration
 
-# ==================== ADMIN: COLLEGES LIST ====================
+#@never_cache ==================== ADMIN: COLLEGES LIST ====================
 @login_required
 def admin_colleges_list(request):
     """Admin dashboard - All colleges list"""
@@ -1294,7 +1302,7 @@ def admin_colleges_list(request):
 ## **Views mein ek fix (`views.py` mein update karo)**
 
 
-# ==================== ADMIN: ADD COLLEGE ====================
+#@never_cache ==================== ADMIN: ADD COLLEGE ====================
 @login_required
 def admin_college_add(request):
     """Admin dashboard - Add new college"""
@@ -1352,7 +1360,7 @@ def admin_college_add(request):
     return render(request, 'admin/college_add.html', context)
 
 
-# ==================== ADMIN: EDIT COLLEGE ====================
+#@never_cache ==================== ADMIN: EDIT COLLEGE ====================
 @login_required
 def admin_college_edit(request, pk):
     """Admin dashboard - Edit college"""
@@ -1393,7 +1401,7 @@ def admin_college_edit(request, pk):
     }
     return render(request, 'admin/college_edit.html', context)
 
-# ==================== ADMIN: DELETE COLLEGE ====================
+#@never_cache ==================== ADMIN: DELETE COLLEGE ====================
 @login_required
 def admin_college_delete(request, pk):
     """Admin dashboard - Delete college"""
@@ -1409,7 +1417,7 @@ def admin_college_delete(request, pk):
     return redirect('main_app:admin_colleges_list')
 
 
-# ==================== ADMIN: COMPARISONS LIST ====================
+#@never_cache ==================== ADMIN: COMPARISONS LIST ====================
 @login_required
 def admin_comparisons_list(request):
     """Admin dashboard - All comparisons list"""
@@ -1426,7 +1434,7 @@ def admin_comparisons_list(request):
 
 
 # ==================== ADMIN: ADD COMPARISON ====================
-# ==================== ADMIN: ADD COMPARISON (UPDATED) ====================
+#@never_cache ==================== ADMIN: ADD COMPARISON (UPDATED) ====================
 @login_required
 def admin_comparison_add(request):
     """Admin dashboard - Add new comparison with multiple colleges"""
@@ -1482,7 +1490,7 @@ def admin_comparison_add(request):
     return render(request, 'admin/comparison_add.html', context)
 
 
-# ==================== ADMIN: EDIT COMPARISON (UPDATED) ====================
+#@never_cache ==================== ADMIN: EDIT COMPARISON (UPDATED) ====================
 @login_required
 def admin_comparison_edit(request, pk):
     """Admin dashboard - Edit comparison"""
@@ -1526,7 +1534,7 @@ def admin_comparison_edit(request, pk):
     return render(request, 'admin/comparison_edit.html', context)
 
 
-# ==================== STUDENT: VIEW COMPARISON DETAIL (UPDATED) ====================
+#@never_cache ==================== STUDENT: VIEW COMPARISON DETAIL (UPDATED) ====================
 @login_required
 def student_comparison_detail(request, pk):
     """Student side - Detailed comparison view for multiple colleges"""
@@ -1548,7 +1556,7 @@ def student_comparison_detail(request, pk):
     return render(request, 'student/comparison_detail.html', context)
 
 
-# ==================== ADMIN: DELETE COMPARISON ====================
+#@never_cache ==================== ADMIN: DELETE COMPARISON ====================
 @login_required
 def admin_comparison_delete(request, pk):
     """Admin dashboard - Delete comparison"""
@@ -1567,7 +1575,7 @@ def admin_comparison_delete(request, pk):
 # ==================== STUDENT: VIEW COMPARISONS ====================
 # ==================== STUDENT: VIEW COMPARISONS ====================
 from django.db.models import Q
-
+@never_cache
 @login_required
 def student_comparisons_list(request):
     """Student side - View comparisons with filters for custom selection"""
@@ -1648,7 +1656,7 @@ def student_comparisons_list(request):
 
 from .models import StateWiseCounsellingUpdate
 
-# ==================== ADMIN: STATE COUNSELLING UPDATES LIST ====================
+#@never_cache ==================== ADMIN: STATE COUNSELLING UPDATES LIST ====================
 @login_required
 def admin_state_counselling_list(request):
     """Admin dashboard - State wise counselling updates list"""
@@ -1664,7 +1672,7 @@ def admin_state_counselling_list(request):
     return render(request, 'admin/state_counselling_list.html', context)
 
 
-# ==================== ADMIN: ADD STATE COUNSELLING UPDATE ====================
+#@never_cache ==================== ADMIN: ADD STATE COUNSELLING UPDATE ====================
 @login_required
 def admin_state_counselling_add(request):
     """Admin dashboard - Add new state counselling update"""
@@ -1718,7 +1726,7 @@ def admin_state_counselling_add(request):
     return render(request, 'admin/state_counselling_add.html', context)
 
 
-# ==================== ADMIN: EDIT STATE COUNSELLING UPDATE ====================
+#@never_cache ==================== ADMIN: EDIT STATE COUNSELLING UPDATE ====================
 @login_required
 def admin_state_counselling_edit(request, pk):
     """Admin dashboard - Edit state counselling update"""
@@ -1757,7 +1765,7 @@ def admin_state_counselling_edit(request, pk):
     return render(request, 'admin/state_counselling_edit.html', context)
 
 
-# ==================== ADMIN: DELETE STATE COUNSELLING UPDATE ====================
+#@never_cache ==================== ADMIN: DELETE STATE COUNSELLING UPDATE ====================
 @login_required
 def admin_state_counselling_delete(request, pk):
     """Admin dashboard - Delete state counselling update"""
@@ -1811,7 +1819,7 @@ from django.contrib import messages
 from .models import AllIndiaServiceCard, SubCategory, ContentPage
 
 # ==================== ADMIN: SUB-CATEGORIES MANAGEMENT ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_sub_categories_list(request):
@@ -1823,7 +1831,7 @@ def admin_sub_categories_list(request):
     }
     return render(request, 'admin/sub_categories_list.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_sub_category_add(request):
@@ -1874,7 +1882,7 @@ def admin_sub_category_add(request):
     }
     return render(request, 'admin/sub_category_add.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_sub_category_edit(request, pk):
@@ -1907,7 +1915,7 @@ def admin_sub_category_edit(request, pk):
     }
     return render(request, 'admin/sub_category_edit.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_sub_category_delete(request, pk):
@@ -1921,7 +1929,7 @@ def admin_sub_category_delete(request, pk):
 
 
 # ==================== ADMIN: CONTENT PAGES MANAGEMENT ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_content_pages_list(request):
@@ -1933,7 +1941,7 @@ def admin_content_pages_list(request):
     }
     return render(request, 'admin/content_pages_list.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_content_page_add(request):
@@ -1990,7 +1998,7 @@ def admin_content_page_add(request):
     }
     return render(request, 'admin/content_page_add.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_content_page_edit(request, pk):
@@ -2026,7 +2034,7 @@ def admin_content_page_edit(request, pk):
     }
     return render(request, 'admin/content_page_edit.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_content_page_delete(request, pk):
@@ -2039,7 +2047,7 @@ def admin_content_page_delete(request, pk):
     return redirect('main_app:admin_content_pages_list')
 
 
-# ==================== ADMIN: SUB-CATEGORIES BY CARD ====================
+#@never_cache ==================== ADMIN: SUB-CATEGORIES BY CARD ====================
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_sub_categories_by_card(request, card_id):
@@ -2062,7 +2070,7 @@ from .models import AllIndiaServiceCard, SubCategory, State, UserRegistration
 
 def is_admin_or_staff(user):
     return user.is_staff or user.is_superuser
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_sub_category_add_for_card(request, card_id):
@@ -2125,7 +2133,7 @@ def admin_sub_category_add_for_card(request, card_id):
     }
     return render(request, 'admin/sub_category_add.html', context)
 
-# ==================== ADMIN: CONTENT PAGES BY SUB-CATEGORY ====================
+#@never_cache ==================== ADMIN: CONTENT PAGES BY SUB-CATEGORY ====================
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_content_pages_by_subcategory(request, subcategory_id):
@@ -2139,7 +2147,7 @@ def admin_content_pages_by_subcategory(request, subcategory_id):
     }
     return render(request, 'admin/content_pages_by_subcategory.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_content_page_add_for_subcategory(request, subcategory_id):
@@ -2207,7 +2215,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
 from .models import AllIndiaServiceCard, SubCategory, UserRegistration
-
+@never_cache
 @login_required(login_url='main_app:user_login')
 def card_detail_view(request, card_slug):
     """
@@ -2276,7 +2284,7 @@ def card_detail_view(request, card_slug):
     
     return render(request, 'student/card_detail.html', context)
 
-# ==================== STUDENT: SUB-CATEGORY DETAIL (PAGES LIST) ====================
+#@never_cache ==================== STUDENT: SUB-CATEGORY DETAIL (PAGES LIST) ====================
 @login_required(login_url='main_app:user_login')
 def subcategory_detail_view(request, card_slug, subcategory_path):
     """
@@ -2327,7 +2335,7 @@ def subcategory_detail_view(request, card_slug, subcategory_path):
         return render(request, 'student/subcategory_detail.html', context)
     
 
-# ==================== STUDENT: PAGE DETAIL (FULL CONTENT) ====================
+#@never_cache ==================== STUDENT: PAGE DETAIL (FULL CONTENT) ====================
 @login_required(login_url='main_app:user_login')
 def page_detail_view(request, card_slug, subcategory_slug, page_slug):
 
@@ -2386,7 +2394,7 @@ def is_admin_or_staff(user):
     return user.is_staff or user.is_superuser
 
 
-# ==================== NESTED SUBCATEGORIES VIEW ====================
+#@never_cache ==================== NESTED SUBCATEGORIES VIEW ====================
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_nested_subcategories(request, parent_subcategory_id):
@@ -2423,7 +2431,7 @@ def admin_nested_subcategories(request, parent_subcategory_id):
     return render(request, 'admin/nested_subcategories_list.html', context)
 
 
-# ==================== ADD NESTED SUBCATEGORY ====================
+#@never_cache ==================== ADD NESTED SUBCATEGORY ====================
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_nested_subcategory_add(request, parent_subcategory_id):
@@ -2477,7 +2485,7 @@ def admin_nested_subcategory_add(request, parent_subcategory_id):
 
 
 # ==================== UPDATE EXISTING VIEW ====================
-# Update your existing admin_sub_categories_by_card view
+#@never_cache Update your existing admin_sub_categories_by_card view
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_sub_categories_by_card(request, card_id):
@@ -2501,7 +2509,7 @@ def admin_sub_categories_by_card(request, card_id):
     return render(request, 'admin/nested_subcategories_list.html', context)
 
 
-# ==================== STUDENT VIEWS (UPDATED) ====================
+#@never_cache ==================== STUDENT VIEWS (UPDATED) ====================
 @login_required(login_url='main_app:user_login')
 def subcategory_detail_view(request, card_slug, subcategory_path):
     """
@@ -2580,7 +2588,7 @@ from .models import AdmissionAbroadCard, AdmissionAbroadSubCategory, AdmissionAb
 from .forms import AdmissionAbroadCardForm, AdmissionAbroadSubCategoryForm, AdmissionAbroadPageForm
 
 # ==================== PUBLIC VIEW (LOGIN REQUIRED) ====================
-
+@never_cache
 @login_required(login_url='main_app:user_login')
 def admission_abroad_view(request):
     """Admission Abroad Services Page - LOGIN REQUIRED"""
@@ -2594,7 +2602,7 @@ def admission_abroad_view(request):
 
 
 # ==================== ADMIN: CARDS MANAGEMENT ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_admission_abroad_cards_list(request):
@@ -2602,7 +2610,7 @@ def admin_admission_abroad_cards_list(request):
     cards = AdmissionAbroadCard.objects.all().order_by('order')
     return render(request, 'admin/admission_abroad_cards_list.html', {'cards': cards})
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_admission_abroad_card_add(request):
@@ -2620,7 +2628,7 @@ def admin_admission_abroad_card_add(request):
     
     return render(request, 'admin/admission_abroad_card_form.html', {'form': form})
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_admission_abroad_card_edit(request, card_id):
@@ -2638,7 +2646,7 @@ def admin_admission_abroad_card_edit(request, card_id):
     
     return render(request, 'admin/admission_abroad_card_form.html', {'form': form, 'card': card})
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_admission_abroad_card_delete(request, card_id):
@@ -2656,7 +2664,7 @@ def admin_admission_abroad_card_delete(request, card_id):
 # ==================== ADMIN: SUBCATEGORIES BY CARD ====================
 
 from django.db.models import Count
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 def admin_admission_abroad_subcategories(request, card_id):
     """
@@ -2680,7 +2688,7 @@ def admin_admission_abroad_subcategories(request, card_id):
     return render(request, 'admin/admission_abroad_subcategories.html', context)
 
 # ==================== ADMIN: ADD SUBCATEGORY FOR CARD ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_admission_abroad_subcategory_add(request, card_id=None, parent_id=None):
@@ -2718,7 +2726,7 @@ def admin_admission_abroad_subcategory_add(request, card_id=None, parent_id=None
     return render(request, 'admin/admission_abroad_subcategory_form.html', context)
 
 
-# ==================== ADMIN: NESTED SUBCATEGORIES ====================
+#@never_cache ==================== ADMIN: NESTED SUBCATEGORIES ====================
 @login_required(login_url='main_app:admin_login')
 def admin_admission_abroad_nested_subcategories(request, parent_id):
     """
@@ -2744,7 +2752,7 @@ def admin_admission_abroad_nested_subcategories(request, parent_id):
     
     return render(request, 'admin/admission_abroad_nested_subcategories.html', context)
 # ==================== ADMIN: CONTENT PAGES FOR SUBCATEGORY ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_admission_abroad_pages_by_subcategory(request, subcategory_id):
@@ -2761,7 +2769,7 @@ def admin_admission_abroad_pages_by_subcategory(request, subcategory_id):
 
 
 # ==================== ADMIN: ADD CONTENT PAGE FOR SUBCATEGORY ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_admission_abroad_page_add(request, subcategory_id):
@@ -2796,7 +2804,7 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from .models import AdmissionAbroadCard, AdmissionAbroadSubCategory, UserRegistration
-
+@never_cache
 @login_required(login_url='main_app:user_login')
 def admission_abroad_card_detail(request, card_slug):
     """
@@ -2865,7 +2873,7 @@ def admission_abroad_card_detail(request, card_slug):
     
     return render(request, 'student/admission_abroad_card_detail.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:user_login')
 def admission_abroad_subcategory_detail(request, card_slug, subcategory_path):
     """Student: Display subcategory with children or pages"""
@@ -2912,7 +2920,7 @@ def admission_abroad_subcategory_detail(request, card_slug, subcategory_path):
     }
     
     return render(request, 'student/admission_abroad_subcategory_detail.html', context)
-
+@never_cache
 @login_required(login_url='main_app:user_login')
 def admission_abroad_page_detail(request, card_slug, subcategory_path, page_slug):
     """Student: Display full page content"""
@@ -2963,7 +2971,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils.text import slugify
 from .models import AdmissionAbroadCard, AdmissionAbroadSubCategory, Country, State, UserRegistration
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 def admin_admission_abroad_nested_subcategory_add(request, parent_id):
     """
@@ -3069,7 +3077,7 @@ def admin_admission_abroad_nested_subcategory_add(request, parent_id):
     
     return render(request, 'admin/admission_abroad_subcategory_form.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 def admin_admission_abroad_subcategory_edit(request, subcategory_id):
     """
@@ -3117,7 +3125,7 @@ def admin_admission_abroad_subcategory_edit(request, subcategory_id):
     
     return render(request, 'admin/admission_abroad_subcategory_form.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 def admin_admission_abroad_subcategory_delete(request, subcategory_id):
     """
@@ -3154,7 +3162,7 @@ from .models import DistanceEducationCard, DistanceEducationSubCategory, Distanc
 from .forms import DistanceEducationSubCategoryForm, DistanceEducationPageForm
 
 # ==================== ADMIN: SUBCATEGORIES BY CARD ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_distance_education_subcategories(request, card_id):
@@ -3175,7 +3183,7 @@ def admin_distance_education_subcategories(request, card_id):
     
     return render(request, 'admin/distance_education_subcategories.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_distance_education_nested_subcategories(request, parent_id):
@@ -3200,7 +3208,7 @@ def admin_distance_education_nested_subcategories(request, parent_id):
 
 
 # views.py mein admin_distance_education_nested_subcategory_add UPDATE karo
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_distance_education_nested_subcategory_add(request, parent_id):
@@ -3304,7 +3312,7 @@ def admin_distance_education_nested_subcategory_add(request, parent_id):
     
     return render(request, 'admin/distance_education_subcategory_form.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_distance_education_subcategory_edit(request, subcategory_id):
@@ -3348,7 +3356,7 @@ def admin_distance_education_subcategory_edit(request, subcategory_id):
     
     return render(request, 'admin/distance_education_subcategory_form.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_distance_education_subcategory_delete(request, subcategory_id):
@@ -3374,7 +3382,7 @@ def admin_distance_education_subcategory_delete(request, subcategory_id):
     else:
         return redirect('main_app:admin_distance_education_subcategories', card_id=parent_card.id)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_distance_education_pages_by_subcategory(request, subcategory_id):
@@ -3389,7 +3397,7 @@ def admin_distance_education_pages_by_subcategory(request, subcategory_id):
     }
     return render(request, 'admin/distance_education_pages_list.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_distance_education_page_add(request, subcategory_id):
@@ -3419,7 +3427,7 @@ def admin_distance_education_page_add(request, subcategory_id):
 
 # views.py mein distance_education_card_detail UPDATE karo
 # views.py mein distance_education_card_detail UPDATE karo
-
+@never_cache
 @login_required(login_url='main_app:user_login')
 def distance_education_card_detail(request, card_slug):
     """Student: Display main card with FILTERED subcategories"""
@@ -3487,7 +3495,7 @@ def distance_education_card_detail(request, card_slug):
     return render(request, 'student/distance_education_card_detail.html', context)
 
 
-
+@never_cache
 @login_required(login_url='main_app:user_login')
 def distance_education_subcategory_detail(request, card_slug, subcategory_path):
     """Student: Display subcategory with children or pages"""
@@ -3528,7 +3536,7 @@ def distance_education_subcategory_detail(request, card_slug, subcategory_path):
     
     return render(request, 'student/distance_education_subcategory_detail.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:user_login')
 def distance_education_page_detail(request, card_slug, subcategory_path, page_slug):
     """Student: Display full page content"""
@@ -3575,7 +3583,7 @@ from .forms import OnlineEducationSubCategoryForm, OnlineEducationPageForm
 from django.db.models import Count
 
 # ==================== ADMIN: SUBCATEGORIES BY CARD ====================
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_online_education_subcategories(request, card_id):
@@ -3596,7 +3604,7 @@ def admin_online_education_subcategories(request, card_id):
     
     return render(request, 'admin/online_education_subcategories.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_online_education_nested_subcategories(request, parent_id):
@@ -3619,7 +3627,7 @@ def admin_online_education_nested_subcategories(request, parent_id):
     
     return render(request, 'admin/online_education_nested_subcategories.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_online_education_nested_subcategory_add(request, parent_id):
@@ -3723,7 +3731,7 @@ def admin_online_education_nested_subcategory_add(request, parent_id):
     
     return render(request, 'admin/online_education_subcategory_form.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_online_education_subcategory_edit(request, subcategory_id):
@@ -3767,7 +3775,7 @@ def admin_online_education_subcategory_edit(request, subcategory_id):
     
     return render(request, 'admin/online_education_subcategory_form.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_online_education_subcategory_delete(request, subcategory_id):
@@ -3793,7 +3801,7 @@ def admin_online_education_subcategory_delete(request, subcategory_id):
     else:
         return redirect('main_app:admin_online_education_subcategories', card_id=parent_card.id)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_online_education_pages_by_subcategory(request, subcategory_id):
@@ -3808,7 +3816,7 @@ def admin_online_education_pages_by_subcategory(request, subcategory_id):
     }
     return render(request, 'admin/online_education_pages_list.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_online_education_page_add(request, subcategory_id):
@@ -3840,7 +3848,7 @@ from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-
+@never_cache
 @login_required(login_url='main_app:user_login')
 def online_education_card_detail(request, card_slug):
     """
@@ -3905,7 +3913,7 @@ def online_education_card_detail(request, card_slug):
     
     return render(request, 'student/online_education_card_detail.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:user_login')
 def online_education_subcategory_detail(request, card_slug, subcategory_path):
     """Student: Display subcategory with children or pages"""
@@ -3946,7 +3954,7 @@ def online_education_subcategory_detail(request, card_slug, subcategory_path):
     
     return render(request, 'student/online_education_subcategory_detail.html', context)
 
-
+@never_cache
 @login_required(login_url='main_app:user_login')
 def online_education_page_detail(request, card_slug, subcategory_path, page_slug):
     """Student: Display full page content"""
