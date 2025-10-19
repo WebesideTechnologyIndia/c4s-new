@@ -1,4 +1,4 @@
-# urls.py - CORRECT ORDERING
+# urls.py - COMPLETE & CORRECT
 
 from django.urls import path
 from . import views
@@ -6,6 +6,9 @@ from . import views
 app_name = 'main_app'
 
 urlpatterns = [
+    # ==================== ADMIN DASHBOARD ====================
+    path('admin-dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
+    
     # ==================== PUBLIC PAGES ====================
     path('', views.home_view, name='home'),
     path('college-admission-counselling-services/', views.college_counselling_view, name='college_counselling'),
@@ -20,24 +23,9 @@ urlpatterns = [
     
     # ==================== PUBLIC VIEWS (LOGIN REQUIRED) ====================
     path('admission-india/', views.admission_india_services_view, name='admission_india_services'),
+    path('purchase-card/<int:card_id>/', views.purchase_card_view, name='purchase_card'),
     path('counselling-services-all-india/', views.all_india_services_view, name='all_india_services'),
     path('professional-counselling-by-experts/', views.student_dashboard_view, name='student_dashboard'),
-    
-    # ✅ ADMISSION ABROAD SPECIFIC URLS - PEHLE YAHA RAKHO
-    path('admission-abroad/', views.admission_abroad_view, name='admission_abroad'),
-    path('admission-abroad/<str:card_slug>/', views.admission_abroad_card_detail, name='admission_abroad_card_detail'),
-    path('admission-abroad/<str:card_slug>/<path:subcategory_path>/', views.admission_abroad_subcategory_detail, name='admission_abroad_subcategory_detail'),
-    path('admission-abroad/<str:card_slug>/<path:subcategory_path>/<str:page_slug>/', views.admission_abroad_page_detail, name='admission_abroad_page_detail'),
-    
-    # ==================== OTHER PUBLIC PAGES ====================
-    path('distance-education/', views.distance_education_view, name='distance_education'),
-    path('online-education/', views.online_education_view, name='online_education'),
-    path('college-comparision/', views.student_comparisons_list, name='student_comparisons_list'),
-    path('college-comparison/<int:pk>/', views.student_comparison_detail, name='student_comparison_detail'),
-    path('state-wise-counselling-updates/', views.state_wise_counselling_updates, name='state_wise_counselling_updates'),
-    
-    # ==================== ADMIN DASHBOARD ====================
-    path('admin-dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
     
     # ==================== ADMIN: HOME CARDS ====================
     path('admin-dashboard/home-cards/', views.admin_cards_list, name='admin_cards_list'),
@@ -157,42 +145,56 @@ urlpatterns = [
     path('admin/admission-abroad/subcategory/<int:subcategory_id>/pages/', views.admin_admission_abroad_pages_by_subcategory, name='admin_admission_abroad_pages_by_subcategory'),
     path('admin/admission-abroad/subcategory/<int:subcategory_id>/pages/add/', views.admin_admission_abroad_page_add, name='admin_admission_abroad_page_add'),
     
-    # ==================== DISTANCE EDUCATION NESTED STRUCTURE ====================
-path('distance-education/', views.distance_education_view, name='distance_education'),
-path('distance-education/<str:card_slug>/', views.distance_education_card_detail, name='distance_education_card_detail'),
-path('distance-education/<str:card_slug>/<path:subcategory_path>/<str:page_slug>/', views.distance_education_page_detail, name='distance_education_page_detail'),
-path('distance-education/<str:card_slug>/<path:subcategory_path>/', views.distance_education_subcategory_detail, name='distance_education_subcategory_detail'),
-
-# Admin URLs
-path('admin/distance-education/<int:card_id>/subcategories/', views.admin_distance_education_subcategories, name='admin_distance_education_subcategories'),
-path('admin/distance-education/subcategory/<int:parent_id>/children/', views.admin_distance_education_nested_subcategories, name='admin_distance_education_nested_subcategories'),
-path('admin/distance-education/subcategory/<int:parent_id>/add/', views.admin_distance_education_nested_subcategory_add, name='admin_distance_education_nested_subcategory_add'),
-path('admin/distance-education/subcategory/<int:subcategory_id>/edit/', views.admin_distance_education_subcategory_edit, name='admin_distance_education_subcategory_edit'),
-path('admin/distance-education/subcategory/<int:subcategory_id>/delete/', views.admin_distance_education_subcategory_delete, name='admin_distance_education_subcategory_delete'),
-path('admin/distance-education/subcategory/<int:subcategory_id>/pages/', views.admin_distance_education_pages_by_subcategory, name='admin_distance_education_pages_by_subcategory'),
-path('admin/distance-education/subcategory/<int:subcategory_id>/pages/add/', views.admin_distance_education_page_add, name='admin_distance_education_page_add'),
-
-
-# ==================== ONLINE EDUCATION NESTED STRUCTURE ====================
-path('online-education/', views.online_education_view, name='online_education'),
-path('online-education/<str:card_slug>/', views.online_education_card_detail, name='online_education_card_detail'),
-path('online-education/<str:card_slug>/<path:subcategory_path>/<str:page_slug>/', views.online_education_page_detail, name='online_education_page_detail'),
-path('online-education/<str:card_slug>/<path:subcategory_path>/', views.online_education_subcategory_detail, name='online_education_subcategory_detail'),
-
-# Admin URLs  
-path('admin/online-education/<int:card_id>/subcategories/', views.admin_online_education_subcategories, name='admin_online_education_subcategories'),
-path('admin/online-education/subcategory/<int:parent_id>/children/', views.admin_online_education_nested_subcategories, name='admin_online_education_nested_subcategories'),
-path('admin/online-education/subcategory/<int:parent_id>/add/', views.admin_online_education_nested_subcategory_add, name='admin_online_education_nested_subcategory_add'),
-path('admin/online-education/subcategory/<int:subcategory_id>/edit/', views.admin_online_education_subcategory_edit, name='admin_online_education_subcategory_edit'),
-path('admin/online-education/subcategory/<int:subcategory_id>/delete/', views.admin_online_education_subcategory_delete, name='admin_online_education_subcategory_delete'),
-path('admin/online-education/subcategory/<int:subcategory_id>/pages/', views.admin_online_education_pages_by_subcategory, name='admin_online_education_pages_by_subcategory'),
-path('admin/online-education/subcategory/<int:subcategory_id>/pages/add/', views.admin_online_education_page_add, name='admin_online_education_page_add'),
+    # ==================== ADMIN: DISTANCE EDUCATION NESTED ====================
+    path('admin/distance-education/<int:card_id>/subcategories/', views.admin_distance_education_subcategories, name='admin_distance_education_subcategories'),
+    path('admin/distance-education/subcategory/<int:parent_id>/children/', views.admin_distance_education_nested_subcategories, name='admin_distance_education_nested_subcategories'),
+    path('admin/distance-education/subcategory/<int:parent_id>/add/', views.admin_distance_education_nested_subcategory_add, name='admin_distance_education_nested_subcategory_add'),
+    path('admin/distance-education/subcategory/<int:subcategory_id>/edit/', views.admin_distance_education_subcategory_edit, name='admin_distance_education_subcategory_edit'),
+    path('admin/distance-education/subcategory/<int:subcategory_id>/delete/', views.admin_distance_education_subcategory_delete, name='admin_distance_education_subcategory_delete'),
+    path('admin/distance-education/subcategory/<int:subcategory_id>/pages/', views.admin_distance_education_pages_by_subcategory, name='admin_distance_education_pages_by_subcategory'),
+    path('admin/distance-education/subcategory/<int:subcategory_id>/pages/add/', views.admin_distance_education_page_add, name='admin_distance_education_page_add'),
+    
+    # ==================== ADMIN: ONLINE EDUCATION NESTED ====================
+    path('admin/online-education/<int:card_id>/subcategories/', views.admin_online_education_subcategories, name='admin_online_education_subcategories'),
+    path('admin/online-education/subcategory/<int:parent_id>/children/', views.admin_online_education_nested_subcategories, name='admin_online_education_nested_subcategories'),
+    path('admin/online-education/subcategory/<int:parent_id>/add/', views.admin_online_education_nested_subcategory_add, name='admin_online_education_nested_subcategory_add'),
+    path('admin/online-education/subcategory/<int:subcategory_id>/edit/', views.admin_online_education_subcategory_edit, name='admin_online_education_subcategory_edit'),
+    path('admin/online-education/subcategory/<int:subcategory_id>/delete/', views.admin_online_education_subcategory_delete, name='admin_online_education_subcategory_delete'),
+    path('admin/online-education/subcategory/<int:subcategory_id>/pages/', views.admin_online_education_pages_by_subcategory, name='admin_online_education_pages_by_subcategory'),
+    path('admin/online-education/subcategory/<int:subcategory_id>/pages/add/', views.admin_online_education_page_add, name='admin_online_education_page_add'),
+    
     # ==================== AJAX ====================
     path('ajax/load-states/', views.load_states, name='ajax_load_states'),
     
-    # ⚠️ CATCH-ALL PATTERNS - SABSE LAST MEIN RAKHO
-    # These will match ANY URL that doesn't match above patterns
-    path('<str:card_slug>/', views.card_detail_view, name='card_detail_view'),
-    path('<str:card_slug>/<path:subcategory_path>/', views.subcategory_detail_view, name='subcategory_detail_view'),
+    # ⚠️ ==================== SPECIFIC URLs (BEFORE CATCH-ALL) ====================
+    
+    # 1. STATE WISE COUNSELLING
+    path('state-wise-counselling-updates/', views.state_wise_counselling_updates, name='state_wise_counselling_updates'),
+    
+    # 2. COLLEGE COMPARISON (Regular)
+    path('college-comparision/', views.student_comparisons_list, name='student_comparisons_list'),
+    path('college-comparison/<int:pk>/', views.student_comparison_detail, name='student_comparison_detail'),
+    
+    # 3. DISTANCE EDUCATION
+    path('distance-education/', views.distance_education_view, name='distance_education'),
+    path('distance-education/<str:card_slug>/', views.distance_education_card_detail, name='distance_education_card_detail'),
+    path('distance-education/<str:card_slug>/<path:subcategory_path>/<str:page_slug>/', views.distance_education_page_detail, name='distance_education_page_detail'),
+    path('distance-education/<str:card_slug>/<path:subcategory_path>/', views.distance_education_subcategory_detail, name='distance_education_subcategory_detail'),
+    
+    # 4. ONLINE EDUCATION
+    path('online-education/', views.online_education_view, name='online_education'),
+    path('online-education/<str:card_slug>/', views.online_education_card_detail, name='online_education_card_detail'),
+    path('online-education/<str:card_slug>/<path:subcategory_path>/<str:page_slug>/', views.online_education_page_detail, name='online_education_page_detail'),
+    path('online-education/<str:card_slug>/<path:subcategory_path>/', views.online_education_subcategory_detail, name='online_education_subcategory_detail'),
+    
+    # 5. ADMISSION ABROAD
+    path('admission-abroad/', views.admission_abroad_view, name='admission_abroad'),
+    path('admission-abroad/<str:card_slug>/', views.admission_abroad_card_detail, name='admission_abroad_card_detail'),
+    path('admission-abroad/<str:card_slug>/<path:subcategory_path>/<str:page_slug>/', views.admission_abroad_page_detail, name='admission_abroad_page_detail'),
+    path('admission-abroad/<str:card_slug>/<path:subcategory_path>/', views.admission_abroad_subcategory_detail, name='admission_abroad_subcategory_detail'),
+    
+    # ⚠️ ==================== CATCH-ALL PATTERNS (LAST MEIN) ====================
     path('<str:card_slug>/<path:subcategory_path>/<str:page_slug>/', views.page_detail_view, name='page_detail_view'),
+    path('<str:card_slug>/<path:subcategory_path>/', views.subcategory_detail_view, name='subcategory_detail_view'),
+    path('<str:card_slug>/', views.card_detail_view, name='card_detail_view'),
 ]

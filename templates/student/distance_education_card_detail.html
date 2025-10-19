@@ -10,12 +10,14 @@
         padding: 60px 0;
         color: white;
         margin-bottom: 40px;
+        text-align: center;
     }
     
     .page-header h1 {
         font-size: 2.5rem;
         font-weight: 700;
         margin-bottom: 10px;
+        color: white;
     }
     
     .page-header p {
@@ -243,7 +245,7 @@
 <section class="page-header">
     <div class="container">
         <!-- Breadcrumb -->
-        <nav aria-label="breadcrumb">
+        <!-- <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
                     <a href="{% url 'main_app:home' %}">
@@ -255,13 +257,13 @@
                 </li>
                 <li class="breadcrumb-item active">{{ card.title }}</li>
             </ol>
-        </nav>
+        </nav> -->
         
         <h1>{{ card.title }}</h1>
         <p>{{ card.description }}</p>
 
         <!-- ✅ NEW: Filter Info Display -->
-        {% if user_state or user_course %}
+        <!-- {% if user_state or user_course %}
         <div class="filter-info-box">
             <div class="filter-label">
                 <i class="fas fa-filter me-2"></i>Personalized Content For You
@@ -281,7 +283,7 @@
                 {% endif %}
             </div>
         </div>
-        {% endif %}
+        {% endif %} -->
     </div>
 </section>
 

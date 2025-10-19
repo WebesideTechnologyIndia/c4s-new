@@ -131,16 +131,12 @@ class CareerCounsellingService(models.Model):
         return self.title
     
 # models.py mein YE MODEL ADD KARO
-
 class AdmissionIndiaCard(models.Model):
     """Model for Admission India Services Page Cards"""
     
-    BORDER_COLOR_CHOICES = [
-        ('#f39c12', 'Orange'),
-        ('#e74c3c', 'Red'),
-        ('#2ecc71', 'Green'),
-        ('#3498db', 'Blue'),
-        ('#9b59b6', 'Purple'),
+    CARD_TYPE_CHOICES = [
+        ('free', 'Free'),
+        ('paid', 'Paid'),
     ]
     
     # Card Content
@@ -154,6 +150,11 @@ class AdmissionIndiaCard(models.Model):
     
     # Link/Redirect
     redirect_link = models.CharField(max_length=500, blank=True, help_text="Card click pe kaha redirect ho?")
+    
+    # Payment Settings
+    card_type = models.CharField(max_length=10, choices=CARD_TYPE_CHOICES, default='free', help_text="Free ya Paid?")
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Price (agar paid hai to yaha likho)")
+    description = models.TextField(blank=True, help_text="Card ke baare mein description")
     
     # Styling
     border_gradient_start = models.CharField(max_length=7, default="#ED651C", help_text="Gradient start color")
@@ -174,8 +175,10 @@ class AdmissionIndiaCard(models.Model):
         verbose_name_plural = "Admission India Cards"
     
     def __str__(self):
-        return self.title
-    
+        return f"{self.title} - {self.get_card_type_display()}"
+
+
+
 
 class AllIndiaServiceCard(models.Model):
     """Model for All India State Wise Counselling Services Page"""
@@ -1003,7 +1006,7 @@ class UserRegistration(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
     father_name = models.CharField(max_length=100)
-    mobile = models.CharField(max_length=15)
+    mobile = models.CharField(max_length=15,unique=True)
     whatsapp_mobile = models.CharField(max_length=15)
     email = models.EmailField(unique=True)
     course = models.CharField(max_length=100, choices=COURSE_CHOICES)
@@ -1028,7 +1031,11 @@ class UserRegistration(models.Model):
         verbose_name = "User Registration"
         verbose_name_plural = "User Registrations"
 
-# ==================== COLLEGE MODEL ====================
+
+
+# 
+
+#  ==================== COLLEGE MODEL ====================
 class College(models.Model):
     """Colleges database"""
     
@@ -1550,3 +1557,44 @@ class AdmissionAbroadPage(models.Model):
             from django.utils.text import slugify
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
+
+
+# ==================== STUDENT CARD PURCHASE MODEL ====================
+class StudentCardPurchase(models.Model):
+    """Model to track student card purchases"""
+    
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
+    
+    student = models.ForeignKey(UserRegistration, on_delete=models.CASCADE, related_name='card_purchases')
+    card = models.ForeignKey(AdmissionIndiaCard, on_delete=models.CASCADE, related_name='purchases')
+    
+    # Payment Info
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    
+    # Transaction Details
+    transaction_id = models.CharField(max_length=100, unique=True, blank=True, null=True)
+    payment_method = models.CharField(max_length=50, blank=True, help_text="Credit Card, UPI, etc.")
+    
+    # Timestamps
+    purchased_at = models.DateTimeField(auto_now_add=True)
+    payment_completed_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        unique_together = ('student', 'card')  # Ek student ek card sirf ek bar kharid sakta hai
+        verbose_name = "Student Card Purchase"
+        verbose_name_plural = "Student Card Purchases"
+        ordering = ['-purchased_at']
+    
+    def __str__(self):
+        return f"{self.student.name} - {self.card.title}"
+    
+    @property
+    def is_purchased(self):
+        """Check agar card successfully purchased hai"""
+        return self.payment_status == 'completed'
+    

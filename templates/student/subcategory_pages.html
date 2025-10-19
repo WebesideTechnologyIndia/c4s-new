@@ -72,18 +72,18 @@
     <!-- Pages List -->
     {% if pages %}
         <div class="row">
-            <div class="col-12">
+            <!-- <div class="col-12">
                 <h4 class="mb-4">
                     <i class="bi bi-book me-2"></i>
                     Available Content ({{ pages.count }} {% if pages.count == 1 %}Page{% else %}Pages{% endif %})
                 </h4>
-            </div>
+            </div> -->
         </div>
 
         <div class="row g-4">
             {% for page in pages %}
             <div class="col-md-6 col-lg-4">
-                <div class="card h-100 shadow-sm hover-card">
+                <div class="card h-90 shadow-sm hover-card">
                     <!-- Featured Image -->
                     {% if page.get_featured_image %}
                     <img src="{{ page.get_featured_image }}" 
@@ -150,6 +150,7 @@
 {% block extra_css %}
 <style>
     .hover-card {
+        border: 1px solid #000;
         transition: all 0.3s ease;
         border: 1px solid #e0e0e0;
     }

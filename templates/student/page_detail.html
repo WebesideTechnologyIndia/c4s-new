@@ -1,156 +1,597 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ page.title }}{% endblock %}
+{% block page_title %}{{ page.title }} - {{ card.title }}{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a href="{% url 'main_app:all_india_services' %}">All India Services</a>
-            </li>
-            <li class="breadcrumb-item">
-                <a href="{% url 'main_app:card_detail' card.get_slug %}">{{ card.title }}</a>
-            </li>
-            <li class="breadcrumb-item">
-                <a href="{% url 'main_app:subcategory_detail' card.get_slug sub_category.slug %}">
-                    {{ sub_category.title }}
-                </a>
-            </li>
-            <li class="breadcrumb-item active">{{ page.title }}</li>
-        </ol>
-    </nav>
-
-    <div class="row">
-        <!-- Main Content -->
-        <div class="col-lg-8">
-            <article>
-                <!-- Featured Image -->
-                {% if page.get_featured_image %}
-                <img src="{{ page.get_featured_image }}" 
-                     class="img-fluid rounded mb-4" 
-                     alt="{{ page.title }}">
-                {% endif %}
-
-                <!-- Title -->
-                <h1 class="mb-3">{{ page.title }}</h1>
-
-                <!-- Meta Info -->
-                <div class="d-flex gap-3 mb-4 text-muted">
-                    <small>
-                        <i class="bi bi-calendar3 me-1"></i>
-                        {{ page.created_at|date:"F d, Y" }}
-                    </small>
-                    <small>
-                        <i class="bi bi-eye me-1"></i>
-                        {{ page.views_count }} views
-                    </small>
-                    {% if page.is_featured %}
-                    <small>
-                        <span class="badge bg-warning">⭐ Featured</span>
-                    </small>
-                    {% endif %}
-                </div>
-
-                <!-- Summary -->
-                {% if page.summary %}
-                <div class="alert alert-info">
-                    <strong>Summary:</strong> {{ page.summary }}
-                </div>
-                {% endif %}
-
-                <!-- Main Content -->
-                <div class="content-body">
-                    {{ page.content|safe }}
-                </div>
-
-                <!-- Last Updated -->
-                <div class="mt-5 pt-4 border-top">
-                    <small class="text-muted">
-                        Last updated: {{ page.updated_at|date:"F d, Y" }}
-                    </small>
-                </div>
-            </article>
-        </div>
-
-        <!-- Sidebar -->
-        <div class="col-lg-4">
-            <!-- Related Pages -->
-            {% if related_pages %}
-            <div class="card mb-4">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Related Pages</h5>
-                </div>
-                <div class="list-group list-group-flush">
-                    {% for related in related_pages %}
-                    <a href="{% url 'main_app:page_detail' card.get_slug sub_category.slug related.slug %}" 
-                       class="list-group-item list-group-item-action">
-                        <h6 class="mb-1">{{ related.title|truncatewords:10 }}</h6>
-                        <small class="text-muted">
-                            <i class="bi bi-eye me-1"></i>{{ related.views_count }} views
-                        </small>
-                    </a>
-                    {% endfor %}
+<div class="blog-page">
+    <!-- Hero Section with Featured Image -->
+    {% if page.get_featured_image %}
+    <div class="hero-section">
+        <div class="hero-overlay"></div>
+        <img src="{{ page.get_featured_image }}" 
+             alt="{{ page.title }}"
+             class="hero-image">
+        <div class="hero-content">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8 text-center">
+                        <h1 class="hero-title">{{ page.title }}</h1>
+                        {% if page.summary %}
+                        <p class="hero-summary">{{ page.summary }}</p>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <!-- No Image Hero -->
+    <div class="hero-section-simple">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h1 class="hero-title-simple">{{ page.title }}</h1>
+                    {% if page.summary %}
+                    <p class="hero-summary-simple">{{ page.summary }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
-            <!-- Back to Category -->
-            <div class="card">
-                <div class="card-body">
-                    <a href="{% url 'main_app:subcategory_detail' card.get_slug sub_category.slug %}" 
-                       class="btn btn-outline-primary w-100">
+    <!-- Breadcrumb Navigation -->
+    <div class="container mt-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb blog-breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'main_app:student_dashboard' %}">
+                        <i class="bi bi-house-door-fill"></i> Home
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'main_app:card_detail_view' card.get_slug %}">
+                        {{ card.title }}
+                    </a>
+                </li>
+                
+                {% for item in breadcrumb %}
+                    {% if forloop.last %}
+                        <li class="breadcrumb-item active">{{ item.title }}</li>
+                    {% else %}
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'main_app:subcategory_detail_view' card.get_slug item.get_full_path %}">
+                                {{ item.title }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <!-- Blog Content -->
+            <div class="col-lg-8">
+                <!-- Meta Info -->
+                <div class="blog-meta mb-4">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                        <div class="meta-items">
+                            <span class="meta-item">
+                                <i class="bi bi-calendar3"></i>
+                                {{ page.created_at|date:"F d, Y" }}
+                            </span>
+                            <span class="meta-item">
+                                <i class="bi bi-eye-fill"></i>
+                                {{ page.views_count }} views
+                            </span>
+                            {% if page.is_featured %}
+                            <span class="badge badge-featured">
+                                <i class="bi bi-star-fill"></i> Featured
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="share-buttons">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="shareOnFacebook()">
+                                <i class="bi bi-facebook"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="shareOnTwitter()">
+                                <i class="bi bi-twitter"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="copyLink()">
+                                <i class="bi bi-link-45deg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Article Content -->
+                <article class="blog-content">
+                    {{ page.content|safe }}
+                </article>
+
+                <!-- Tags (if you have them) -->
+                <!-- Tags (if you have them) -->
+{% if tags %}
+<div class="blog-tags mt-5">
+    <h5 class="mb-3">
+        <i class="bi bi-tags-fill me-2"></i>Tags
+    </h5>
+    <div class="d-flex flex-wrap gap-2">
+        {% for tag in tags %}
+        <span class="badge tag-badge">{{ tag }}</span>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+                <!-- Navigation -->
+                <div class="blog-navigation mt-5 pt-5 border-top">
+                    <a href="{% url 'main_app:subcategory_detail_view' card.get_slug sub_category.get_full_path %}" 
+                       class="btn btn-outline-primary btn-lg">
                         <i class="bi bi-arrow-left me-2"></i>
                         Back to {{ sub_category.title }}
                     </a>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <div class="blog-sidebar sticky-top" style="top: 2rem;">
+                    
+                    <!-- Category Info Card -->
+                    <div class="sidebar-card mb-4">
+                        <div class="sidebar-card-header">
+                            <div class="d-flex align-items-center">
+                                <div class="category-icon" style="background: {{ sub_category.icon_color }};">
+                                    <img src="{{ sub_category.get_icon }}" alt="icon">
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="mb-0">{{ sub_category.title }}</h6>
+                                    <small class="text-muted">Category</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% if sub_category.description %}
+                        <div class="sidebar-card-body">
+                            <p class="small text-muted mb-0">{{ sub_category.description }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Related Content -->
+                    {% if related_pages %}
+                    <div class="sidebar-card mb-4">
+                        <div class="sidebar-card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-bookmark-star-fill me-2"></i>
+                                Related Articles
+                            </h5>
+                        </div>
+                        <div class="related-list">
+                            {% for related in related_pages %}
+                            <a href="{% url 'main_app:page_detail_view' card.get_slug sub_category.get_full_path related.slug %}" 
+                               class="related-item">
+                                <div class="d-flex">
+                                    {% if related.get_featured_image %}
+                                    <div class="related-thumb">
+                                        <img src="{{ related.get_featured_image }}" alt="{{ related.title }}">
+                                    </div>
+                                    {% else %}
+                                    <div class="related-thumb related-thumb-placeholder">
+                                        <i class="bi bi-file-earmark-text"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div class="related-info flex-grow-1">
+                                        <h6 class="related-title">{{ related.title }}</h6>
+                                        <div class="related-meta">
+                                            <small>
+                                                <i class="bi bi-eye"></i> {{ related.views_count }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Quick Links -->
+                  
+
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Share Script -->
+<script>
+function shareOnFacebook() {
+    window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href), '_blank');
+}
+
+function shareOnTwitter() {
+    window.open('https://twitter.com/intent/tweet?url=' + encodeURIComponent(window.location.href) + '&text=' + encodeURIComponent('{{ page.title }}'), '_blank');
+}
+
+function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(function() {
+        alert('Link copied to clipboard!');
+    });
+}
+</script>
+
+{% endblock %}
+
+{% block extra_css %}
 <style>
-    .content-body {
+    /* Hero Section */
+    .hero-section {
+        position: relative;
+        height: 500px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+    
+    .hero-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
+        z-index: 1;
+    }
+    
+    .hero-content {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        padding: 3rem 0;
+        z-index: 2;
+    }
+    
+    .hero-title {
+        color: white;
+        font-size: 2.5rem;
+        font-weight: 700;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        margin-bottom: 1rem;
+    }
+    
+    .hero-summary {
+        color: rgba(255,255,255,0.95);
+        font-size: 1.2rem;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    /* Simple Hero (no image) */
+    .hero-section-simple {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 4rem 0;
+        margin-bottom: 2rem;
+    }
+    
+    .hero-title-simple {
+        color: white;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    
+    .hero-summary-simple {
+        color: rgba(255,255,255,0.95);
+        font-size: 1.2rem;
+    }
+    
+    /* Breadcrumb */
+    .blog-breadcrumb {
+        background: transparent;
+        padding: 0;
+        margin-bottom: 0;
+    }
+    
+    .blog-breadcrumb .breadcrumb-item a {
+        color: #667eea;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    
+    .blog-breadcrumb .breadcrumb-item a:hover {
+        color: #764ba2;
+    }
+    
+    /* Blog Meta */
+    .blog-meta {
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+    }
+    
+    .meta-item {
+        display: inline-flex;
+        align-items: center;
+        margin-right: 1.5rem;
+        color: #6c757d;
+        font-size: 0.95rem;
+    }
+    
+    .meta-item i {
+        margin-right: 0.5rem;
+        color: #667eea;
+    }
+    
+    .badge-featured {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+    }
+    
+    .share-buttons .btn {
+        margin-left: 0.5rem;
+    }
+    
+    /* Blog Content */
+    .blog-content {
         font-size: 1.1rem;
         line-height: 1.8;
+        color: #333;
     }
     
-    .content-body h2 {
-        margin-top: 2rem;
-        margin-bottom: 1rem;
+    .blog-content h2 {
+        font-size: 2rem;
         font-weight: 600;
+        margin-top: 3rem;
+        margin-bottom: 1.5rem;
+        color: #2d3748;
+        border-left: 4px solid #667eea;
+        padding-left: 1rem;
     }
     
-    .content-body h3 {
-        margin-top: 1.5rem;
-        margin-bottom: 0.75rem;
+    .blog-content h3 {
+        font-size: 1.5rem;
         font-weight: 600;
+        margin-top: 2.5rem;
+        margin-bottom: 1rem;
+        color: #4a5568;
     }
     
-    .content-body p {
-        margin-bottom: 1rem;
+    .blog-content p {
+        margin-bottom: 1.5rem;
     }
     
-    .content-body ul, .content-body ol {
-        margin-bottom: 1rem;
+    .blog-content img {
+        max-width: 100%;
+        height: auto;
+        margin: 2rem 0;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .blog-content ul, .blog-content ol {
+        margin: 1.5rem 0;
         padding-left: 2rem;
     }
     
-    .content-body li {
-        margin-bottom: 0.5rem;
+    .blog-content li {
+        margin-bottom: 0.8rem;
     }
     
-    .content-body a {
-        color: #0d6efd;
+    .blog-content blockquote {
+        border-left: 4px solid #667eea;
+        padding: 1rem 1.5rem;
+        margin: 2rem 0;
+        background: #f8f9fa;
+        font-style: italic;
+        border-radius: 0 8px 8px 0;
+    }
+    
+    .blog-content code {
+        background: #f8f9fa;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        color: #e83e8c;
+    }
+    
+    .blog-content pre {
+        background: #2d3748;
+        color: #e2e8f0;
+        padding: 1.5rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 2rem 0;
+    }
+    
+    .blog-content a {
+        color: #667eea;
         text-decoration: underline;
     }
     
-    .content-body img {
-        max-width: 100%;
-        height: auto;
-        margin: 1rem 0;
+    .blog-content a:hover {
+        color: #764ba2;
+    }
+    
+    /* Tags */
+    .blog-tags {
+        padding: 2rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+    }
+    
+    .tag-badge {
+        background: white;
+        color: #667eea;
+        border: 2px solid #667eea;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .tag-badge:hover {
+        background: #667eea;
+        color: white;
+    }
+    
+    /* Sidebar */
+    .sidebar-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .sidebar-card-header {
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .sidebar-card-header h5 {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    .sidebar-card-body {
+        padding: 1.5rem;
+    }
+    
+    /* Category Icon */
+    .category-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+    }
+    
+    .category-icon img {
+        width: 30px;
+        height: 30px;
+        object-fit: contain;
+    }
+    
+    /* Related Items */
+    .related-list {
+        padding: 0;
+    }
+    
+    .related-item {
+        display: block;
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.3s;
+    }
+    
+    .related-item:last-child {
+        border-bottom: none;
+    }
+    
+    .related-item:hover {
+        background: #f8f9fa;
+    }
+    
+    .related-thumb {
+        width: 80px;
+        height: 60px;
         border-radius: 8px;
+        overflow: hidden;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+    
+    .related-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .related-thumb-placeholder {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+    
+    .related-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #2d3748;
+        line-height: 1.4;
+    }
+    
+    .related-meta {
+        color: #6c757d;
+        font-size: 0.85rem;
+    }
+    
+    /* Quick Links */
+    .quick-link {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        color: #4a5568;
+        text-decoration: none;
+        border-bottom: 1px solid #e9ecef;
+        transition: all 0.3s;
+    }
+    
+    .quick-link:last-child {
+        border-bottom: none;
+    }
+    
+    .quick-link i {
+        margin-right: 1rem;
+        color: #667eea;
+        font-size: 1.2rem;
+    }
+    
+    .quick-link:hover {
+        background: #f8f9fa;
+        color: #667eea;
+        padding-left: 2rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 991px) {
+        .hero-title, .hero-title-simple {
+            font-size: 2rem;
+        }
+        
+        .hero-summary, .hero-summary-simple {
+            font-size: 1rem;
+        }
+        
+        .blog-sidebar {
+            margin-top: 3rem;
+        }
+    }
+    
+    @media print {
+        .blog-sidebar, .share-buttons, .blog-navigation, .breadcrumb {
+            display: none;
+        }
     }
 </style>
 {% endblock %}

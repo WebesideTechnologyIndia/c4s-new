@@ -18,7 +18,7 @@
         :root {
             --primary-color: #ED651C;
             --secondary-color: #667eea;
-            --sidebar-bg: #2c3e50;
+            --sidebar-bg: #000000;
             --sidebar-hover: #34495e;
             --light-bg: #f8f9fa;
             --border-color: #e9ecef;
@@ -144,6 +144,7 @@
             border: none;
             width: calc(100% - 24px);
             text-align: left;
+            /* border: 1px solid #000; */
         }
 
         .nav-dropdown:hover {
@@ -181,6 +182,9 @@
             background-color: rgba(0, 0, 0, 0.2);
             border-radius: 8px;
             margin: 0 12px;
+            /* border: 1px solid #000; */
+            text-align: left;
+            float: left;
         }
 
         .dropdown-menu-custom.show {
@@ -190,7 +194,7 @@
 
         .dropdown-menu-custom .nav-link {
             margin-left: 0;
-            padding-left: 50px;
+            /* padding-left: 50px; */
             font-size: 13px;
             margin: 4px 8px;
         }
@@ -475,7 +479,7 @@
     <div class="sidebar">
         <div class="logo">
             <i class="bi bi-speedometer2"></i>
-            <span>LearnUp Admin</span>
+            <span>C4s Admin</span>
         </div>
 
         <ul class="nav flex-column mt-3">
@@ -504,21 +508,27 @@
                         </button>
                         <ul class="dropdown-menu-custom" id="admissionIndiaCards">
                             <li class="nav-item">
-                                <a class="nav-link {% if 'admission-cards' in request.path %}active{% endif %}"
+                                <!-- <a class="nav-link {% if 'admission-cards' in request.path %}active{% endif %}"
                                     href="{% url 'main_app:admin_admission_cards_list' %}">
                                     <i class="bi bi-building"></i> Admission India
-                                </a>
+                                </a> -->
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link {% if 'all-india-cards' in request.path %}active{% endif %}"
                                     href="{% url 'main_app:admin_all_india_cards_list' %}">
-                                    <i class="bi bi-geo-alt"></i> All India Cards
+                                    <i class="bi bi-geo-alt"></i> All India Updates
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link {% if 'pro-counselling-cards' in request.path %}active{% endif %}"
                                     href="{% url 'main_app:admin_pro_counselling_cards_list' %}">
                                     <i class="bi bi-card-checklist"></i> Professional Counselling
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if 'pro-counselling-cards' in request.path %}active{% endif %}"
+                                    href="# ">
+                                    <i class="bi bi-card-checklist"></i> Quota Admission
                                 </a>
                             </li>
                         </ul>

@@ -4,7 +4,6 @@
 {% block title %}Admission India Services{% endblock %}
 
 {% block extra_css %}
-
 <style>
     body {
         overflow-x: hidden;
@@ -57,7 +56,168 @@
         font-size: 1.2rem;
         margin-bottom: 0;
     }
-    
+
+    .profile-view-btn {
+        display: inline-block;
+        padding: 12px 30px;
+        background: linear-gradient(135deg, #ED651C, #F4800C);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        float: right;
+    }
+
+    .profile-view-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(237, 101, 28, 0.4);
+        color: white;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 999;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 700px;
+        width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        color: #ED651C;
+        font-size: 1.6rem;
+        font-weight: 700;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.8rem;
+        cursor: pointer;
+        color: #666;
+        transition: color 0.3s ease;
+    }
+
+    .modal-close:hover {
+        color: #ED651C;
+    }
+
+    .modal-body {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .modal-field {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 4px solid #ED651C;
+    }
+
+    .modal-field label {
+        font-size: 0.75rem;
+        color: #666;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .modal-field p {
+        font-size: 1rem;
+        color: #000;
+        font-weight: 600;
+        margin: 0;
+        word-break: break-word;
+    }
+
+    .modal-divider {
+        grid-column: 1 / -1;
+        height: 1px;
+        background: #e9ecef;
+        margin: 10px 0;
+    }
+
+    .modal-section-title {
+        grid-column: 1 / -1;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #ED651C;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 15px;
+        margin-bottom: 10px;
+    }
+
+    .verification-badge {
+        display: inline-block;
+        padding: 8px 16px;
+        background: #28a745;
+        color: white;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .verification-badge.unverified {
+        background: #ffc107;
+        color: #000;
+    }
+
     /* Feature Boxes Section */
     .feature-section {
         padding: 80px 0;
@@ -72,6 +232,8 @@
         text-decoration: none;
         display: block;
         box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+        position: relative;
+        /* border: 1px solid #  000; */
     }
     
     .feature-box:hover {
@@ -121,63 +283,96 @@
         font-weight: 500;
         line-height: 1.3;
     }
-    
+
+    .card-button {
+        background: linear-gradient(135deg, #ED651C, #F4800C);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 12px rgba(237, 101, 28, 0.4);
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .card-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(237, 101, 28, 0.6);
+    }
+
+    .card-button-green {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+    }
+
+    .card-button-green:hover {
+        box-shadow: 0 6px 16px rgba(40, 167, 69, 0.6);
+    }
+
+    .badge {
+        position: relative;
+        top: 10px;
+        right: 0px;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        z-index: 10;
+        color: white;
+    }
+
+    .badge-lock {
+        background: #dc3545;
+    }
+
+    .badge-purchased {
+        background: #28a745;
+    }
+
+    .badge-free {
+        background: #17a2b8;
+    }
+
     @media (max-width: 991px) {
-        .services-hero {
-            padding: 100px 0 60px;
-        }
-        
-        .services-hero h1 {
-            font-size: 2.2rem;
-        }
-        
+        .services-hero { padding: 100px 0 60px; }
+        .services-hero h1 { font-size: 2.2rem; }
         .services-hero::before {
             width: 350px;
             height: 350px;
             right: -80px;
         }
-        
-        .feature-section {
-            padding: 60px 0;
-        }
-        
-        .feature-content {
-            grid-template-columns: 1fr;
-        }
+        .feature-section { padding: 60px 0; }
+        .feature-content { grid-template-columns: 1fr; }
     }
     
     @media (max-width: 767px) {
-        .services-hero {
-            padding: 80px 0 50px;
-        }
-        
-        .services-hero h1 {
-            font-size: 1.8rem;
-        }
-        
-        .services-hero p {
-            font-size: 1rem;
-        }
-        
+        .services-hero { padding: 80px 0 50px; }
+        .services-hero h1 { font-size: 1.8rem; }
+        .services-hero p { font-size: 1rem; }
         .services-hero::before {
             width: 250px;
             height: 250px;
             right: -50px;
             opacity: 0.5;
         }
-        
         .feature-content {
             grid-template-columns: 1fr;
             padding: 25px 20px;
         }
-        
         .feature-header h3 {
             font-size: 0.9rem;
             padding: 15px;
         }
+        .modal-body { grid-template-columns: 1fr; }
+        .modal-content { padding: 25px; }
+        .modal-header h2 { font-size: 1.3rem; }
     }
 </style>
-
 {% endblock %}
 
 {% block content %}
@@ -198,17 +393,120 @@
     </div>
 </section>
 
+<!-- View Profile Button Section -->
+{% if student %}
+<section style="padding: 40px 0; text-align: center;">
+    <div class="container">
+        <button class="profile-view-btn" onclick="openProfileModal()">👁️ View Your Profile</button>
+    </div>
+</section>
+{% endif %}
+
+<!-- Profile Modal -->
+{% if student %}
+<div class="modal-overlay" id="profileModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>📋 Complete Profile</h2>
+            <button class="modal-close" onclick="closeProfileModal()">✕</button>
+        </div>
+
+        <div class="modal-body">
+            <div class="modal-section-title">Personal Information</div>
+            
+            <div class="modal-field">
+                <label>Full Name</label>
+                <p>{{ student.name }}</p>
+            </div>
+            <div class="modal-field">
+                <label>Father's Name</label>
+                <p>{{ student.father_name }}</p>
+            </div>
+            <div class="modal-field">
+                <label>Email Address</label>
+                <p>{{ student.email }}</p>
+            </div>
+            <div class="modal-field">
+                <label>Username</label>
+                <p>{{ request.user.username }}</p>
+            </div>
+
+            <div class="modal-divider"></div>
+
+            <div class="modal-section-title">Contact Information</div>
+            
+            <div class="modal-field">
+                <label>Mobile Number</label>
+                <p>{{ student.mobile }}</p>
+            </div>
+            <div class="modal-field">
+                <label>WhatsApp Number</label>
+                <p>{{ student.whatsapp_mobile }}</p>
+            </div>
+
+            <div class="modal-divider"></div>
+
+            <div class="modal-section-title">Educational Information</div>
+            
+            <div class="modal-field">
+                <label>Course</label>
+                <p>{{ student.course }}</p>
+            </div>
+            <div class="modal-field">
+                <label>Verification Status</label>
+                <p>
+                    {% if student.is_verified %}
+                        <span class="verification-badge">✓ Verified</span>
+                    {% else %}
+                        <span class="verification-badge unverified">⚠ Not Verified</span>
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="modal-divider"></div>
+
+            <div class="modal-section-title">Location Information</div>
+            
+            <div class="modal-field">
+                <label>Country</label>
+                <p>{{ student.country.name|default:"Not Selected" }}</p>
+            </div>
+            <div class="modal-field">
+                <label>State</label>
+                <p>{{ student.state.name|default:"Not Selected" }}</p>
+            </div>
+            <div class="modal-field">
+                <label>City</label>
+                <p>{{ student.city }}</p>
+            </div>
+            <div class="modal-field">
+                <label>Registration Date</label>
+                <p>{{ student.created_at|date:"d M, Y" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Feature Cards Section -->
 <section class="feature-section">
     <div class="container">
         <div class="row g-4">
             {% for card in cards %}
             <div class="col-lg-4 col-md-12">
-                <a href="{{ card.redirect_link }}">
-                    <div class="feature-box" style="--gradient-start: {{ card.border_gradient_start }}; --gradient-end: {{ card.border_gradient_end }}">
+                
+                <!-- PAID CARD - NOT PURCHASED (LOCKED) -->
+                {% if card.card_type == 'paid' and not card.is_purchased %}
+                <div class="badge badge-lock">🔒 ₹{{ card.price }}</div>
+                    <div class="feature-box" style="--gradient-start: {{ card.border_gradient_start }}; --gradient-end: {{ card.border_gradient_end }}; opacity: 0.6; display: flex; flex-direction: column;">
+                        
+                        <!-- Lock Badge - Top Left -->
+                        
+
                         <div class="feature-header">
                             <h3>{{ card.title }}</h3>
                         </div>
+
                         <div class="feature-content">
                             <div class="feature-item">
                                 <i class="bi bi-check-circle-fill"></i>
@@ -227,15 +525,105 @@
                                 <span>{{ card.feature_4 }}</span>
                             </div>
                         </div>
+
+                        <!-- Buy Now Button - Bottom (Only for unpurchased paid cards) -->
+                        <div style="margin-top: auto; padding: 15px; text-align: center;">
+                            <form method="POST" action="{% url 'main_app:purchase_card' card.id %}" style="margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="card-button" style="width: 100%;">💳 Buy Now - ₹{{ card.price }}</button>
+                            </form>
+                        </div>
                     </div>
-                </a>
-            </div>
-            {% empty %}
-            <div class="col-12 text-center">
-                <p>No services available at the moment.</p>
+
+                <!-- FREE CARD OR PURCHASED PAID CARD (UNLOCKED) -->
+                {% else %}
+                    <a href="{{ card.redirect_link }}" style="text-decoration: none;">
+                        <!-- Badges - Top Left -->
+                            {% if card.is_purchased %}
+                                <div class="badge badge-purchased">✓ Purchased</div>
+                            {% elif card.card_type == 'free' %}
+                                <div class="badge badge-free">🎉 FREE</div>
+                            {% endif %}
+                        <div class="feature-box" style="--gradient-start: {{ card.border_gradient_start }}; --gradient-end: {{ card.border_gradient_end }}; display: flex; flex-direction: column;">
+                            
+                            
+
+                            <div class="feature-header">
+                                <h3>{{ card.title }}</h3>
+                            </div>
+
+                            <div class="feature-content">
+                                <div class="feature-item">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <span>{{ card.feature_1 }}</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <span>{{ card.feature_2 }}</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <span>{{ card.feature_3 }}</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <span>{{ card.feature_4 }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Read More Button - Bottom (For free and purchased cards) -->
+                            <div style="margin-top: auto; padding: 15px; text-align: center;">
+                                <a href="{{ card.redirect_link }}" class="card-button card-button-green" style="width: 100%; display: block;">📖 View Now</a>
+                            </div>
+                        </div>
+                    </a>
+                {% endif %}
             </div>
             {% endfor %}
+
+            {% if not cards %}
+            <div class="col-12 text-center">
+                <p style="font-size: 1.1rem; color: #666; padding: 40px 0;">
+                    No services available at the moment.
+                </p>
+            </div>
+            {% endif %}
         </div>
     </div>
 </section>
+
+<script>
+    function openProfileModal() {
+        const modal = document.getElementById('profileModal');
+        if (modal) {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeProfileModal() {
+        const modal = document.getElementById('profileModal');
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('profileModal');
+        if (modal) {
+            modal.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    closeProfileModal();
+                }
+            });
+        }
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeProfileModal();
+        }
+    });
+</script>
 {% endblock %}

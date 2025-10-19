@@ -4,9 +4,11 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    # IMPORTANT: Custom admin routes PEHLE aani chahiye Django admin se
-    path('', include('main_app.urls')),  # Ye pehle rakho
-    path('admin/', admin.site.urls),     # Django admin baad mein
+    # ✅ DJANGO ADMIN - PEHLE LIKHO
+    path('', include('main_app.urls')),
+    path('admin/', admin.site.urls),
+    
+    # ✅ CUSTOM URLS - BAAD MEIN
 ]
 
 if settings.DEBUG:

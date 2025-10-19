@@ -178,3 +178,6 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'webeside.agency@gmail.com'  # Replace with your Gmail
 EMAIL_HOST_PASSWORD = 'zxki gfti crqy xwry'  # Replace with your App Password
 DEFAULT_FROM_EMAIL = 'CAREER4S <your-email@gmail.com>'
+
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')

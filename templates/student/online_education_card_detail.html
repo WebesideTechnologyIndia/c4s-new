@@ -10,12 +10,14 @@
         padding: 60px 0;
         color: white;
         margin-bottom: 40px;
+        text-align: center;
     }
     
     .page-header h1 {
         font-size: 2.5rem;
         font-weight: 700;
         margin-bottom: 10px;
+        color: white;
     }
     
     .page-header p {
@@ -27,6 +29,7 @@
         background: transparent;
         padding: 0;
         margin-bottom: 0;
+        text-align: center;
     }
     
     .breadcrumb-item a {
@@ -156,7 +159,7 @@
 <section class="page-header">
     <div class="container">
         <!-- Breadcrumb -->
-        <nav aria-label="breadcrumb">
+        <!-- <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
                     <a href="{% url 'main_app:home' %}">
@@ -168,13 +171,13 @@
                 </li>
                 <li class="breadcrumb-item active">{{ card.title }}</li>
             </ol>
-        </nav>
+        </nav> -->
         
         <h1>{{ card.title }}</h1>
         <p>{{ card.description }}</p>
         
         <!-- ✅ NEW: User Profile Filters -->
-        {% if user_country or user_state or user_course %}
+        <!-- {% if user_country or user_state or user_course %}
         <div class="mt-3">
             <small style="opacity: 0.8;">Showing results for:</small><br>
             {% if user_country %}
@@ -193,7 +196,7 @@
                 </span>
             {% endif %}
         </div>
-        {% endif %}
+        {% endif %} -->
     </div>
 </section>
 
@@ -201,7 +204,7 @@
 <section class="py-5">
     <div class="container">
         <!-- ✅ NEW: Filter Info Alert (Optional) -->
-        {% if user_country or user_state or user_course %}
+        <!-- {% if user_country or user_state or user_course %}
         <div class="filter-info">
             <i class="fas fa-info-circle"></i>
             <strong>Personalized Results:</strong> 
@@ -211,7 +214,7 @@
                 (Showing {{ filtered_count }} of {{ total_subcategories }} available categories)
             </small>
         </div>
-        {% endif %}
+        {% endif %} -->
         
         {% if subcategories %}
             <div class="row">

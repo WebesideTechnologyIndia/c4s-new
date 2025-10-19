@@ -12,6 +12,7 @@
         color: white;
         position: relative;
         overflow: hidden;
+        /* border: 1px solid #000; */
     }
 
     .hero-section::before {
@@ -40,6 +41,8 @@
     .hero-content {
         position: relative;
         z-index: 1;
+        /* border: 1px solid #000; */
+        text-align: center;
     }
 
     /* Breadcrumb */
@@ -346,6 +349,7 @@
         margin-bottom: 15px;
         text-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
         letter-spacing: -0.5px;
+        color: white;
     }
 
     .page-subtitle {
@@ -467,7 +471,7 @@
         <!-- Breadcrumb -->
         <div class="custom-breadcrumb" style="animation: slideInLeft 0.6s;">
             <a href="{% url 'main_app:all_india_services' %}">
-                <i class="bi bi-house-door me-2"></i>All India Services
+                <i class="bi bi-house-door me-2"></i>All India State Wise Counselling
             </a>
             <span class="separator">›</span>
             <span class="active">{{ card.title }}</span>
@@ -482,7 +486,7 @@
         </p>
 
         <!-- ✅ NEW: Filter Info Display -->
-        {% if user_state or user_course %}
+        <!-- {% if user_state or user_course %}
         <div class="filter-info-box">
             <div class="filter-label">
                 <i class="bi bi-funnel-fill me-2"></i>Personalized Content For You
@@ -502,7 +506,7 @@
                 {% endif %}
             </div>
         </div>
-        {% endif %}
+        {% endif %} -->
     </div>
 </div>
 
@@ -588,10 +592,7 @@
                 <p>
                     Get personalized content by completing your profile with state and course information.
                 </p>
-                <a href="{% url 'main_app:user_profile' %}" class="btn-complete-profile">
-                    <i class="bi bi-pencil-square"></i>
-                    Complete Profile
-                </a>
+                <!--  -->
             </div>
             {% endif %}
 

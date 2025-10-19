@@ -112,19 +112,121 @@ admin_logout_view = user_logout_view
 
 
 # ==================== ADMISSION INDIA (LOGIN REQUIRED) ====================
+from django.db.models import Q
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.utils import timezone
+from django.views.decorators.cache import never_cache
+from .models import AdmissionIndiaCard, StudentCardPurchase, UserRegistration
+
 @never_cache
 @login_required(login_url='main_app:user_login')
 def admission_india_services_view(request):
     """Admission India Services Page - LOGIN REQUIRED (Normal Users)"""
+    
     # Agar admin hai to admin dashboard bhej do
     if request.user.is_staff or request.user.is_superuser:
         messages.info(request, 'Admins can access from admin panel.')
         return redirect('main_app:admin_dashboard')
     
-    cards = AdmissionIndiaCard.objects.filter(is_active=True)
-    context = {'cards': cards}
+    # Student ka registration data nikalo
+    try:
+        student = UserRegistration.objects.get(user=request.user)
+    except UserRegistration.DoesNotExist:
+        student = None
+    
+    # ✅ SAHI LOGIC: Sab active cards nikalo (FREE + PAID dono)
+    all_cards = AdmissionIndiaCard.objects.filter(is_active=True).order_by('order', 'id')
+    
+    # Student ke purchased cards nikalo
+    purchased_card_ids = set()
+    if student:
+        purchased_card_ids = set(
+            StudentCardPurchase.objects.filter(
+                student=student,
+                payment_status='completed'
+            ).values_list('card_id', flat=True)
+        )
+    
+    # ✅ Cards ko prepare karo (sab dikhaega - free, paid, purchased)
+    cards_to_display = []
+    
+    for card in all_cards:
+        is_purchased = card.id in purchased_card_ids
+        
+        card_data = {
+            'id': card.id,
+            'title': card.title,
+            'feature_1': card.feature_1,
+            'feature_2': card.feature_2,
+            'feature_3': card.feature_3,
+            'feature_4': card.feature_4,
+            'redirect_link': card.redirect_link,
+            'border_gradient_start': card.border_gradient_start,
+            'border_gradient_end': card.border_gradient_end,
+            'card_type': card.card_type,  # 'free' or 'paid'
+            'price': card.price,
+            'is_purchased': is_purchased,
+        }
+        
+        # ✅ ADD SABB CARDS - frontend decide karega kya show karna hai
+        cards_to_display.append(card_data)
+    
+    context = {
+        'cards': cards_to_display,
+        'student': student,
+    }
+    
     return render(request, 'admission_india_services.html', context)
 
+
+@never_cache
+@login_required(login_url='main_app:user_login')
+def purchase_card_view(request, card_id):
+    """Payment page for card purchase"""
+    
+    if request.user.is_staff or request.user.is_superuser:
+        return redirect('main_app:admin_dashboard')
+    
+    try:
+        student = UserRegistration.objects.get(user=request.user)
+        card = AdmissionIndiaCard.objects.get(id=card_id, is_active=True)
+    except (UserRegistration.DoesNotExist, AdmissionIndiaCard.DoesNotExist):
+        messages.error(request, 'Invalid request.')
+        return redirect('main_app:admission_india_services')
+    
+    # Check agar already purchased hai
+    if StudentCardPurchase.objects.filter(
+        student=student,
+        card=card,
+        payment_status='completed'
+    ).exists():
+        messages.info(request, 'You have already purchased this card.')
+        return redirect(card.redirect_link or 'main_app:admission_india_services')
+    
+    if request.method == 'POST':
+        # ✅ Payment process - Status 'pending' rakhenge (admin approve karega baad mein)
+        
+        purchase = StudentCardPurchase.objects.create(
+            student=student,
+            card=card,
+            amount=card.price,
+            payment_status='pending',  # ✅ PENDING - completed nahi
+            transaction_id=f"TXN_{student.id}_{card.id}_{int(timezone.now().timestamp())}",
+            payment_method='Online'
+        )
+        # Don't set payment_completed_at - it will be set when admin approves
+        purchase.save()
+        
+        messages.info(request, f'Card "{card.title}" purchase request submitted! Waiting for approval.')
+        return redirect('main_app:admission_india_services')
+    
+    context = {
+        'student': student,
+        'card': card,
+    }
+    return render(request, 'purchase_card.html', context)
 
 # ==================== ADMIN LOGIN/LOGOUT ====================
 
@@ -2575,6 +2677,81 @@ def subcategory_detail_view(request, card_slug, subcategory_path):
         return render(request, 'student/subcategory_pages.html', context)
 
 
+# views.py - YE VIEW UPDATE KARO
+
+@never_cache
+@login_required(login_url='main_app:user_login')
+def page_detail_view(request, card_slug, subcategory_path, page_slug):
+    """
+    Student side - Show full page content
+    URL: /counselling-services-all-india/engineering/admission-process/rahul/
+    """
+    if request.user.is_staff or request.user.is_superuser:
+        return redirect('main_app:admin_dashboard')
+    
+    # ✅ Get card
+    card = get_object_or_404(
+        AllIndiaServiceCard, 
+        redirect_link__icontains=card_slug, 
+        is_active=True
+    )
+    
+    # ✅ Parse nested path to find subcategory
+    path_parts = subcategory_path.strip('/').split('/')
+    
+    current_subcategory = None
+    for slug in path_parts:
+        if current_subcategory is None:
+            # First level
+            current_subcategory = get_object_or_404(
+                SubCategory,
+                slug=slug,
+                parent_card=card,
+                parent_subcategory__isnull=True,
+                is_active=True
+            )
+        else:
+            # Nested level
+            current_subcategory = get_object_or_404(
+                SubCategory,
+                slug=slug,
+                parent_subcategory=current_subcategory,
+                is_active=True
+            )
+    
+    # ✅ Get the page
+    page = get_object_or_404(
+        ContentPage, 
+        sub_category=current_subcategory,
+        slug=page_slug, 
+        is_active=True
+    )
+    
+    # Increment view count
+    page.increment_views()
+    
+    # Get related pages (same sub-category)
+    related_pages = ContentPage.objects.filter(
+        sub_category=current_subcategory,
+        is_active=True
+    ).exclude(id=page.id).order_by('order')[:5]
+    
+    # ✅ Split meta_keywords into tags
+    tags = []
+    if page.meta_keywords:
+        tags = [tag.strip() for tag in page.meta_keywords.split(',') if tag.strip()]
+    
+    context = {
+        'card': card,
+        'sub_category': current_subcategory,
+        'page': page,
+        'related_pages': related_pages,
+        'breadcrumb': current_subcategory.get_breadcrumb() if hasattr(current_subcategory, 'get_breadcrumb') else [],
+        'tags': tags,  # ✅ Add tags to context
+    }
+    
+    return render(request, 'student/page_detail.html', context)
+
 
 # abroad india 
 
@@ -3991,3 +4168,7 @@ def online_education_page_detail(request, card_slug, subcategory_path, page_slug
     }
     
     return render(request, 'student/online_education_page_detail.html', context)
+
+
+
+  
