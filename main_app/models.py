@@ -1032,9 +1032,6 @@ class UserRegistration(models.Model):
         verbose_name_plural = "User Registrations"
 
 
-
-# 
-
 #  ==================== COLLEGE MODEL ====================
 class College(models.Model):
     """Colleges database"""
@@ -1285,7 +1282,7 @@ class SubCategory(models.Model):
         
         return '/'.join(path)
     
-    
+
 # ==================== CONTENT PAGE MODEL (Level 3) ====================
 class ContentPage(models.Model):
     """Individual content pages under SubCategory"""
@@ -1347,15 +1344,15 @@ class ContentPage(models.Model):
         self.save(update_fields=['views_count'])
 
 
-
-
 # models.py mein ye add karo
 # **DELETE THE SECOND DEFINITION** - Keep only ONE copy of AdmissionAbroadSubCategory and AdmissionAbroadPage
+
 
 # The duplicate appears around line 450-550 in your file
 # You have:
 # 1. First definition: lines ~320-380
 # 2. Second definition: lines ~450-550 (DELETE THIS ONE)
+
 
 # Here's the SINGLE correct version of AdmissionAbroadSubCategory:
 
@@ -1597,4 +1594,170 @@ class StudentCardPurchase(models.Model):
     def is_purchased(self):
         """Check agar card successfully purchased hai"""
         return self.payment_status == 'completed'
+
+
+# Add these models to your existing models.py
+
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+
+
+# ==================== MANAGEMENT QUOTA COLLEGE MODEL ====================
+class ManagementQuotaCollege(models.Model):
+    """Colleges offering management quota seats"""
     
+    college = models.OneToOneField(College, on_delete=models.CASCADE, related_name='management_quota')
+    management_seats_available = models.IntegerField(default=0, help_text="Number of management quota seats")
+    courses_offered = models.TextField(help_text="Comma-separated list of courses available")
+    fee_structure = models.TextField(blank=True, help_text="Fee details for management quota")
+    eligibility_criteria = models.TextField(blank=True)
+    
+    # Contact
+    contact_person = models.CharField(max_length=100, blank=True)
+    contact_email = models.EmailField(blank=True)
+    contact_phone = models.CharField(max_length=15, blank=True)
+    
+    # Settings
+    is_active = models.BooleanField(default=True)
+    accepts_applications = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Management Quota College"
+        verbose_name_plural = "Management Quota Colleges"
+    
+    def __str__(self):
+        return f"{self.college.name} - Management Quota"
+    
+    def seats_filled(self):
+        """Get number of approved applications"""
+        return self.applications.filter(status='approved').count()
+    
+    def seats_remaining(self):
+        """Get remaining seats"""
+        return self.management_seats_available - self.seats_filled()
+
+
+# ==================== MANAGEMENT QUOTA APPLICATION MODEL ====================
+class ManagementQuotaApplication(models.Model):
+    """Student applications for management quota"""
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('waitlist', 'Waitlist'),
+    ]
+    
+    # Relationships
+    student = models.ForeignKey(UserRegistration, on_delete=models.CASCADE, related_name='management_quota_applications')
+    college = models.ForeignKey(ManagementQuotaCollege, on_delete=models.CASCADE, related_name='applications')
+    
+    # Application Details
+    course_name = models.CharField(max_length=200)
+    full_name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=15)
+    
+    # Academic Details
+    tenth_marks = models.DecimalField(max_digits=5, decimal_places=2)
+    twelfth_marks = models.DecimalField(max_digits=5, decimal_places=2)
+    entrance_exam_score = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    
+    # Documents
+    tenth_marksheet = models.FileField(upload_to='management_quota/tenth/')
+    twelfth_marksheet = models.FileField(upload_to='management_quota/twelfth/')
+    exam_scorecard = models.FileField(upload_to='management_quota/exam/', null=True, blank=True)
+    
+    # Status & Admin Details
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    admin_remarks = models.TextField(blank=True)
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_mq_applications')
+    
+    # Timestamps
+    applied_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-applied_at']
+        unique_together = ['student', 'college']  # One application per student per college
+        verbose_name = "Management Quota Application"
+        verbose_name_plural = "Management Quota Applications"
+    
+    def __str__(self):
+        return f"{self.student.name} - {self.college.college.name}"
+    
+    def get_average_marks(self):
+        """Calculate average of 10th and 12th marks"""
+        return (float(self.tenth_marks) + float(self.twelfth_marks)) / 2
+    
+    def mark_as_reviewed(self, admin_user, action, remarks=""):
+        """Mark application as reviewed"""
+        self.status = action
+        self.admin_remarks = remarks
+        self.reviewed_by = admin_user
+        self.reviewed_at = timezone.now()
+        self.save()
+
+
+# ==================== MANAGEMENT QUOTA NOTIFICATION MODEL ====================
+class ManagementQuotaNotification(models.Model):
+    """Notifications for students about their applications"""
+    
+    NOTIFICATION_TYPE_CHOICES = [
+        ('submitted', 'Application Submitted'),
+        ('approved', 'Application Approved'),
+        ('rejected', 'Application Rejected'),
+        ('waitlist', 'Added to Waitlist'),
+        ('document_required', 'Additional Documents Required'),
+    ]
+    
+    student = models.ForeignKey(UserRegistration, on_delete=models.CASCADE, related_name='mq_notifications')
+    application = models.ForeignKey(ManagementQuotaApplication, on_delete=models.CASCADE, related_name='notifications', null=True, blank=True)
+    
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPE_CHOICES)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.student.name} - {self.title}"
+
+
+# ==================== MANAGEMENT QUOTA SEAT ALLOCATION MODEL ====================
+class ManagementQuotaSeatAllocation(models.Model):
+    """Seat allocation for approved applicants"""
+    
+    allocation_choices = [
+        ('allotted', 'Seat Allotted'),
+        ('joined', 'Student Joined'),
+        ('not_joined', 'Student Did Not Join'),
+    ]
+    
+    application = models.OneToOneField(ManagementQuotaApplication, on_delete=models.CASCADE, related_name='seat_allocation')
+    allocation_roll_number = models.CharField(max_length=50, unique=True)
+    
+    seat_number = models.CharField(max_length=50)
+    allotment_date = models.DateField()
+    joining_date = models.DateField(null=True, blank=True)
+    
+    status = models.CharField(max_length=20, choices=allocation_choices, default='allotted')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Management Quota Seat Allocation"
+        verbose_name_plural = "Management Quota Seat Allocations"
+    
+    def __str__(self):
+        return f"Roll: {self.allocation_roll_number} - {self.application.student.name}"

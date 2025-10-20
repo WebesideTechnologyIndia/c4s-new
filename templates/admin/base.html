@@ -508,10 +508,10 @@
                         </button>
                         <ul class="dropdown-menu-custom" id="admissionIndiaCards">
                             <li class="nav-item">
-                                <!-- <a class="nav-link {% if 'admission-cards' in request.path %}active{% endif %}"
+                                <a class="nav-link {% if 'admission-cards' in request.path %}active{% endif %}"
                                     href="{% url 'main_app:admin_admission_cards_list' %}">
                                     <i class="bi bi-building"></i> Admission India
-                                </a> -->
+                                </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link {% if 'all-india-cards' in request.path %}active{% endif %}"
@@ -526,11 +526,31 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link {% if 'pro-counselling-cards' in request.path %}active{% endif %}"
-                                    href="# ">
-                                    <i class="bi bi-card-checklist"></i> Quota Admission
+                        <button class="nav-dropdown" onclick="toggleDropdown(event, 'quotaAdmission')">
+                            <span><i class="bi bi-check-circle"></i> Management Quota</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <ul class="dropdown-menu-custom" id="quotaAdmission">
+                            <li class="nav-item">
+                                <a class="nav-link {% if 'management-quota-colleges' in request.path %}active{% endif %}"
+                                    href="{% url 'main_app:admin_management_quota_colleges' %}">
+                                    <i class="bi bi-building"></i> Colleges
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if 'management-quota-applications' in request.path and 'detail' not in request.path %}active{% endif %}"
+                                    href="{% url 'main_app:admin_management_quota_applications' %}">
+                                    <i class="bi bi-file-earmark"></i> Applications
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if 'management-quota-manage' in request.path %}active{% endif %}"
+                                    href="{% url 'main_app:admin_management_quota_notifications' %}">
+                                    <i class="bi bi-bell"></i> Notifications & Allocation
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                         </ul>
                     </li>
                     <li class="nav-item">

@@ -1,0 +1,365 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Management Quota Applications - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #ED651C, #F4800C);
+        color: white;
+        padding: 25px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-left: 4px solid;
+    }
+
+    .stat-card.total {
+        border-left-color: #ED651C;
+    }
+
+    .stat-card.pending {
+        border-left-color: #ffc107;
+    }
+
+    .stat-card.approved {
+        border-left-color: #28a745;
+    }
+
+    .stat-card.rejected {
+        border-left-color: #dc3545;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .filter-section {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .filter-row {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .filter-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+    }
+
+    .filter-group input,
+    .filter-group select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+
+    .btn-filter {
+        background: #ED651C;
+        color: white;
+        padding: 8px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .btn-filter:hover {
+        background: #d84c0a;
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .table {
+        margin: 0;
+    }
+
+    .table thead {
+        background: #f8f9fa;
+    }
+
+    .table th {
+        font-weight: 600;
+        padding: 15px;
+        border: none;
+    }
+
+    .table td {
+        padding: 15px;
+        vertical-align: middle;
+        border-color: #eee;
+    }
+
+    .table tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-approved {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-waitlist {
+        background: #cfe2ff;
+        color: #084298;
+    }
+
+    .btn-view {
+        background: #3498db;
+        color: white;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+    }
+
+    .btn-view:hover {
+        background: #2980b9;
+    }
+
+    .pagination-section {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    .pagination-section a,
+    .pagination-section span {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        text-decoration: none;
+        color: #ED651C;
+    }
+
+    .pagination-section a:hover {
+        background: #ED651C;
+        color: white;
+    }
+
+    .pagination-section .current {
+        background: #ED651C;
+        color: white;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: #ddd;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 20px;">
+    <div class="admin-header">
+        <h1>Management Quota Applications</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">Review and manage student applications</p>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}" style="margin-bottom: 20px;">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card total">
+            <div class="stat-number">{{ total_applications }}</div>
+            <div class="stat-label">Total Applications</div>
+        </div>
+        <div class="stat-card pending">
+            <div class="stat-number">{{ pending_count }}</div>
+            <div class="stat-label">Pending Review</div>
+        </div>
+        <div class="stat-card approved">
+            <div class="stat-number">{{ approved_count }}</div>
+            <div class="stat-label">Approved</div>
+        </div>
+        <div class="stat-card rejected">
+            <div class="stat-number">{{ rejected_count }}</div>
+            <div class="stat-label">Rejected</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section">
+        <form method="GET" class="filter-row">
+            <div class="filter-group">
+                <label>Search by Name/Email</label>
+                <input type="text" name="search" placeholder="Enter student name or email..." value="{{ request.GET.search }}">
+            </div>
+            <div class="filter-group">
+                <label>Filter by Status</label>
+                <select name="status">
+                    <option value="">All Status</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Approved</option>
+                    <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                    <option value="waitlist" {% if request.GET.status == 'waitlist' %}selected{% endif %}>Waitlist</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Filter by College</label>
+                <select name="college">
+                    <option value="">All Colleges</option>
+                    {% for college in colleges %}
+                    <option value="{{ college.id }}" {% if request.GET.college == college.id|stringformat:"s" %}selected{% endif %}>{{ college.college.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn-filter">Search</button>
+        </form>
+    </div>
+
+    <!-- Applications Table -->
+    <div class="table-container">
+        {% if applications %}
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Student Name</th>
+                        <th>Email</th>
+                        <th>College</th>
+                        <th>Course</th>
+                        <th>Applied On</th>
+                        <th>Avg Marks</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><strong>{{ app.student.name }}</strong></td>
+                        <td>{{ app.email }}</td>
+                        <td>{{ app.college.college.name }}</td>
+                        <td>{{ app.course_name }}</td>
+                        <td>{{ app.applied_at|date:"d M, Y" }}</td>
+                        <td><strong>{{ app.get_average_marks|floatformat:2 }}</strong></td>
+                        <td>
+                            {% if app.status == 'pending' %}
+                                <span class="status-badge status-pending">⏳ Pending</span>
+                            {% elif app.status == 'approved' %}
+                                <span class="status-badge status-approved">✓ Approved</span>
+                            {% elif app.status == 'rejected' %}
+                                <span class="status-badge status-rejected">✗ Rejected</span>
+                            {% else %}
+                                <span class="status-badge status-waitlist">⌛ Waitlist</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'main_app:admin_view_application_detail' app.id %}" class="btn-view">View Details</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="pagination-section">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">« First</a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">‹ Previous</a>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="current">{{ num }}</span>
+                    {% else %}
+                        <a href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Next ›</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Last »</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h5>No Applications Found</h5>
+                <p>No management quota applications match your filter criteria.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

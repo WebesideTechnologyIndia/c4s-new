@@ -192,7 +192,27 @@ urlpatterns = [
     path('admission-abroad/<str:card_slug>/', views.admission_abroad_card_detail, name='admission_abroad_card_detail'),
     path('admission-abroad/<str:card_slug>/<path:subcategory_path>/<str:page_slug>/', views.admission_abroad_page_detail, name='admission_abroad_page_detail'),
     path('admission-abroad/<str:card_slug>/<path:subcategory_path>/', views.admission_abroad_subcategory_detail, name='admission_abroad_subcategory_detail'),
+
     
+    # management-quota-direct-admission
+     path('management-quota-direct-admission/', views.management_quota_admission, name='management_quota_admission'),
+    
+    # ==================== ADMIN URLS ====================
+    # Management Quota Colleges
+    path('admin/management-quota/colleges/', views.admin_management_quota_colleges, name='admin_management_quota_colleges'),
+    
+    # Applications
+    path('admin/management-quota/applications/', views.admin_management_quota_applications, name='admin_management_quota_applications'),
+    path('admin/management-quota/application/<int:app_id>/', views.admin_view_application_detail, name='admin_view_application_detail'),
+    
+    # Notifications & Seat Allocation (Combined in one view)
+    path('admin/management-quota/manage/', views.admin_management_quota_notifications, name='admin_management_quota_notifications'),
+    
+    # Seat Allocation (separate if needed)
+    path('admin/management-quota/seat-allocation/', views.admin_management_quota_seat_allocation, name='admin_management_quota_seat_allocation'),
+
+path('student/notifications/', views.student_notifications, name='student_notifications'),
+
     # ⚠️ ==================== CATCH-ALL PATTERNS (LAST MEIN) ====================
     path('<str:card_slug>/<path:subcategory_path>/<str:page_slug>/', views.page_detail_view, name='page_detail_view'),
     path('<str:card_slug>/<path:subcategory_path>/', views.subcategory_detail_view, name='subcategory_detail_view'),

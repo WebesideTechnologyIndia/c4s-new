@@ -4172,3 +4172,417 @@ def online_education_page_detail(request, card_slug, subcategory_path, page_slug
 
 
   
+
+
+#
+# views.py - Management Quota Views
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
+from django.db.models import Q, Count
+from django.utils import timezone
+from .models import (
+    ManagementQuotaCollege, ManagementQuotaApplication,
+    ManagementQuotaNotification, ManagementQuotaSeatAllocation,
+    UserRegistration, College
+)
+
+# Admin check function
+def is_admin(user):
+    return user.is_staff or user.is_superuser
+
+
+# ==================== STUDENT VIEWS ====================
+
+@login_required
+def management_quota_admission(request):
+    """Student management quota dashboard"""
+    
+    try:
+        user_registration = UserRegistration.objects.get(user=request.user)
+    except UserRegistration.DoesNotExist:
+        messages.error(request, 'Please complete your registration first.')
+        return redirect('student_registration')
+    
+    # Get all active management quota colleges
+    management_colleges = ManagementQuotaCollege.objects.filter(
+        is_active=True,
+        accepts_applications=True
+    ).select_related('college', 'college__state', 'college__country')
+    
+    # Get student's applications
+    applications = ManagementQuotaApplication.objects.filter(
+        student=user_registration
+    ).select_related('college__college').order_by('-applied_at')
+    
+    # Handle application submission
+    if request.method == 'POST' and 'submit_application' in request.POST:
+        college_id = request.POST.get('college_id')
+        course_name = request.POST.get('course_name')
+        full_name = request.POST.get('full_name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone', user_registration.whatsapp_mobile)
+        tenth_marks = request.POST.get('tenth_marks')
+        twelfth_marks = request.POST.get('twelfth_marks')
+        exam_score = request.POST.get('exam_score')
+        
+        # Validate files
+        tenth_file = request.FILES.get('tenth_marksheet')
+        twelfth_file = request.FILES.get('twelfth_marksheet')
+        exam_file = request.FILES.get('exam_scorecard')
+        
+        if not college_id or not tenth_file or not twelfth_file:
+            messages.error(request, 'Please fill all required fields.')
+            return redirect('management_quota_admission')
+        
+        try:
+            mq_college = ManagementQuotaCollege.objects.get(id=college_id, is_active=True)
+            
+            # Check if already applied
+            if ManagementQuotaApplication.objects.filter(
+                student=user_registration,
+                college=mq_college
+            ).exists():
+                messages.warning(request, 'You have already applied to this college.')
+                return redirect('management_quota_admission')
+            
+            # Create application
+            application = ManagementQuotaApplication.objects.create(
+                student=user_registration,
+                college=mq_college,
+                course_name=course_name,
+                full_name=full_name,
+                email=email,
+                phone=phone,
+                tenth_marks=float(tenth_marks),
+                twelfth_marks=float(twelfth_marks),
+                entrance_exam_score=float(exam_score) if exam_score else None,
+                tenth_marksheet=tenth_file,
+                twelfth_marksheet=twelfth_file,
+                exam_scorecard=exam_file if exam_file else None
+            )
+            
+            # Create notification
+            ManagementQuotaNotification.objects.create(
+                student=user_registration,
+                application=application,
+                notification_type='submitted',
+                title='Application Submitted',
+                message=f'Your application for {mq_college.college.name} has been submitted successfully.'
+            )
+            
+            messages.success(request, 'Application submitted successfully!')
+            
+        except ManagementQuotaCollege.DoesNotExist:
+            messages.error(request, 'College not found or not accepting applications.')
+        except Exception as e:
+            messages.error(request, f'Error submitting application: {str(e)}')
+        
+        return redirect('main_app:management_quota_admission')
+    
+    context = {
+        'management_colleges': management_colleges,
+        'applications': applications,
+        'user_registration': user_registration,
+    }
+    
+    return render(request, 'student/management_quota_admission.html', context)
+
+
+@login_required
+def student_notifications(request):
+    """Student notifications page"""
+    
+    try:
+        user_registration = UserRegistration.objects.get(user=request.user)
+    except UserRegistration.DoesNotExist:
+        messages.error(request, 'Please complete your registration first.')
+        return redirect('student_registration')
+    
+    # Get filter from query parameter
+    filter_type = request.GET.get('filter', 'all')
+    
+    # Get all notifications for this student
+    notifications = ManagementQuotaNotification.objects.filter(
+        student=user_registration
+    ).select_related('application__college__college').order_by('-created_at')
+    
+    # Apply filter
+    if filter_type == 'submitted':
+        notifications = notifications.filter(notification_type='submitted')
+    elif filter_type == 'approved':
+        notifications = notifications.filter(notification_type='approved')
+    elif filter_type == 'rejected':
+        notifications = notifications.filter(notification_type='rejected')
+    elif filter_type == 'waitlist':
+        notifications = notifications.filter(notification_type='waitlist')
+    
+    # Mark as read when viewed
+    ManagementQuotaNotification.objects.filter(
+        student=user_registration,
+        is_read=False
+    ).update(is_read=True)
+    
+    # Count statistics
+    all_notifs = ManagementQuotaNotification.objects.filter(
+        student=user_registration
+    )
+    
+    # Count applications by status
+    applications = ManagementQuotaApplication.objects.filter(
+        student=user_registration
+    )
+    
+    pending_count = applications.filter(status='pending').count()
+    approved_count = applications.filter(status='approved').count()
+    rejected_count = applications.filter(status='rejected').count()
+    
+    context = {
+        'notifications': notifications,
+        'total_notifications': all_notifs.count(),
+        'pending_count': pending_count,
+        'approved_count': approved_count,
+        'rejected_count': rejected_count,
+        'current_filter': filter_type,
+    }
+    
+    return render(request, 'student/notifications.html', context)
+
+
+# ==================== ADMIN VIEWS ====================
+
+@user_passes_test(is_admin)
+def admin_management_quota_colleges(request):
+    """Admin: Manage management quota colleges"""
+    
+    colleges = ManagementQuotaCollege.objects.select_related('college').all()
+    
+    if request.method == 'POST' and 'save_college' in request.POST:
+        college_id = request.POST.get('college_id')
+        
+        try:
+            college_obj = College.objects.get(id=request.POST.get('college'))
+            
+            if college_id:
+                mq_college = ManagementQuotaCollege.objects.get(id=college_id)
+            else:
+                if ManagementQuotaCollege.objects.filter(college=college_obj).exists():
+                    messages.error(request, 'Management quota entry already exists for this college.')
+                    return redirect('admin_management_quota_colleges')
+                mq_college = ManagementQuotaCollege(college=college_obj)
+            
+            mq_college.management_seats_available = int(request.POST.get('management_seats_available'))
+            mq_college.courses_offered = request.POST.get('courses_offered')
+            mq_college.fee_structure = request.POST.get('fee_structure', '')
+            mq_college.eligibility_criteria = request.POST.get('eligibility_criteria', '')
+            mq_college.contact_person = request.POST.get('contact_person', '')
+            mq_college.contact_email = request.POST.get('contact_email', '')
+            mq_college.contact_phone = request.POST.get('contact_phone', '')
+            mq_college.is_active = 'is_active' in request.POST
+            mq_college.accepts_applications = 'accepts_applications' in request.POST
+            mq_college.save()
+            
+            messages.success(request, 'Management quota college saved successfully!')
+            return redirect('admin_management_quota_colleges')
+        
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
+    
+    if request.method == 'POST' and 'delete_college' in request.POST:
+        college_id = request.POST.get('college_id')
+        try:
+            ManagementQuotaCollege.objects.get(id=college_id).delete()
+            messages.success(request, 'Management quota college deleted!')
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
+        return redirect('admin_management_quota_colleges')
+    
+    context = {
+        'colleges': colleges,
+        'all_colleges': College.objects.all(),
+    }
+    
+    return render(request, 'admin/management_quota_colleges.html', context)
+
+
+@user_passes_test(is_admin)
+def admin_management_quota_applications(request):
+    """Admin: List and manage applications"""
+    
+    search = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+    college_filter = request.GET.get('college', '')
+    
+    applications = ManagementQuotaApplication.objects.select_related(
+        'student', 'college', 'reviewed_by'
+    ).all()
+    
+    if search:
+        applications = applications.filter(
+            Q(student__name__icontains=search) |
+            Q(student__email__icontains=search) |
+            Q(full_name__icontains=search)
+        )
+    
+    if status_filter:
+        applications = applications.filter(status=status_filter)
+    
+    if college_filter:
+        applications = applications.filter(college_id=college_filter)
+    
+    total_applications = applications.count()
+    pending_count = applications.filter(status='pending').count()
+    approved_count = applications.filter(status='approved').count()
+    rejected_count = applications.filter(status='rejected').count()
+    
+    colleges = ManagementQuotaCollege.objects.select_related('college')
+    
+    context = {
+        'applications': applications,
+        'colleges': colleges,
+        'total_applications': total_applications,
+        'pending_count': pending_count,
+        'approved_count': approved_count,
+        'rejected_count': rejected_count,
+    }
+    
+    return render(request, 'admin/management_quota_applications.html', context)
+
+
+@user_passes_test(is_admin)
+def admin_view_application_detail(request, app_id):
+    """Admin: View detailed application"""
+    
+    application = get_object_or_404(ManagementQuotaApplication, id=app_id)
+    
+    if request.method == 'POST' and 'update_status' in request.POST:
+        status = request.POST.get('status')
+        remarks = request.POST.get('remarks', '')
+        
+        if status in ['approved', 'rejected', 'waitlist']:
+            application.mark_as_reviewed(request.user, status, remarks)
+            
+            notification_types = {
+                'approved': ('approved', 'Application Approved'),
+                'rejected': ('rejected', 'Application Rejected'),
+                'waitlist': ('waitlist', 'Added to Waitlist'),
+            }
+            
+            notif_type, notif_title = notification_types[status]
+            ManagementQuotaNotification.objects.create(
+                student=application.student,
+                application=application,
+                notification_type=notif_type,
+                title=notif_title,
+                message=f'Your application for {application.college.college.name} status: {status}'
+            )
+            
+            messages.success(request, f'Application {status}!')
+            return redirect('main_app:admin_management_quota_applications')
+    
+    context = {
+        'application': application,
+    }
+    
+    return render(request, 'admin/management_quota_application_detail.html', context)
+
+
+@user_passes_test(is_admin)
+def admin_management_quota_notifications(request):
+    """Admin: View and manage notifications"""
+    
+    search = request.GET.get('search', '')
+    notif_type = request.GET.get('type', '')
+    read_filter = request.GET.get('read', '')
+    
+    notifications = ManagementQuotaNotification.objects.select_related(
+        'student', 'application'
+    ).all()
+    
+    if search:
+        notifications = notifications.filter(
+            Q(student__name__icontains=search) |
+            Q(title__icontains=search) |
+            Q(message__icontains=search)
+        )
+    
+    if notif_type:
+        notifications = notifications.filter(notification_type=notif_type)
+    
+    if read_filter:
+        notifications = notifications.filter(is_read=(read_filter == 'read'))
+    
+    total = notifications.count()
+    unread_count = notifications.filter(is_read=False).count()
+    
+    # Get approved applications for allocation form
+    approved_apps = ManagementQuotaApplication.objects.filter(
+        status='approved'
+    ).exclude(
+        seat_allocation__isnull=False
+    ).select_related('student', 'college__college')
+    
+    # Handle create allocation
+    if request.method == 'POST' and 'create_allocation' in request.POST:
+        try:
+            app_id = request.POST.get('application_id')
+            application = ManagementQuotaApplication.objects.get(id=app_id)
+            
+            if ManagementQuotaSeatAllocation.objects.filter(application=application).exists():
+                messages.error(request, 'Seat already allocated for this application.')
+                return redirect('admin_management_quota_notifications')
+            
+            roll_number = request.POST.get('roll_number')
+            seat_number = request.POST.get('seat_number')
+            allotment_date = request.POST.get('allotment_date')
+            
+            ManagementQuotaSeatAllocation.objects.create(
+                application=application,
+                allocation_roll_number=roll_number,
+                seat_number=seat_number,
+                allotment_date=allotment_date,
+                status='allotted'
+            )
+            
+            messages.success(request, 'Seat allocated successfully!')
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
+        
+        return redirect('admin_management_quota_notifications')
+    
+    context = {
+        'notifications': notifications,
+        'total': total,
+        'unread_count': unread_count,
+        'approved_apps': approved_apps,
+    }
+    
+    return render(request, 'admin/management_quota_notifications.html', context)
+
+
+@user_passes_test(is_admin)
+def admin_management_quota_seat_allocation(request):
+    """Admin: Manage seat allocations"""
+    
+    search = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+    
+    allocations = ManagementQuotaSeatAllocation.objects.select_related(
+        'application__student', 'application__college'
+    ).all()
+    
+    if search:
+        allocations = allocations.filter(
+            Q(allocation_roll_number__icontains=search) |
+            Q(application__student__name__icontains=search)
+        )
+    
+    if status_filter:
+        allocations = allocations.filter(status=status_filter)
+    
+    context = {
+        'allocations': allocations,
+    }
+    
+    return render(request, 'admin/management_quota_seat_allocation.html', context)
