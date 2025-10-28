@@ -542,7 +542,7 @@ urlpatterns = [
     # ⚠️ ==================== SPECIFIC URLs (BEFORE CATCH-ALL) ====================
     # 1. STATE WISE COUNSELLING
     path(
-        "counselling-services-all-india/state-wise-counselling-updates/",
+        "state-wise-counselling-updates/",
         views.state_wise_counselling_updates,
         name="state_wise_counselling_updates",
     ),

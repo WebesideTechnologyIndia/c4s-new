@@ -4,253 +4,640 @@
 
 {% block content %}
 
-
-<div class="container py-5">
-    
-    <!-- Breadcrumb Navigation -->
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb bg-light p-3 rounded">
-            <li class="breadcrumb-item">
-                <a href="{% url 'main_app:student_dashboard' %}">
-                    <i class="bi bi-house-door"></i> Home
-                </a>
-            </li>
-            
-            <!-- Add the parent CARD link first -->
-            <li class="breadcrumb-item">
-                <a href="{% url 'main_app:card_detail_view' card.get_slug %}">
-                    {{ card.title }}
-                </a>
-            </li>
-            
-            <!-- Then loop through subcategories ONLY (breadcrumb will never include card) -->
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container hero-content">
+        <!-- Breadcrumb -->
+        <div class="custom-breadcrumb" style="animation: slideInLeft 0.6s;">
+            <a href="{% url 'main_app:student_dashboard' %}">
+                <i class="bi bi-house-door me-2"></i>Home
+            </a>
+            <span class="separator">›</span>
+            <a href="{% url 'main_app:card_detail_view' card.get_slug %}">
+                {{ card.title }}
+            </a>
             {% for item in breadcrumb %}
+                <span class="separator">›</span>
                 {% if forloop.last %}
-                    <!-- Current item - no link -->
-                    <li class="breadcrumb-item active" aria-current="page">
-                        {{ item.title }}
-                    </li>
+                    <span class="active">{{ item.title }}</span>
                 {% else %}
-                    <!-- Parent subcategory - with link -->
-                    <li class="breadcrumb-item">
-                        <a href="{% url 'main_app:subcategory_detail_view' card.get_slug item.get_full_path %}">
-                            {{ item.title }}
-                        </a>
-                    </li>
+                    <a href="{% url 'main_app:subcategory_detail_view' card.get_slug item.get_full_path %}">
+                        {{ item.title }}
+                    </a>
                 {% endif %}
             {% endfor %}
-        </ol>
-    </nav>
-
-    <!-- Page Header -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <h1 class="display-5 fw-bold text-primary mb-3">
-                <i class="bi bi-folder-open me-2"></i>
-                {{ sub_category.title }}
-            </h1>
-            {% if sub_category.description %}
-                <p class="lead text-muted">{{ sub_category.description }}</p>
-            {% endif %}
-            <hr class="my-4">
         </div>
-    </div>
 
+        <!-- Page Title -->
+        <h1 class="page-title" style="animation: fadeInUp 0.6s;">
+            {{ sub_category.title }}
+        </h1>
+        {% if sub_category.description %}
+        <p class="page-subtitle" style="animation: fadeInUp 0.6s 0.2s both;">
+            {{ sub_category.description }}
+        </p>
+        {% else %}
+        <p class="page-subtitle" style="animation: fadeInUp 0.6s 0.2s both;">
+            Select a category below to explore detailed information and resources
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container py-5">
     <!-- CHILD SUB-CATEGORIES SECTION -->
     {% if sub_categories %}
-        <div class="mb-5">
-            <h3 class="mb-4">
-                <i class="bi bi-folder2-open text-warning me-2"></i>
-                Sub-Categories
-            </h3>
-            <div class="row g-4">
-                {% for sub_cat in sub_categories %}
-                <div class="col-md-6 col-lg-4">
-                    <a href="{% url 'main_app:subcategory_detail_view' card.get_slug sub_cat.get_full_path %}" 
-                       class="text-decoration-none">
-                        <div class="card h-100 shadow-sm hover-card" 
-                             style="border-left: 4px solid {{ sub_cat.icon_color }};">
-                            <div class="card-body">
-                                <!-- Icon -->
-                                <div class="d-flex align-items-center mb-3">
-                                    <div style="width: 60px; height: 60px; 
-                                                background: {{ sub_cat.icon_color }}; 
-                                                border-radius: 12px; 
-                                                display: flex; 
-                                                align-items: center; 
-                                                justify-content: center;
-                                                box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-                                        <img src="{{ sub_cat.get_icon }}" 
-                                             alt="{{ sub_cat.title }}"
-                                             style="width: 35px; height: 35px; object-fit: contain;">
-                                    </div>
-                                    <div class="ms-3">
-                                        <h5 class="card-title mb-0 text-dark">
-                                            {{ sub_cat.title }}
-                                        </h5>
-                                    </div>
-                                </div>
-
-                                <!-- Description -->
-                                {% if sub_cat.description %}
-                                <p class="card-text text-muted small">
-                                    {{ sub_cat.description|truncatewords:15 }}
-                                </p>
-                                {% endif %}
-
-                                <!-- Stats Badge -->
-                                <div class="d-flex justify-content-between align-items-center mt-3">
-                                    {% if sub_cat.has_children %}
-                                        <span class="badge bg-primary">
-                                            <i class="bi bi-folder"></i>
-                                            {{ sub_cat.get_children.count }} Sub-Categories
-                                        </span>
-                                    {% else %}
-                                        <span class="badge bg-success">
-                                            <i class="bi bi-file-earmark-text"></i>
-                                            {{ sub_cat.pages_count }} Pages
-                                        </span>
-                                    {% endif %}
-                                    
-                                    <i class="bi bi-arrow-right-circle text-primary" style="font-size: 1.2rem;"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-                {% endfor %}
+        <!-- Results Count -->
+        <div class="text-center">
+            <div class="results-count">
+                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                Showing <span class="count-number">{{ sub_categories|length }}</span> 
+                Sub-Categor{{ sub_categories|length|pluralize:"y,ies" }}
             </div>
+        </div>
+
+        <!-- Subcategories Grid -->
+        <div class="subcategories-grid">
+            {% for sub_cat in sub_categories %}
+            <a href="{% url 'main_app:subcategory_detail_view' card.get_slug sub_cat.get_full_path %}" 
+               class="text-decoration-none d-block">
+                <div class="subcategory-card">
+                    <!-- Icon -->
+                    <div class="icon-wrapper" style="background: {{ sub_cat.icon_color }}20; border: 3px solid {{ sub_cat.icon_color }}40;">
+                        <img src="{{ sub_cat.get_icon }}" alt="{{ sub_cat.title }}">
+                    </div>
+                    
+                    <!-- Title -->
+                    <h5 class="card-title">{{ sub_cat.title }}</h5>
+                    
+                    <!-- Description -->
+                    {% if sub_cat.description %}
+                    <p class="card-description">
+                        {{ sub_cat.description|truncatewords:20 }}
+                    </p>
+                    {% else %}
+                    <p class="card-description">
+                        Explore detailed information and comprehensive resources
+                    </p>
+                    {% endif %}
+                    
+                    <!-- Stats Badge -->
+                    <div class="mt-auto">
+                        {% if sub_cat.has_children %}
+                            <span class="pages-badge">
+                                <i class="bi bi-folder"></i>
+                                {{ sub_cat.get_children.count }} Sub-Categor{{ sub_cat.get_children.count|pluralize:"y,ies" }}
+                            </span>
+                        {% else %}
+                            <span class="pages-badge">
+                                <i class="bi bi-file-earmark-text"></i>
+                                {{ sub_cat.pages_count }} Page{{ sub_cat.pages_count|pluralize }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
         </div>
     {% endif %}
 
     <!-- PAGES SECTION -->
     {% if pages %}
-        <div>
-            <h3 class="mb-4">
-                <i class="bi bi-file-earmark-text text-success me-2"></i>
-                Available Pages ({{ pages.count }})
-            </h3>
-            <div class="row g-4">
-                {% for page in pages %}
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 shadow-sm hover-card page-card">
-                        <!-- Featured Image -->
-                        {% if page.get_featured_image %}
-                        <img src="{{ page.get_featured_image }}" 
-                             class="card-img-top" 
-                             alt="{{ page.title }}"
-                             style="height: 200px; object-fit: cover;">
-                        {% else %}
-                        <div class="card-img-top bg-gradient d-flex align-items-center justify-content-center"
-                             style="height: 200px; background: linear-gradient(135deg, {{ sub_category.icon_color }} 0%, #667eea 100%);">
-                            <i class="bi bi-file-earmark-text text-white" style="font-size: 3rem;"></i>
-                        </div>
-                        {% endif %}
+        <!-- Results Count for Pages -->
+        <div class="text-center {% if sub_categories %}mt-5{% endif %}">
+            <div class="results-count">
+                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                Showing <span class="count-number">{{ pages.count }}</span> 
+                Page{{ pages.count|pluralize }}
+            </div>
+        </div>
 
-                        <div class="card-body d-flex flex-column">
-                            <!-- Title -->
-                            <h5 class="card-title text-dark">
-                                {{ page.title }}
-                            </h5>
-
-                            <!-- Summary -->
-                            {% if page.summary %}
-                            <p class="card-text text-muted small flex-grow-1">
-                                {{ page.summary|truncatewords:20 }}
-                            </p>
-                            {% endif %}
-
-                            <!-- Meta Info -->
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <small class="text-muted">
-                                    <i class="bi bi-eye"></i> {{ page.views_count }} views
-                                </small>
-                                {% if page.is_featured %}
-                                <span class="badge bg-warning text-dark">
-                                    <i class="bi bi-star-fill"></i> Featured
-                                </span>
-                                {% endif %}
-                            </div>
-
-                            <!-- Read Button -->
-<!-- BEST ✅ -->
-<a href="{% url 'main_app:page_detail_view' card.get_slug sub_category.get_full_path page.slug %}"
-   class="btn btn-primary w-100">
-    <i class="bi bi-book-open me-2"></i>
-    Read More
-</a>
-                        </div>
+        <!-- Pages Grid -->
+        <div class="subcategories-grid">
+            {% for page in pages %}
+            <div class="subcategory-card page-card-style">
+                <!-- Featured Image -->
+                <div class="page-image-wrapper">
+                    {% if page.get_featured_image %}
+                    <img src="{{ page.get_featured_image }}" alt="{{ page.title }}">
+                    {% else %}
+                    <div class="page-image-fallback">
+                        <i class="bi bi-file-earmark-text"></i>
                     </div>
+                    {% endif %}
+                    {% if page.is_featured %}
+                    <span class="featured-badge-top">
+                        <i class="bi bi-star-fill"></i> Featured
+                    </span>
+                    {% endif %}
                 </div>
-                {% endfor %}
+
+                <div class="page-content">
+                    <!-- Title -->
+                    <h5 class="card-title">{{ page.title }}</h5>
+
+                    <!-- Summary -->
+                    {% if page.summary %}
+                    <p class="card-description">
+                        {{ page.summary|truncatewords:20 }}
+                    </p>
+                    {% else %}
+                    <p class="card-description">
+                        Click to read the complete content and detailed information.
+                    </p>
+                    {% endif %}
+
+                    <!-- Meta Info -->
+                    <div class="page-meta">
+                        <span class="views-count">
+                            <i class="bi bi-eye"></i> {{ page.views_count }} views
+                        </span>
+                    </div>
+
+                    <!-- Read Button -->
+                    <a href="{% url 'main_app:page_detail_view' card.get_slug sub_category.get_full_path page.slug %}"
+                       class="pages-badge w-100">
+                        <i class="bi bi-book-open"></i>
+                        Read More
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- EMPTY STATE -->
+    {% if not sub_categories and not pages %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-inbox"></i>
+            </div>
+            <p class="empty-state-text">
+                No content available yet
+            </p>
+            <p class="empty-state-subtext">
+                New content is being added regularly. Check back soon!
+            </p>
+            <div class="mt-4">
+                <a href="{% url 'main_app:card_detail_view' card.get_slug %}" class="btn-add">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to {{ card.title }}
+                </a>
             </div>
         </div>
     {% endif %}
-
-    <!-- EMPTY STATE - When no subcategories AND no pages -->
-    {% if not sub_categories and not pages %}
-        <div class="text-center py-5">
-            <i class="bi bi-inbox" style="font-size: 4rem; color: #ddd;"></i>
-            <h4 class="text-muted mt-3">No content available</h4>
-            <p class="text-muted">Check back later for updates.</p>
-        </div>
-    {% endif %}
-
 </div>
 
 {% endblock %}
 
 {% block extra_css %}
 <style>
-    .hover-card {
-        transition: all 0.3s ease;
-        cursor: pointer;
-        border: 1px solid #e0e0e0;
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(135deg, #ED651C, #F4800C, #FF8C42);
+        padding: 100px 0 80px;
+        color: white;
+        position: relative;
+        overflow: hidden;
     }
-    
-    .hover-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+            radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
     }
-    
-    .page-card:hover {
-        border-color: {{ sub_category.icon_color }};
+
+    .hero-section::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 100px;
+        background: linear-gradient(to top, white, transparent);
+        opacity: 0.1;
     }
-    
-    .breadcrumb {
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+    }
+
+    /* Breadcrumb */
+    .custom-breadcrumb {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(15px);
+        padding: 14px 24px;
+        border-radius: 50px;
+        display: inline-flex;
+        margin-bottom: 35px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .custom-breadcrumb a {
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+    }
+
+    .custom-breadcrumb a:hover {
+        color: #FFE5D0;
+        transform: translateX(-3px);
+    }
+
+    .custom-breadcrumb .separator {
+        margin: 0 12px;
+        opacity: 0.7;
+        font-weight: 300;
+    }
+
+    .custom-breadcrumb .active {
+        opacity: 0.9;
+        font-weight: 500;
+    }
+
+    /* Page Title */
+    .page-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 15px;
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        letter-spacing: -0.5px;
+        color: white;
+    }
+
+    .page-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.95;
+        font-weight: 400;
+        line-height: 1.6;
+    }
+
+    /* Results Count Badge */
+    .results-count {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 15px 30px;
+        border-radius: 15px;
+        display: inline-block;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        font-weight: 600;
+        color: #2d3748;
+    }
+
+    .results-count .count-number {
+        color: #ED651C;
+        font-size: 1.3rem;
+        font-weight: 800;
+    }
+
+    /* Sub-Category Cards */
+    .subcategory-card {
+        background: white;
+        border-radius: 24px;
+        padding: 35px;
+        text-align: center;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid #f7fafc;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .subcategory-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #ED651C, #F4800C, #FF8C42);
+        transform: scaleX(0);
+        transition: transform 0.4s;
+        transform-origin: left;
+    }
+
+    .subcategory-card:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 25px 50px rgba(237, 101, 28, 0.15);
+        border-color: #ED651C;
+    }
+
+    .subcategory-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .icon-wrapper {
+        width: 110px;
+        height: 110px;
+        margin: 0 auto 25px;
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        transition: all 0.4s;
+    }
+
+    .subcategory-card:hover .icon-wrapper {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .icon-wrapper img {
+        width: 65px;
+        height: 65px;
+        object-fit: contain;
+        transition: all 0.4s;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+    }
+
+    .subcategory-card:hover .icon-wrapper img {
+        transform: scale(1.15);
+        filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.15));
+    }
+
+    .card-title {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 15px;
+        line-height: 1.4;
+        transition: color 0.3s;
+    }
+
+    .subcategory-card:hover .card-title {
+        color: #ED651C;
+    }
+
+    .card-description {
+        color: #718096;
         font-size: 0.95rem;
+        line-height: 1.7;
+        margin-bottom: 20px;
+        min-height: 60px;
     }
-    
-    .breadcrumb-item + .breadcrumb-item::before {
-        content: "›";
-        font-weight: bold;
+
+    .pages-badge {
+        background: linear-gradient(135deg, #ED651C 0%, #F4800C 100%);
+        color: white;
+        padding: 10px 24px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 15px rgba(237, 101, 28, 0.3);
+        transition: all 0.3s;
+        text-decoration: none;
+        justify-content: center;
     }
-    
-    .card {
-        border: 1px solid #e0e0e0;
+
+    .subcategory-card:hover .pages-badge {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(237, 101, 28, 0.4);
     }
-    
-    .badge {
-        padding: 0.5rem 0.75rem;
+
+    .pages-badge i {
+        font-size: 1.1rem;
+    }
+
+    /* Page Card Specific Styles */
+    .page-card-style {
+        padding: 0;
+        text-align: left;
+    }
+
+    .page-image-wrapper {
+        position: relative;
+        height: 200px;
+        overflow: hidden;
+        border-radius: 24px 24px 0 0;
+    }
+
+    .page-image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s;
+    }
+
+    .subcategory-card:hover .page-image-wrapper img {
+        transform: scale(1.1);
+    }
+
+    .page-image-fallback {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #ED651C 0%, #F4800C 50%, #FF8C42 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .page-image-fallback i {
+        font-size: 4rem;
+        color: white;
+        opacity: 0.8;
+    }
+
+    .featured-badge-top {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        color: white;
+        padding: 6px 15px;
+        border-radius: 50px;
+        font-weight: 600;
         font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
     }
-    
-    .card-img-top {
-        border-bottom: 3px solid {{ sub_category.icon_color }};
+
+    .page-content {
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
     }
-    
-    .bg-gradient {
-        background: linear-gradient(135deg, {{ sub_category.icon_color }} 0%, #667eea 100%);
+
+    .page-meta {
+        display: flex;
+        align-items: center;
+        padding-top: 15px;
+        border-top: 1px solid #e2e8f0;
     }
-    
-    .btn-primary {
-        background-color: {{ sub_category.icon_color }};
-        border-color: {{ sub_category.icon_color }};
+
+    .views-count {
+        color: #718096;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
-    
-    .btn-primary:hover {
-        filter: brightness(1.1);
-        transform: scale(1.02);
+
+    /* Empty State */
+    .empty-state {
+        padding: 100px 20px;
+        text-align: center;
+    }
+
+    .empty-state-icon {
+        font-size: 6rem;
+        color: #FFE5D0;
+        margin-bottom: 25px;
+        opacity: 0.5;
+    }
+
+    .empty-state-text {
+        color: #4a5568;
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+
+    .empty-state-subtext {
+        color: #718096;
+        font-size: 1.1rem;
+        margin-bottom: 35px;
+        line-height: 1.6;
+    }
+
+    .btn-add {
+        background: linear-gradient(135deg, #ED651C 0%, #F4800C 100%);
+        color: white;
+        padding: 14px 35px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 15px rgba(237, 101, 28, 0.3);
+        font-size: 1rem;
+    }
+
+    .btn-add:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(237, 101, 28, 0.4);
+        color: white;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .subcategory-card {
+        animation: fadeInUp 0.6s ease-out;
+        animation-fill-mode: both;
+    }
+
+    .subcategory-card:nth-child(1) { animation-delay: 0.1s; }
+    .subcategory-card:nth-child(2) { animation-delay: 0.2s; }
+    .subcategory-card:nth-child(3) { animation-delay: 0.3s; }
+    .subcategory-card:nth-child(4) { animation-delay: 0.4s; }
+    .subcategory-card:nth-child(5) { animation-delay: 0.5s; }
+    .subcategory-card:nth-child(6) { animation-delay: 0.6s; }
+    .subcategory-card:nth-child(7) { animation-delay: 0.7s; }
+    .subcategory-card:nth-child(8) { animation-delay: 0.8s; }
+    .subcategory-card:nth-child(9) { animation-delay: 0.9s; }
+
+    /* Grid Layout */
+    .subcategories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 30px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 70px 0 50px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .page-subtitle {
+            font-size: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+        }
+
+        .icon-wrapper {
+            width: 90px;
+            height: 90px;
+        }
+
+        .icon-wrapper img {
+            width: 55px;
+            height: 55px;
+        }
+
+        .custom-breadcrumb {
+            padding: 10px 18px;
+            font-size: 0.9rem;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+        }
+
+        .subcategories-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .subcategory-card {
+            padding: 25px;
+        }
+
+        .page-content {
+            padding: 20px;
+        }
     }
 </style>
 {% endblock %}

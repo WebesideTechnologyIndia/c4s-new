@@ -8,154 +8,343 @@
     body {
         overflow-x: hidden;
     }
-    
-    .services-hero {
-        background: linear-gradient(135deg, #ED651C, #F4800C);
-        padding: 100px 0;
+
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(135deg, #ED651C, #F4800C, #FF8C42);
+        padding: 100px 0 80px;
+        color: white;
         position: relative;
-        min-height: 60vh;
-        display: flex;
-        align-items: center;
+        overflow: hidden;
     }
-    
-    .services-hero::before {
+
+    .hero-section::before {
         content: '';
         position: absolute;
-        top: 160px;
-        right: -126px;
-        width: 438px;
-        height: 393px;
-        background: linear-gradient(135deg, #DDA25B, #EA8405);
-        background-image: url("{% static 'img/main_img.png' %}");
-        background-size: contain;
-        background-repeat: no-repeat;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+            radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
     }
-    
-    .services-hero::after {
+
+    .hero-section::after {
         content: '';
         position: absolute;
-        bottom: -100px;
-        left: -100px;
-        width: 350px;
-        height: 350px;
-        background: rgba(46, 204, 113, 0.08);
-        border-radius: 50%;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 100px;
+        background: linear-gradient(to top, white, transparent);
+        opacity: 0.1;
     }
-    
+
     .hero-content {
         position: relative;
-        z-index: 2;
+        z-index: 1;
+        text-align: center;
     }
-    
+
+    /* Hero Icon */
     .hero-icon {
-        width: 80px;
-        height: 80px;
-        margin: 0 auto 25px;
-        filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 30px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(15px);
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        animation: fadeInUp 0.6s;
     }
-    
-    .services-hero h1 {
-        color: #fff;
-        font-size: 2.8rem;
-        font-weight: 700;
+
+    .hero-icon svg {
+        width: 60px;
+        height: 60px;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+    }
+
+    /* Page Title */
+    .page-title {
+        font-size: 3rem;
+        font-weight: 800;
         margin-bottom: 15px;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        letter-spacing: -0.5px;
+        color: white;
+        animation: fadeInUp 0.6s 0.1s both;
     }
-    
-    .services-hero p {
-        color: rgba(255,255,255,0.9);
-        font-size: 1.1rem;
-        margin-bottom: 0;
+
+    .page-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.95;
+        font-weight: 400;
+        line-height: 1.6;
+        animation: fadeInUp 0.6s 0.2s both;
     }
-    
+
+    /* Services Section */
     .services-section {
         padding: 80px 0;
-        background: #f8f9fa;
-    }
-    
-    .service-card {
         background: #fff;
+    }
+
+    /* Results Count Badge */
+    .results-count {
+        background: rgba(237, 101, 28, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 15px 30px;
         border-radius: 15px;
-        padding: 35px 20px;
+        display: inline-block;
+        margin-bottom: 50px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        font-weight: 600;
+        color: #2d3748;
+    }
+
+    .results-count .count-number {
+        color: #ED651C;
+        font-size: 1.3rem;
+        font-weight: 800;
+    }
+
+    /* Service Cards - Exact Same Design */
+    .subcategory-card {
+        background: white;
+        border-radius: 24px;
+        padding: 35px;
         text-align: center;
-        box-shadow: 0 5px 25px rgba(0,0,0,0.08);
-        transition: all 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid #f7fafc;
         height: 100%;
-        border-top: 4px solid;
-        margin-bottom: 40px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         text-decoration: none;
+        display: block;
     }
-    
-    .service-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+
+    .subcategory-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #ED651C, #F4800C, #FF8C42);
+        transform: scaleX(0);
+        transition: transform 0.4s;
+        transform-origin: left;
     }
-    
-    .service-icon {
-        width: 80px;
-        height: 80px;
-        margin: 0 auto 20px;
-        transition: transform 0.3s ease;
+
+    .subcategory-card:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 25px 50px rgba(237, 101, 28, 0.15);
+        border-color: #ED651C;
     }
-    
-    .service-icon img {
-        width: 100%;
-        height: 100%;
+
+    .subcategory-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .icon-wrapper {
+        width: 110px;
+        height: 110px;
+        margin: 0 auto 25px;
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        transition: all 0.4s;
+    }
+
+    .subcategory-card:hover .icon-wrapper {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .icon-wrapper img {
+        width: 65px;
+        height: 65px;
         object-fit: contain;
+        transition: all 0.4s;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
     }
-    
-    .service-card:hover .service-icon {
-        transform: scale(1.1);
+
+    .subcategory-card:hover .icon-wrapper img {
+        transform: scale(1.15);
+        filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.15));
     }
-    
-    .service-card h4 {
-        font-size: 1.25rem;
+
+    .card-title {
+        font-size: 1.35rem;
         font-weight: 700;
-        color: #2c3e50;
-        margin-bottom: 12px;
+        color: #1a202c;
+        margin-bottom: 15px;
         line-height: 1.4;
+        transition: color 0.3s;
         min-height: 50px;
         display: flex;
         align-items: center;
         justify-content: center;
     }
-    
-    .service-card p {
-        color: #7f8c8d;
-        font-size: 0.9rem;
-        line-height: 1.6;
-        margin-bottom: 0;
+
+    .subcategory-card:hover .card-title {
+        color: #ED651C;
     }
-    
-    @media (max-width: 991px) {
-        .services-hero h1 {
-            font-size: 2.2rem;
+
+    .card-description {
+        color: #718096;
+        font-size: 0.95rem;
+        line-height: 1.7;
+        margin-bottom: 20px;
+        min-height: 60px;
+    }
+
+    .pages-badge {
+        background: linear-gradient(135deg, #ED651C 0%, #F4800C 100%);
+        color: white;
+        padding: 10px 24px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 15px rgba(237, 101, 28, 0.3);
+        transition: all 0.3s;
+    }
+
+    .subcategory-card:hover .pages-badge {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(237, 101, 28, 0.4);
+    }
+
+    .pages-badge i {
+        font-size: 1.1rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 100px 20px;
+        text-align: center;
+    }
+
+    .empty-state-icon {
+        font-size: 6rem;
+        color: #FFE5D0;
+        margin-bottom: 25px;
+        opacity: 0.5;
+    }
+
+    .empty-state-text {
+        color: #4a5568;
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+
+    .empty-state-subtext {
+        color: #718096;
+        font-size: 1.1rem;
+        margin-bottom: 35px;
+        line-height: 1.6;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
         }
-        
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .subcategory-card {
+        animation: fadeInUp 0.6s ease-out;
+        animation-fill-mode: both;
+    }
+
+    .subcategory-card:nth-child(1) { animation-delay: 0.1s; }
+    .subcategory-card:nth-child(2) { animation-delay: 0.2s; }
+    .subcategory-card:nth-child(3) { animation-delay: 0.3s; }
+    .subcategory-card:nth-child(4) { animation-delay: 0.4s; }
+    .subcategory-card:nth-child(5) { animation-delay: 0.5s; }
+    .subcategory-card:nth-child(6) { animation-delay: 0.6s; }
+    .subcategory-card:nth-child(7) { animation-delay: 0.7s; }
+    .subcategory-card:nth-child(8) { animation-delay: 0.8s; }
+    .subcategory-card:nth-child(9) { animation-delay: 0.9s; }
+
+    /* Grid Layout */
+    .subcategories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 30px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 70px 0 50px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .page-subtitle {
+            font-size: 1rem;
+        }
+
+        .hero-icon {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+        }
+
+        .hero-icon svg {
+            width: 50px;
+            height: 50px;
+        }
+
         .services-section {
             padding: 60px 0;
         }
-    }
-    
-    @media (max-width: 767px) {
-        .services-hero {
-            padding: 80px 0;
+
+        .subcategories-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
         }
-        
-        .services-hero h1 {
-            font-size: 1.8rem;
+
+        .subcategory-card {
+            padding: 25px;
         }
-        
-        .service-card {
-            padding: 25px 15px;
+
+        .card-title {
+            font-size: 1.15rem;
+            min-height: auto;
         }
-        
-        .service-icon {
-            width: 60px;
-            height: 60px;
+
+        .card-description {
+            min-height: auto;
+        }
+
+        .icon-wrapper {
+            width: 90px;
+            height: 90px;
+        }
+
+        .icon-wrapper img {
+            width: 55px;
+            height: 55px;
         }
     }
 </style>
@@ -163,17 +352,17 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="services-hero">
+<section class="hero-section">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-8 col-md-10 text-center hero-content">
+            <div class="col-lg-8 col-md-10 hero-content">
                 <div class="hero-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" fill="#fff">
                         <path d="M320 32c-8.1 0-16.1 1.4-23.7 4.1L15.8 137.4C6.3 140.9 0 149.9 0 160s6.3 19.1 15.8 22.6l57.9 20.9C57.3 229.3 48 259.8 48 291.9v28.1c0 28.4-10.8 57.7-22.3 80.8c-6.5 13-13.9 25.8-22.5 37.6C0 442.7-.9 448.3 .9 453.4s6 8.9 11.2 10.2l64 16c4.2 1.1 8.7 .3 12.4-2s6.3-6.1 7.1-10.4c8.6-42.8 4.3-81.2-2.1-108.7C90.3 344.3 86 329.8 80 316.5V291.9c0-30.2 10.2-58.7 27.9-81.5c12.9-15.5 29.6-28 49.2-35.7l157-61.7c8.2-3.2 17.5 .8 20.7 9s-.8 17.5-9 20.7l-157 61.7c-12.4 4.9-23.3 12.4-32.2 21.6l159.6 57.6c7.6 2.7 15.6 4.1 23.7 4.1s16.1-1.4 23.7-4.1L624.2 182.6c9.5-3.4 15.8-12.5 15.8-22.6s-6.3-19.1-15.8-22.6L343.7 36.1C336.1 33.4 328.1 32 320 32zM128 408c0 35.3 86 72 192 72s192-36.7 192-72L496.7 262.6 354.5 314c-11.1 4-22.8 6-34.5 6s-23.5-2-34.5-6L143.3 262.6 128 408z"/>
                     </svg>
                 </div>
-                <h1>Study Abroad Services</h1>
-                <p>Comprehensive Support for Your International Education Journey</p>
+                <h1 class="page-title">Study Abroad Services</h1>
+                <p class="page-subtitle">Comprehensive Support for Your International Education Journey</p>
             </div>
         </div>
     </div>
@@ -182,23 +371,57 @@
 <!-- Services Cards -->
 <section class="services-section">
     <div class="container">
-        <div class="row">
-        {% for card in cards %}
-<div class="col-lg-3 col-md-6 col-6">
-    <a href="{% url 'main_app:admission_abroad_card_detail' card.slug %}" class="service-card" style="border-top-color: {{ card.border_color }};">
-        <div class="service-icon">
-            <img src="{{ card.get_image }}" alt="{{ card.title }}" class="img-fluid">
-        </div>
-        <h4>{{ card.title }}</h4>
-        <p>{{ card.description }}</p>
-    </a>
-</div>
-{% empty %}
-<div class="col-12 text-center">
-    <p class="text-muted">No services available at the moment.</p>
-</div>
-{% endfor %}
-        </div>
+        {% if cards %}
+            <!-- Results Count -->
+            <div class="text-center">
+                <div class="results-count">
+                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                    Showing <span class="count-number">{{ cards|length }}</span> 
+                    Service{{ cards|length|pluralize }}
+                </div>
+            </div>
+
+            <!-- Services Grid -->
+            <div class="subcategories-grid">
+                {% for card in cards %}
+                <a href="{% url 'main_app:admission_abroad_card_detail' card.slug %}" class="subcategory-card">
+                    <!-- Icon -->
+                    <div class="icon-wrapper" style="background: {{ card.border_color }}20; border: 3px solid {{ card.border_color }}40;">
+                        <img src="{{ card.get_image }}" alt="{{ card.title }}">
+                    </div>
+                    
+                    <!-- Title -->
+                    <h4 class="card-title">{{ card.title }}</h4>
+                    
+                    <!-- Description -->
+                    <p class="card-description">
+                        {{ card.description }}
+                    </p>
+                    
+                    <!-- Explore Badge -->
+                    <div class="mt-auto">
+                        <span class="pages-badge">
+                            <i class="bi bi-arrow-right-circle"></i>
+                            Explore Service
+                        </span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="bi bi-inbox"></i>
+                </div>
+                <p class="empty-state-text">
+                    No services available yet
+                </p>
+                <p class="empty-state-subtext">
+                    New study abroad services are being added regularly. Check back soon!
+                </p>
+            </div>
+        {% endif %}
     </div>
 </section>
 {% endblock %}
