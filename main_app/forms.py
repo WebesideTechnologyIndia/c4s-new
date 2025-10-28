@@ -556,6 +556,7 @@ class OnlineEducationSubCategoryForm(forms.ModelForm):
 
 
 
+from ckeditor_uploader.widgets import CKEditorUploadingWidget
 
 class OnlineEducationPageForm(forms.ModelForm):
     class Meta:
@@ -563,9 +564,38 @@ class OnlineEducationPageForm(forms.ModelForm):
         fields = ['title', 'slug', 'summary', 'content', 'featured_image', 
                   'featured_image_url', 'meta_description', 'meta_keywords', 
                   'order', 'is_active', 'is_featured']
+        
         widgets = {
-            'summary': forms.Textarea(attrs={'rows': 3}),
-            'content': forms.Textarea(attrs={'rows': 10}),
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., Best Online Courses for Data Science 2025'
+            }),
+            'slug': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'best-online-courses-data-science-2025'
+            }),
+            'summary': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Brief summary of the page'
+            }),
+            'content': CKEditorUploadingWidget(),  # CKEditor widget
+            'featured_image': forms.FileInput(attrs={'class': 'form-control'}),
+            'featured_image_url': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://example.com/image.jpg'
+            }),
+            'meta_description': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'SEO meta description'
+            }),
+            'meta_keywords': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'keyword1, keyword2, keyword3'
+            }),
+            'order': forms.NumberInput(attrs={'class': 'form-control', 'value': '0'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_featured': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
 from django import forms
@@ -596,46 +626,67 @@ class StateForm(forms.ModelForm):
         }
 
 
-# ==================== USER REGISTRATION FORM ====================
+from django import forms
+from .models import Country, State, UserRegistration
+
+
+from django import forms
+from .models import Country, State, UserRegistration
+
 class UserRegistrationForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(attrs={
         'class': 'form-control',
-        'placeholder': 'Create Password'
+        'placeholder': 'Enter password'
     }))
     confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={
         'class': 'form-control',
-        'placeholder': 'Confirm Password'
+        'placeholder': 'Confirm password'
     }))
     
     class Meta:
         model = UserRegistration
-        fields = ['name', 'father_name', 'mobile', 'whatsapp_mobile', 'email', 
-                  'course', 'country', 'state', 'city']
+        fields = ['name', 'father_name', 'mobile', 'whatsapp_mobile', 
+                  'email', 'course', 'country', 'state', 'city']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full Name'}),
-            'father_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': "Father's Name"}),
-            'mobile': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Mobile Number'}),
-            'whatsapp_mobile': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'WhatsApp Number'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email Address'}),
-            'course': forms.Select(attrs={'class': 'form-control'}),
-            'country': forms.Select(attrs={'class': 'form-control', 'id': 'id_country'}),
-            'state': forms.Select(attrs={'class': 'form-control', 'id': 'id_state'}),
-            'city': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'City'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'father_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'mobile': forms.TextInput(attrs={'class': 'form-control'}),
+            'whatsapp_mobile': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'course': forms.TextInput(attrs={'class': 'form-control'}),
+            'country': forms.Select(attrs={'class': 'form-select'}),
+            'state': forms.Select(attrs={'class': 'form-select'}),
+            'city': forms.TextInput(attrs={'class': 'form-control'}),
         }
     
     def __init__(self, *args, **kwargs):
+        # ✅ Accept country_filter parameter
+        country_filter = kwargs.pop('country_filter', 'all')
         super().__init__(*args, **kwargs)
-        self.fields['country'].queryset = Country.objects.filter(is_active=True)
+        
+        # ✅ Filter countries based on next URL
+        if country_filter == 'india_only':
+            # Only India
+            self.fields['country'].queryset = Country.objects.filter(name__iexact='India')
+        elif country_filter == 'exclude_india':
+            # All except India
+            self.fields['country'].queryset = Country.objects.exclude(name__iexact='India').order_by('name')
+        else:
+            # All countries (default)
+            self.fields['country'].queryset = Country.objects.all().order_by('name')
+        
+        # Empty state initially (will be populated via AJAX)
         self.fields['state'].queryset = State.objects.none()
         
+        # If country is already selected (on form error), load states
         if 'country' in self.data:
             try:
                 country_id = int(self.data.get('country'))
-                self.fields['state'].queryset = State.objects.filter(country_id=country_id, is_active=True)
+                self.fields['state'].queryset = State.objects.filter(country_id=country_id).order_by('name')
             except (ValueError, TypeError):
                 pass
-        elif self.instance.pk:
-            self.fields['state'].queryset = self.instance.country.states.filter(is_active=True)
+        elif self.instance.pk and self.instance.country:
+            self.fields['state'].queryset = self.instance.country.state_set.order_by('name')
     
     def clean(self):
         cleaned_data = super().clean()
@@ -647,6 +698,8 @@ class UserRegistrationForm(forms.ModelForm):
         
         return cleaned_data
     
+
+
 from django import forms
 from .models import SubCategory, ContentPage
 
@@ -696,6 +749,8 @@ class SubCategoryForm(forms.ModelForm):
 
 
 # ==================== CONTENT PAGE FORM ====================
+from ckeditor_uploader.widgets import CKEditorUploadingWidget
+
 class ContentPageForm(forms.ModelForm):
     class Meta:
         model = ContentPage
@@ -707,7 +762,7 @@ class ContentPageForm(forms.ModelForm):
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Top 10 Engineering Colleges'}),
             'slug': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'top-10-engineering-colleges'}),
             'summary': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Brief summary'}),
-            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 15, 'placeholder': 'Full page content (HTML supported)'}),
+            'content': CKEditorUploadingWidget(),  # Changed to CKEditor
             'featured_image': forms.FileInput(attrs={'class': 'form-control'}),
             'featured_image_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://example.com/image.jpg'}),
             'meta_description': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'SEO description'}),
@@ -716,8 +771,6 @@ class ContentPageForm(forms.ModelForm):
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_featured': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
-
-
 # forms.py mein add karo
 
 class AdmissionAbroadSubCategoryForm(forms.ModelForm):
@@ -739,6 +792,8 @@ class AdmissionAbroadSubCategoryForm(forms.ModelForm):
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
+from ckeditor_uploader.widgets import CKEditorUploadingWidget
+
 class AdmissionAbroadPageForm(forms.ModelForm):
     class Meta:
         model = AdmissionAbroadPage
@@ -747,18 +802,16 @@ class AdmissionAbroadPageForm(forms.ModelForm):
         
         widgets = {
             'sub_category': forms.Select(attrs={'class': 'form-control'}),
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
-            'slug': forms.TextInput(attrs={'class': 'form-control'}),
-            'summary': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 15}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Study in USA - Complete Guide 2025'}),
+            'slug': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'study-in-usa-guide-2025'}),
+            'summary': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Brief summary of the page'}),
+            'content': CKEditorUploadingWidget(),  # CKEditor for rich text
             'featured_image': forms.FileInput(attrs={'class': 'form-control'}),
-            'featured_image_url': forms.URLInput(attrs={'class': 'form-control'}),
-            'order': forms.NumberInput(attrs={'class': 'form-control'}),
+            'featured_image_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://example.com/image.jpg'}),
+            'order': forms.NumberInput(attrs={'class': 'form-control', 'value': '0'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_featured': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
-
-
 
 
 # forms.py mein add karo
@@ -880,13 +933,44 @@ class DistanceEducationSubCategoryForm(forms.ModelForm):
 
 
 
+from ckeditor_uploader.widgets import CKEditorUploadingWidget
+
 class DistanceEducationPageForm(forms.ModelForm):
     class Meta:
         model = DistanceEducationPage
         fields = ['title', 'slug', 'summary', 'content', 'featured_image', 
                   'featured_image_url', 'meta_description', 'meta_keywords', 
                   'order', 'is_active', 'is_featured']
+        
         widgets = {
-            'summary': forms.Textarea(attrs={'rows': 3}),
-            'content': forms.Textarea(attrs={'rows': 10}),
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., Distance MBA Programs 2025'
+            }),
+            'slug': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'distance-mba-programs-2025'
+            }),
+            'summary': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Brief summary of the page'
+            }),
+            'content': CKEditorUploadingWidget(),  # CKEditor widget
+            'featured_image': forms.FileInput(attrs={'class': 'form-control'}),
+            'featured_image_url': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://example.com/image.jpg'
+            }),
+            'meta_description': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'SEO meta description'
+            }),
+            'meta_keywords': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'keyword1, keyword2, keyword3'
+            }),
+            'order': forms.NumberInput(attrs={'class': 'form-control', 'value': '0'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_featured': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }

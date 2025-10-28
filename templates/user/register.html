@@ -46,9 +46,12 @@
     }
 
     @keyframes float {
-        0%, 100% {
+
+        0%,
+        100% {
             transform: translateY(0) rotate(0deg);
         }
+
         50% {
             transform: translateY(-30px) rotate(10deg);
         }
@@ -72,6 +75,7 @@
             opacity: 0;
             transform: translateY(30px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -160,7 +164,8 @@
         color: #e74c3c;
     }
 
-    .form-control, .form-select {
+    .form-control,
+    .form-select {
         border: 2px solid #e8e8e8;
         border-radius: 10px;
         padding: 12px 15px;
@@ -170,7 +175,8 @@
         background: #f8f9fa;
     }
 
-    .form-control:focus, .form-select:focus {
+    .form-control:focus,
+    .form-select:focus {
         border-color: #ED651C;
         box-shadow: 0 0 0 4px rgba(237, 101, 28, 0.1);
         background: #fff;
@@ -254,6 +260,7 @@
             opacity: 0;
             transform: translateY(-10px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -274,12 +281,15 @@
         .register-section {
             padding: 30px 15px;
         }
+
         .register-card {
             max-width: 100%;
         }
+
         .register-body {
             padding: 30px 20px;
         }
+
         .register-header h2 {
             font-size: 1.6rem;
         }
@@ -296,7 +306,8 @@
                     <div class="register-header">
                         <div class="logo-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                                <path
+                                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
                             </svg>
                         </div>
                         <h2>Create Your Account</h2>
@@ -305,16 +316,34 @@
 
                     <div class="register-body">
                         {% if messages %}
-                            {% for message in messages %}
-                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                                    {{ message }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                            {% endfor %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
                         {% endif %}
 
                         <form method="POST" id="registrationForm">
                             {% csrf_token %}
+                            <!-- ✅ HIDDEN FIELDS -->
+                            <input type="hidden" name="source" value="{{ source_page|default:'direct' }}">
+                            <input type="hidden" name="country_filter" value="{{ country_filter }}">
+                            {% if next_url %}
+                            <input type="hidden" name="next" value="{{ next_url }}">
+                            {% endif %}
+
+                            <!-- ✅ Optional: Debug Info (Remove in production) -->
+                            {% if country_filter != 'all' %}
+                            <div class="alert alert-info" role="alert">
+                                {% if country_filter == 'india_only' %}
+                                <small>🇮🇳 Showing only India</small>
+                                {% elif country_filter == 'exclude_india' %}
+                                <small>🌍 Showing all countries except India</small>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
 
                             <!-- PERSONAL DETAILS -->
                             <div class="form-section-title">📋 Personal Details</div>
@@ -344,7 +373,8 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="form-label">WhatsApp Number <span class="required">*</span></label>
+                                        <label class="form-label">WhatsApp Number <span
+                                                class="required">*</span></label>
                                         {{ form.whatsapp_mobile }}
                                     </div>
                                 </div>
@@ -402,7 +432,8 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="form-label">Confirm Password <span class="required">*</span></label>
+                                        <label class="form-label">Confirm Password <span
+                                                class="required">*</span></label>
                                         {{ form.confirm_password }}
                                     </div>
                                 </div>
@@ -422,34 +453,35 @@
 </section>
 
 <script>
-// AJAX for dynamic state loading
-document.addEventListener('DOMContentLoaded', function() {
-    const countrySelect = document.getElementById('id_country');
-    const stateSelect = document.getElementById('id_state');
-    
-    if (countrySelect && stateSelect) {
-        countrySelect.addEventListener('change', function() {
-            const countryId = this.value;
-            
-            // Clear existing states
-            stateSelect.innerHTML = '<option value="">---------</option>';
-            
-            if (countryId) {
-                // Fetch states via AJAX
-                fetch(`{% url 'main_app:ajax_load_states' %}?country_id=${countryId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        data.forEach(state => {
-                            const option = document.createElement('option');
-                            option.value = state.id;
-                            option.textContent = state.name;
-                            stateSelect.appendChild(option);
-                        });
-                    })
-                    .catch(error => console.error('Error loading states:', error));
-            }
-        });
-    }
-});
+    // AJAX for dynamic state loading
+    document.addEventListener('DOMContentLoaded', function () {
+        const countrySelect = document.getElementById('id_country');
+        const stateSelect = document.getElementById('id_state');
+
+        if (countrySelect && stateSelect) {
+            countrySelect.addEventListener('change', function () {
+                const countryId = this.value;
+
+                // Clear existing states
+                stateSelect.innerHTML = '<option value="">---------</option>';
+
+                if (countryId) {
+                    // Fetch states via AJAX
+                    fetch(`{% url 'main_app:ajax_load_states' %}?country_id=${countryId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            data.forEach(state => {
+                                const option = document.createElement('option');
+                                option.value = state.id;
+                                option.textContent = state.name;
+                                stateSelect.appendChild(option);
+                            });
+                        })
+                        .catch(error => console.error('Error loading states:', error));
+                }
+            });
+        }
+    });
 </script>
+
 {% endblock %}

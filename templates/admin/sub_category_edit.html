@@ -1,0 +1,280 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Edit Sub-Category{% endblock %}
+{% block page_title %}Edit Sub-Category{% endblock %}
+
+{% block extra_css %}
+<style>
+    .preview-icon {
+        width: 100px;
+        height: 100px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 10px;
+    }
+    
+    .preview-icon img {
+        max-width: 60px;
+        max-height: 60px;
+        object-fit: contain;
+    }
+    
+    .filter-info-box {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+    }
+    
+    .filter-info-box h6 {
+        color: #1976d2;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+    
+    .filter-info-box p {
+        margin: 0;
+        color: #555;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Sub-Category Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <!-- Parent Card -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Parent Card</label>
+                            <input type="text" class="form-control" value="{{ subcategory.parent_card.title }}" readonly>
+                        </div>
+
+                        <!-- Title -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Title <span class="text-danger">*</span></label>
+                            <input type="text" name="title" class="form-control" required 
+                                   value="{{ subcategory.title }}"
+                                   placeholder="e.g., Engineering Colleges">
+                        </div>
+
+                        <!-- Slug -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Slug (Optional - Auto-generated from title)</label>
+                            <input type="text" name="slug" class="form-control" 
+                                   value="{{ subcategory.slug }}"
+                                   placeholder="engineering-colleges">
+                            <small class="text-muted">Leave blank for auto-generation</small>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Description (Optional)</label>
+                            <textarea name="description" class="form-control" rows="3"
+                                      placeholder="Short description about this sub-category">{{ subcategory.description }}</textarea>
+                        </div>
+
+                        <!-- State & Course Filters -->
+                        <div class="col-md-12 mb-3">
+                            <div class="filter-info-box">
+                                <h6><i class="bi bi-funnel me-2"></i>Target Audience Filter</h6>
+                                <p>Select state and course to show this subcategory only to relevant students. Leave blank to show to everyone.</p>
+                            </div>
+                        </div>
+
+                        <!-- State Selection -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-geo-alt me-1"></i>Target State
+                            </label>
+                            <select name="state" id="stateSelect" class="form-select">
+                                <option value="">All States (No Filter)</option>
+                                {% for state in states %}
+                                <option value="{{ state.id }}" {% if subcategory.state_id == state.id %}selected{% endif %}>
+                                    {{ state.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Show only to students from this state</small>
+                        </div>
+
+                        <!-- Course Selection -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-book me-1"></i>Target Course
+                            </label>
+                            <select name="course" id="courseSelect" class="form-select">
+                                <option value="">All Courses (No Filter)</option>
+                                {% for code, name in courses %}
+                                <option value="{{ code }}" {% if subcategory.course == code %}selected{% endif %}>
+                                    {{ name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Show only to students enrolled in this course</small>
+                        </div>
+
+                        <!-- Current Icon Display -->
+                        {% if subcategory.icon_url %}
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Current Icon</label>
+                            <div class="preview-icon" style="background: {{ subcategory.icon_color|default:'#f39c12' }}; display: flex;">
+                                <img src="{{ subcategory.icon_url }}" alt="Current Icon">
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Upload Icon -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Upload New Icon (Optional)</label>
+                            <input type="file" name="icon_image" class="form-control" 
+                                   accept="image/*" id="iconUpload">
+                            <small class="text-muted">Leave blank to keep current icon</small>
+                        </div>
+
+                        <!-- OR Icon URL -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">OR Icon URL</label>
+                            <input type="url" name="icon_url" class="form-control" id="iconUrl"
+                                   value="{{ subcategory.icon_url }}"
+                                   placeholder="https://example.com/icon.png">
+                        </div>
+
+                        <!-- Icon Color -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Icon Background Color</label>
+                            <select name="icon_color" id="iconColor" class="form-select">
+                                <option value="#f39c12" {% if subcategory.icon_color == '#f39c12' %}selected{% endif %}>Orange</option>
+                                <option value="#e74c3c" {% if subcategory.icon_color == '#e74c3c' %}selected{% endif %}>Red</option>
+                                <option value="#2ecc71" {% if subcategory.icon_color == '#2ecc71' %}selected{% endif %}>Green</option>
+                                <option value="#3498db" {% if subcategory.icon_color == '#3498db' %}selected{% endif %}>Blue</option>
+                                <option value="#9b59b6" {% if subcategory.icon_color == '#9b59b6' %}selected{% endif %}>Purple</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Icon Preview</label>
+                            <div id="iconPreview" class="preview-icon" style="display: none;">
+                                <img id="previewImg" src="" alt="Preview">
+                            </div>
+                        </div>
+
+                        <!-- Order -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Display Order</label>
+                            <input type="number" name="order" class="form-control" 
+                                   value="{{ subcategory.order }}">
+                            <small class="text-muted">Lower numbers appear first</small>
+                        </div>
+
+                        <!-- Active Status -->
+                        <div class="col-md-12 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" name="is_active" class="form-check-input" 
+                                       id="isActive" {% if subcategory.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="isActive">
+                                    Active (Show on website)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                   <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Update Sub-Category
+                        </button>
+                        {% if subcategory.parent_card %}
+                        <a href="{% url 'main_app:admin_sub_categories_by_card' subcategory.parent_card.id %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                        {% else %}
+                        <a href="{% url 'main_app:admin_sub_categories_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Icon preview
+    const iconUpload = document.getElementById('iconUpload');
+    const iconUrl = document.getElementById('iconUrl');
+    const iconColor = document.getElementById('iconColor');
+    const iconPreview = document.getElementById('iconPreview');
+    const previewImg = document.getElementById('previewImg');
+    
+    function updatePreview(src) {
+        if (src) {
+            previewImg.src = src;
+            iconPreview.style.display = 'flex';
+            iconPreview.style.background = iconColor.value;
+        } else {
+            iconPreview.style.display = 'none';
+        }
+    }
+    
+    iconUpload.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                updatePreview(e.target.result);
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    iconUrl.addEventListener('input', function() {
+        updatePreview(this.value);
+    });
+    
+    iconColor.addEventListener('change', function() {
+        if (previewImg.src) {
+            iconPreview.style.background = this.value;
+        }
+    });
+
+    // Filter Selection Feedback
+    const stateSelect = document.getElementById('stateSelect');
+    const courseSelect = document.getElementById('courseSelect');
+    
+    function updateFilterInfo() {
+        const state = stateSelect.options[stateSelect.selectedIndex].text;
+        const course = courseSelect.options[courseSelect.selectedIndex].text;
+        
+        let filterText = 'Visible to: ';
+        
+        if (stateSelect.value && courseSelect.value) {
+            filterText += `Students from ${state} enrolled in ${course}`;
+        } else if (stateSelect.value) {
+            filterText += `All students from ${state}`;
+        } else if (courseSelect.value) {
+            filterText += `All students enrolled in ${course}`;
+        } else {
+            filterText += 'All students (no filter)';
+        }
+        
+        console.log(filterText);
+    }
+    
+    stateSelect.addEventListener('change', updateFilterInfo);
+    courseSelect.addEventListener('change', updateFilterInfo);
+</script>
+{% endblock %}

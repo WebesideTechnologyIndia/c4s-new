@@ -405,9 +405,13 @@
                         </form>
 
                         <div class="register-link">
-                            <p>Don't have an account? <a href="{% url 'main_app:user_register' %}">Register Here</a></p>
-                            <p style="margin-top: 10px;">Back to <a href="{% url 'main_app:home' %}">Homepage</a></p>
-                        </div>
+    <p>Don't have an account? 
+        <a href="{% url 'main_app:user_register' %}?from=login{% if request.GET.next %}&next={{ request.GET.next }}{% endif %}">
+            Register Here
+        </a>
+    </p>
+    <p style="margin-top: 10px;">Back to <a href="{% url 'main_app:home' %}">Homepage</a></p>
+</div>
                     </div>
                 </div>
             </div>

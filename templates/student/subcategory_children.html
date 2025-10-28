@@ -4,6 +4,7 @@
 
 {% block content %}
 
+
 <div class="container py-5">
     
     <!-- Breadcrumb Navigation -->
@@ -172,11 +173,12 @@
                             </div>
 
                             <!-- Read Button -->
-                            <a href="{% url 'main_app:page_detail_view' card.get_slug sub_category.get_full_path page.slug %}" 
-                               class="btn btn-primary w-100">
-                                <i class="bi bi-book-open me-2"></i>
-                                Read More
-                            </a>
+<!-- BEST ✅ -->
+<a href="{% url 'main_app:page_detail_view' card.get_slug sub_category.get_full_path page.slug %}"
+   class="btn btn-primary w-100">
+    <i class="bi bi-book-open me-2"></i>
+    Read More
+</a>
                         </div>
                     </div>
                 </div>

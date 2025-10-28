@@ -643,6 +643,8 @@ class DistanceEducationSubCategory(models.Model):
         return current.parent_card
 
 
+from ckeditor_uploader.fields import RichTextUploadingField
+
 class DistanceEducationPage(models.Model):
     """Content pages for Distance Education subcategories"""
     sub_category = models.ForeignKey(
@@ -652,9 +654,9 @@ class DistanceEducationPage(models.Model):
     )
     
     title = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255)
+    slug = models.SlugField(max_length=255, blank=True)
     summary = models.TextField(blank=True)
-    content = models.TextField()
+    content = RichTextUploadingField()  # Changed to RichTextUploadingField
     
     # SEO & Images
     featured_image = models.ImageField(upload_to='distance_education/pages/', blank=True, null=True)
@@ -681,13 +683,19 @@ class DistanceEducationPage(models.Model):
     def __str__(self):
         return f"{self.sub_category.title} - {self.title}"
     
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+    
     def get_featured_image(self):
         """Return featured image or URL"""
         if self.featured_image:
             return self.featured_image.url
         elif self.featured_image_url:
             return self.featured_image_url
-        return None
+        return 'https://via.placeholder.com/800x400'
     
     def increment_views(self):
         """Increment page views"""
@@ -871,7 +879,8 @@ class OnlineEducationSubCategory(models.Model):
         
         return True  # All filters passed
     
-    
+from ckeditor_uploader.fields import RichTextUploadingField
+
 class OnlineEducationPage(models.Model):
     """Content pages for Online Education subcategories"""
     sub_category = models.ForeignKey(
@@ -881,9 +890,9 @@ class OnlineEducationPage(models.Model):
     )
     
     title = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255)
+    slug = models.SlugField(max_length=255, blank=True)
     summary = models.TextField(blank=True)
-    content = models.TextField()
+    content = RichTextUploadingField()  # Changed to RichTextUploadingField
     
     # SEO & Images
     featured_image = models.ImageField(upload_to='online_education/pages/', blank=True, null=True)
@@ -910,18 +919,22 @@ class OnlineEducationPage(models.Model):
     def __str__(self):
         return f"{self.sub_category.title} - {self.title}"
     
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+    
     def get_featured_image(self):
         if self.featured_image:
             return self.featured_image.url
         elif self.featured_image_url:
             return self.featured_image_url
-        return None
+        return 'https://via.placeholder.com/800x400'
     
     def increment_views(self):
         self.views_count += 1
         self.save(update_fields=['views_count'])
-
-
 
 
 from django.db import models
@@ -1282,8 +1295,12 @@ class SubCategory(models.Model):
         
         return '/'.join(path)
     
+from ckeditor_uploader.fields import RichTextUploadingField
+
 
 # ==================== CONTENT PAGE MODEL (Level 3) ====================
+
+
 class ContentPage(models.Model):
     """Individual content pages under SubCategory"""
     
@@ -1296,7 +1313,7 @@ class ContentPage(models.Model):
     
     # Content
     summary = models.TextField(max_length=500, blank=True, help_text="Short summary (optional)")
-    content = models.TextField(help_text="Full page content (HTML supported)")
+    content = RichTextUploadingField()
     
     # Featured Image
     featured_image = models.ImageField(upload_to='content_pages/', blank=True, null=True)
@@ -1466,6 +1483,8 @@ class AdmissionAbroadSubCategory(models.Model):
 
 
 # Same for AdmissionAbroadPage - Keep only ONE copy
+from ckeditor_uploader.fields import RichTextUploadingField
+
 class AdmissionAbroadPage(models.Model):
     """Content pages for Admission Abroad"""
     
@@ -1479,7 +1498,7 @@ class AdmissionAbroadPage(models.Model):
     
     # Content
     summary = models.TextField(max_length=500, blank=True)
-    content = models.TextField(help_text="Full page content (HTML supported)")
+    content = RichTextUploadingField()  # Changed to RichTextUploadingField for CKEditor
     
     # Featured Image
     featured_image = models.ImageField(upload_to='admission_abroad_pages/', blank=True, null=True)
@@ -1509,51 +1528,17 @@ class AdmissionAbroadPage(models.Model):
             from django.utils.text import slugify
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
-
-
-class AdmissionAbroadPage(models.Model):
-    """Content pages for Admission Abroad"""
     
-    # Parent Sub-Category
-    sub_category = models.ForeignKey(AdmissionAbroadSubCategory, on_delete=models.CASCADE, 
-                                     related_name='content_pages')
+    def get_featured_image(self):
+        """Return featured image URL"""
+        if self.featured_image:
+            return self.featured_image.url
+        return self.featured_image_url if self.featured_image_url else 'https://via.placeholder.com/800x400'
     
-    # Page Info
-    title = models.CharField(max_length=300)
-    slug = models.SlugField(max_length=300, unique=True, blank=True)
-    
-    # Content
-    summary = models.TextField(max_length=500, blank=True)
-    content = models.TextField(help_text="Full page content (HTML supported)")
-    
-    # Featured Image
-    featured_image = models.ImageField(upload_to='admission_abroad_pages/', blank=True, null=True)
-    featured_image_url = models.URLField(max_length=500, blank=True)
-    
-    # Display Settings
-    order = models.IntegerField(default=0)
-    is_active = models.BooleanField(default=True)
-    is_featured = models.BooleanField(default=False)
-    
-    # Stats
-    views_count = models.IntegerField(default=0)
-    
-    # Meta
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    
-    class Meta:
-        ordering = ['sub_category', 'order', '-created_at']
-        
-    def __str__(self):
-        return f"{self.sub_category.title} → {self.title}"
-    
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            from django.utils.text import slugify
-            self.slug = slugify(self.title)
-        super().save(*args, **kwargs)
+    def increment_views(self):
+        """Increment view count"""
+        self.views_count += 1
+        self.save(update_fields=['views_count'])
 
 
 # ==================== STUDENT CARD PURCHASE MODEL ====================

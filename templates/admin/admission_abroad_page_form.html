@@ -1,0 +1,361 @@
+{% extends 'admin/base.html' %}
+{% block title %}Add Admission Abroad Page{% endblock %}
+{% block page_title %}Add New Content Page{% endblock %}
+
+{% block extra_css %}
+<style>
+    .preview-image {
+        max-width: 300px;
+        max-height: 200px;
+        margin-top: 10px;
+        border-radius: 8px;
+        display: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .char-counter {
+        font-size: 0.85rem;
+        color: #6c757d;
+        float: right;
+    }
+
+    .form-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .form-section h6 {
+        color: #495057;
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    /* CKEditor custom styling */
+    .django-ckeditor-widget {
+        width: 100% !important;
+    }
+
+    .cke_chrome {
+        border: 1px solid #ced4da !important;
+        border-radius: 0.25rem !important;
+    }
+
+    .breadcrumb-section {
+        background: #fff;
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .breadcrumb-section .breadcrumb {
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<div class="breadcrumb-section">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+           
+            <li class="breadcrumb-item">
+                <a href="{% url 'main_app:admin_admission_abroad_subcategories' subcategory.parent_card.id %}">
+                    {{ subcategory.parent_card.title }}
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'main_app:admin_admission_abroad_pages_by_subcategory' subcategory.id %}">
+                    {{ subcategory.title }}
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Add Page</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-file-earmark-plus me-2"></i>
+                    Add Content Page - {{ subcategory.title }}
+                </h5>
+                <small class="text-muted">Parent: {{ subcategory.parent_card.title }}</small>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Display form errors -->
+                    {% if form.errors %}
+                    <div class="alert alert-danger alert-dismissible fade show">
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <strong><i class="bi bi-exclamation-triangle me-2"></i>Please correct the following errors:</strong>
+                        <ul class="mb-0 mt-2">
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                <li>{{ field }}: {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <!-- BASIC INFO SECTION -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-info-circle me-2"></i>Basic Information</h6>
+
+                        <div class="row">
+                            <!-- Sub-Category (Hidden - Pre-selected) -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Sub-Category</label>
+                                <input type="text" class="form-control" 
+                                       value="{{ subcategory.parent_card.title }} → {{ subcategory.title }}" readonly>
+                                {{ form.sub_category.as_hidden }}
+                            </div>
+
+                            <!-- Title -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Page Title <span class="text-danger">*</span></label>
+                                {{ form.title }}
+                                <span class="char-counter">
+                                    <span id="titleCount">0</span>/300 characters
+                                </span>
+                            </div>
+
+                            <!-- Slug -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">URL Slug (Optional - Auto-generated from title)</label>
+                                {{ form.slug }}
+                                <small class="text-muted">Leave blank for auto-generation. Used in URL.</small>
+                            </div>
+
+                            <!-- Summary -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Summary (Optional)</label>
+                                {{ form.summary }}
+                                <span class="char-counter">
+                                    <span id="summaryCount">0</span>/500 characters
+                                </span>
+                                <small class="text-muted d-block mt-1">
+                                    Brief summary shown in preview cards
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CONTENT SECTION WITH CKEDITOR -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-file-text me-2"></i>Page Content (Rich Text Editor)</h6>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Full Content <span class="text-danger">*</span></label>
+                                <!-- CKEditor Media Files (CSS/JS) -->
+                                {{ form.media }}
+                                <!-- CKEditor Widget -->
+                                {{ form.content }}
+                                <small class="text-muted">
+                                    <i class="bi bi-lightbulb me-1"></i>
+                                    <strong>Use the rich text editor above:</strong> Add headings, format text, insert images, create lists, add links, and more using the toolbar.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FEATURED IMAGE SECTION -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-image me-2"></i>Featured Image</h6>
+
+                        <div class="row">
+                            <!-- Upload Image -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Upload Featured Image</label>
+                                {{ form.featured_image }}
+                                <small class="text-muted d-block mt-1">
+                                    Recommended: 800x400px or 16:9 ratio, Max: 2MB
+                                </small>
+                            </div>
+
+                            <!-- OR Image URL -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">OR Image URL</label>
+                                {{ form.featured_image_url }}
+                                <small class="text-muted d-block mt-1">
+                                    Provide external image URL if not uploading
+                                </small>
+                            </div>
+
+                            <!-- Image Preview -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Image Preview</label>
+                                <div>
+                                    <img id="imagePreview" class="preview-image" alt="Image Preview">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DISPLAY SETTINGS SECTION -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-gear me-2"></i>Display Settings</h6>
+
+                        <div class="row">
+                            <!-- Order -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Display Order</label>
+                                {{ form.order }}
+                                <small class="text-muted d-block mt-1">
+                                    Lower numbers appear first (0 = highest priority)
+                                </small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <!-- Empty space for layout -->
+                            </div>
+
+                            <!-- Active Status -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="id_is_active">
+                                        <strong>Active</strong>
+                                        <small class="text-muted d-block">Page will be visible on website</small>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Featured -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    {{ form.is_featured }}
+                                    <label class="form-check-label" for="id_is_featured">
+                                        <strong>Featured</strong>
+                                        <small class="text-muted d-block">Highlight this page prominently</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BUTTONS -->
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Create Page
+                        </button>
+                        <a href="{% url 'main_app:admin_admission_abroad_pages_by_subcategory' subcategory.id %}" 
+                           class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Character counters
+    const titleInput = document.querySelector('input[name="title"]');
+    const titleCount = document.getElementById('titleCount');
+    const summaryInput = document.querySelector('textarea[name="summary"]');
+    const summaryCount = document.getElementById('summaryCount');
+
+    if (titleInput) {
+        titleInput.addEventListener('input', function () {
+            titleCount.textContent = this.value.length;
+        });
+        titleCount.textContent = titleInput.value.length;
+    }
+
+    if (summaryInput) {
+        summaryInput.addEventListener('input', function () {
+            summaryCount.textContent = this.value.length;
+        });
+        summaryCount.textContent = summaryInput.value.length;
+    }
+
+    // Image preview functionality
+    const imageUpload = document.querySelector('input[name="featured_image"]');
+    const imageUrl = document.querySelector('input[name="featured_image_url"]');
+    const imagePreview = document.getElementById('imagePreview');
+
+    function updatePreview(src) {
+        if (src) {
+            imagePreview.src = src;
+            imagePreview.style.display = 'block';
+        } else {
+            imagePreview.style.display = 'none';
+        }
+    }
+
+    if (imageUpload) {
+        imageUpload.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Check file size (2MB limit)
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('File size should not exceed 2MB');
+                    this.value = '';
+                    imagePreview.style.display = 'none';
+                    return;
+                }
+                
+                // Check file type
+                if (!file.type.startsWith('image/')) {
+                    alert('Please upload an image file');
+                    this.value = '';
+                    imagePreview.style.display = 'none';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    updatePreview(e.target.result);
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    if (imageUrl) {
+        imageUrl.addEventListener('input', function () {
+            updatePreview(this.value);
+        });
+    }
+
+    // Auto-generate slug from title
+    if (titleInput) {
+        const slugInput = document.querySelector('input[name="slug"]');
+        if (slugInput) {
+            titleInput.addEventListener('blur', function() {
+                if (!slugInput.value) {
+                    const slug = this.value
+                        .toLowerCase()
+                        .replace(/[^a-z0-9]+/g, '-')
+                        .replace(/^-+|-+$/g, '');
+                    slugInput.value = slug;
+                }
+            });
+        }
+    }
+
+    // Form submission confirmation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
+    });
+</script>
+{% endblock %}

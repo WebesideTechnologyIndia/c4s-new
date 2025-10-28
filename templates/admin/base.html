@@ -35,8 +35,11 @@
         }
 
         /* ==================== SIDEBAR ==================== */
+        /* ==================== SIDEBAR ==================== */
         .sidebar {
             min-height: 100vh;
+            max-height: 100vh;
+            /* ADD THIS - Fix maximum height to viewport */
             background: linear-gradient(135deg, var(--sidebar-bg) 0%, #1a252f 100%);
             color: white;
             position: fixed;
@@ -44,10 +47,16 @@
             top: 0;
             width: 260px;
             padding-top: 0;
+            padding-bottom: 20px;
+            /* ADD THIS - Add some bottom padding */
             overflow-y: auto;
             overflow-x: hidden;
             box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
             z-index: 1000;
+            display: flex;
+            /* ADD THIS */
+            flex-direction: column;
+            /* ADD THIS */
         }
 
         .sidebar::-webkit-scrollbar {
@@ -507,6 +516,18 @@
                             <i class="bi bi-chevron-down"></i>
                         </button>
                         <ul class="dropdown-menu-custom" id="admissionIndiaCards">
+                            <!-- <li class="nav-item">
+                                <a class="nav-link {% if 'admission-cards' in request.path %}active{% endif %}"
+                                    href="{% url 'main_app:admin_cards_list' %}">
+                                    <i class="bi bi-building"></i> Home Cards
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if 'admission-cards' in request.path %}active{% endif %}"
+                                    href="{% url 'main_app:admin_counselling_cards_list' %}">
+                                    <i class="bi bi-building"></i> Admission Counselling Cards list
+                                </a>
+                            </li> -->
                             <li class="nav-item">
                                 <a class="nav-link {% if 'admission-cards' in request.path %}active{% endif %}"
                                     href="{% url 'main_app:admin_admission_cards_list' %}">
@@ -526,31 +547,31 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                        <button class="nav-dropdown" onclick="toggleDropdown(event, 'quotaAdmission')">
-                            <span><i class="bi bi-check-circle"></i> Management Quota</span>
-                            <i class="bi bi-chevron-down"></i>
-                        </button>
-                        <ul class="dropdown-menu-custom" id="quotaAdmission">
-                            <li class="nav-item">
-                                <a class="nav-link {% if 'management-quota-colleges' in request.path %}active{% endif %}"
-                                    href="{% url 'main_app:admin_management_quota_colleges' %}">
-                                    <i class="bi bi-building"></i> Colleges
-                                </a>
+                                <button class="nav-dropdown" onclick="toggleDropdown(event, 'quotaAdmission')">
+                                    <span><i class="bi bi-check-circle"></i> Management Quota</span>
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                                <ul class="dropdown-menu-custom" id="quotaAdmission">
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'management-quota-colleges' in request.path %}active{% endif %}"
+                                            href="{% url 'main_app:admin_management_quota_colleges' %}">
+                                            <i class="bi bi-building"></i> Colleges
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'management-quota-applications' in request.path and 'detail' not in request.path %}active{% endif %}"
+                                            href="{% url 'main_app:admin_management_quota_applications' %}">
+                                            <i class="bi bi-file-earmark"></i> Applications
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'management-quota-manage' in request.path %}active{% endif %}"
+                                            href="{% url 'main_app:admin_management_quota_notifications' %}">
+                                            <i class="bi bi-bell"></i> Notifications & Allocation
+                                        </a>
+                                    </li>
+                                </ul>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if 'management-quota-applications' in request.path and 'detail' not in request.path %}active{% endif %}"
-                                    href="{% url 'main_app:admin_management_quota_applications' %}">
-                                    <i class="bi bi-file-earmark"></i> Applications
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if 'management-quota-manage' in request.path %}active{% endif %}"
-                                    href="{% url 'main_app:admin_management_quota_notifications' %}">
-                                    <i class="bi bi-bell"></i> Notifications & Allocation
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
                         </ul>
                     </li>
                     <li class="nav-item">
@@ -718,7 +739,7 @@
             if (activeLink) {
                 const dropdown = activeLink.closest('.dropdown-menu-custom');
                 let current = dropdown;
-                
+
                 while (current) {
                     current.classList.add('show');
                     const button = current.previousElementSibling;

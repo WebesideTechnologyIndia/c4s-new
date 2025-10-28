@@ -10,9 +10,7 @@
             <a href="{% url 'main_app:admin_all_india_cards_list' %}">All India Cards</a>
         </li>
         <li class="breadcrumb-item">
-            <a href="{% url 'main_app:admin_sub_categories_by_card' sub_category.parent_card.id %}">
-                {{ sub_category.parent_card.title }}
-            </a>
+          
         </li>
         <li class="breadcrumb-item active">{{ sub_category.title }} - Pages</li>
     </ol>

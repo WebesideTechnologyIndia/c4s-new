@@ -16,6 +16,8 @@ from .forms import (
     AdmissionIndiaCardForm
 )
 from django.views.decorators.cache import never_cache
+
+
 # ==================== HELPER FUNCTION ====================
 def is_admin_or_staff(user):
     """Check if user is staff or superuser"""
@@ -23,6 +25,7 @@ def is_admin_or_staff(user):
 
 
 # ==================== PUBLIC VIEWS ====================
+
 
 def home_view(request):
     """Home page view with dynamic cards"""
@@ -526,11 +529,11 @@ def all_india_services_view(request):
         messages.info(request, 'Admins can access from admin panel.')
         return redirect('main_app:admin_dashboard')
     
-    cards = AllIndiaServiceCard.objects.filter(is_active=True)
+    # Cards alphabetically sorted by title (A to Z)
+    cards = AllIndiaServiceCard.objects.filter(is_active=True).order_by('title')
+    
     context = {'cards': cards}
     return render(request, 'all_india_services.html', context)
-
-
 # ==================== ADMIN VIEWS ====================
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -589,10 +592,6 @@ def admin_all_india_card_delete(request, card_id):
         return redirect('main_app:admin_all_india_cards_list')
     
     return render(request, 'admin/all_india_card_delete.html', {'card': card})
-
-
-
-
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -1006,6 +1005,7 @@ def admin_distance_education_cards_list(request):
     cards = DistanceEducationCard.objects.all()
     return render(request, 'admin/distance_education_cards_list.html', {'cards': cards})
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -1029,6 +1029,7 @@ def admin_distance_education_card_add(request):
     
     return render(request, 'admin/distance_education_card_form.html', {'form': form})
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -1043,6 +1044,8 @@ def admin_distance_education_card_edit(request, card_id):
     else:
         form = DistanceEducationCardForm(instance=card)
     return render(request, 'admin/distance_education_card_form.html', {'form': form, 'card': card})
+
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -1251,23 +1254,66 @@ def load_states(request):
     return JsonResponse(list(states), safe=False)
 
 
+from django.shortcuts import render, redirect
+from django.contrib.auth import login
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.urls import reverse
+
+
+
+from django.shortcuts import render, redirect
+from django.contrib.auth import login
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import User
+from django.contrib import messages
+from .models import Country, State  # Import your models
+
+from django.shortcuts import render, redirect
+from django.contrib.auth import login
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import User
+from django.contrib import messages
+from .models import Country, State
+
 # ==================== USER REGISTRATION ====================
 def user_register_view(request):
-    """User Registration with Country/State"""
+    """User Registration with Country Filtering based on 'next' URL"""
+    
     if request.user.is_authenticated:
         if request.user.is_staff or request.user.is_superuser:
             return redirect('main_app:admin_dashboard')
         return redirect('main_app:admission_india_services')
     
+    # ✅ Get parameters
+    source_page = request.GET.get('from', 'direct')
+    next_url = request.GET.get('next', None)
+    
+    # ✅ Determine country filter based on 'next' URL
+    country_filter = 'all'  # Default
+    
+    if next_url:
+        if 'admission-india' in next_url:
+            country_filter = 'india_only'
+        elif 'admission-abroad' in next_url:
+            country_filter = 'exclude_india'
+    
     if request.method == 'POST':
-        form = UserRegistrationForm(request.POST)
+        # ✅ Pass country_filter to form
+        form = UserRegistrationForm(
+            request.POST, 
+            country_filter=request.POST.get('country_filter', country_filter)
+        )
+        
+        post_source = request.POST.get('source', source_page)
+        post_next = request.POST.get('next', next_url)
+        
         if form.is_valid():
-            # Save registration
             registration = form.save(commit=False)
             registration.password = make_password(form.cleaned_data['password'])
             registration.save()
             
-            # Create Django User
             user = User.objects.create_user(
                 username=registration.email,
                 email=registration.email,
@@ -1276,16 +1322,34 @@ def user_register_view(request):
             registration.user = user
             registration.save()
             
-            # Auto login
             login(request, user)
-            messages.success(request, f'Welcome {registration.name}! Registration successful.')
-            return redirect('main_app:admission_india_services')
+            
+            # ✅ Debug logs
+            # print(f"✅ User registered: {registration.email}")
+            # print(f"📍 Source: {post_source}")
+            # print(f"🔗 Next URL: {post_next}")
+            # print(f"🌍 Country Filter: {country_filter}")
+            
+            messages.success(request, f'Welcome {registration.name}!')
+            
+            if post_next:
+                return redirect(post_next)
+            else:
+                return redirect('main_app:admission_india_services')
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = UserRegistrationForm()
+        # ✅ Pass country_filter to form
+        form = UserRegistrationForm(country_filter=country_filter)
     
-    return render(request, 'user/register.html', {'form': form})
+    context = {
+        'form': form,
+        'source_page': source_page,
+        'next_url': next_url,
+        'country_filter': country_filter,  # For debugging
+    }
+    
+    return render(request, 'user/register.html', context)
 
 
 #@never_cache ==================== ADMIN - COUNTRIES ====================
@@ -1984,6 +2048,8 @@ def admin_sub_category_add(request):
     }
     return render(request, 'admin/sub_category_add.html', context)
 
+
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -1992,7 +2058,6 @@ def admin_sub_category_edit(request, pk):
     sub_category = get_object_or_404(SubCategory, pk=pk)
     
     if request.method == 'POST':
-        sub_category.parent_card_id = request.POST.get('parent_card')
         sub_category.title = request.POST.get('title')
         sub_category.slug = request.POST.get('slug')
         sub_category.description = request.POST.get('description')
@@ -2000,6 +2065,13 @@ def admin_sub_category_edit(request, pk):
         sub_category.icon_color = request.POST.get('icon_color')
         sub_category.order = request.POST.get('order') or 0
         sub_category.is_active = request.POST.get('is_active') == 'on'
+        
+        # ✅ NEW: Save state and course filters
+        state_id = request.POST.get('state')
+        sub_category.state_id = state_id if state_id else None
+        
+        course = request.POST.get('course')
+        sub_category.course = course if course else None
         
         if request.FILES.get('icon_image'):
             sub_category.icon_image = request.FILES.get('icon_image')
@@ -2011,11 +2083,36 @@ def admin_sub_category_edit(request, pk):
     
     parent_cards = AllIndiaServiceCard.objects.filter(is_active=True).order_by('title')
     
+    # ✅ Get states for dropdown
+    states = State.objects.all().order_by('name')
+    
+    # ✅ Get courses - You need to define COURSE_CHOICES somewhere
+    # Option 1: If you have it in a model
+    # from .models import Course
+    # courses = Course.COURSE_CHOICES
+    
+    # Option 2: Define it here temporarily
+    courses = [
+        ('btech', 'B.Tech'),
+        ('mtech', 'M.Tech'),
+        ('bba', 'BBA'),
+        ('mba', 'MBA'),
+        ('bca', 'BCA'),
+        ('mca', 'MCA'),
+        ('bsc', 'B.Sc'),
+        ('msc', 'M.Sc'),
+        ('ba', 'B.A'),
+        ('ma', 'M.A'),
+    ]
+    
     context = {
-        'sub_category': sub_category,
+        'subcategory': sub_category,  # ✅ Changed to match template
         'parent_cards': parent_cards,
+        'states': states,
+        'courses': courses,
     }
     return render(request, 'admin/sub_category_edit.html', context)
+
 
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -2042,6 +2139,7 @@ def admin_content_pages_list(request):
         'pages': pages,
     }
     return render(request, 'admin/content_pages_list.html', context)
+
 
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -2249,6 +2347,10 @@ def admin_content_pages_by_subcategory(request, subcategory_id):
     }
     return render(request, 'admin/content_pages_by_subcategory.html', context)
 
+
+
+
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -2257,49 +2359,30 @@ def admin_content_page_add_for_subcategory(request, subcategory_id):
     sub_category = get_object_or_404(SubCategory, pk=subcategory_id)
     
     if request.method == 'POST':
-        # Same as admin_content_page_add but sub_category is pre-selected
-        title = request.POST.get('title')
-        slug = request.POST.get('slug')
-        summary = request.POST.get('summary')
-        content = request.POST.get('content')
-        featured_image_url = request.POST.get('featured_image_url')
-        meta_description = request.POST.get('meta_description')
-        meta_keywords = request.POST.get('meta_keywords')
-        order = request.POST.get('order') or 0
-        is_active = request.POST.get('is_active') == 'on'
-        is_featured = request.POST.get('is_featured') == 'on'
+        form = ContentPageForm(request.POST, request.FILES)
         
-        featured_image = request.FILES.get('featured_image')
-        
-        try:
-            if not slug:
+        if form.is_valid():
+            page = form.save(commit=False)
+            page.sub_category = sub_category
+            page.created_by = request.user
+            
+            # Auto-generate slug if not provided
+            if not page.slug:
                 from django.utils.text import slugify
-                slug = slugify(title)
+                page.slug = slugify(page.title)
             
-            page = ContentPage.objects.create(
-                sub_category=sub_category,
-                title=title,
-                slug=slug,
-                summary=summary,
-                content=content,
-                featured_image=featured_image,
-                featured_image_url=featured_image_url,
-                meta_description=meta_description,
-                meta_keywords=meta_keywords,
-                order=order,
-                is_active=is_active,
-                is_featured=is_featured,
-                created_by=request.user
-            )
-            
-            messages.success(request, f"Page '{title}' added successfully!")
+            page.save()
+            messages.success(request, f"Page '{page.title}' added successfully!")
             return redirect('main_app:admin_content_pages_by_subcategory', subcategory_id=subcategory_id)
-            
-        except Exception as e:
-            messages.error(request, f"Error: {str(e)}")
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        # Pre-fill sub_category in the form
+        form = ContentPageForm(initial={'sub_category': sub_category})
     
     context = {
         'sub_category': sub_category,
+        'form': form,
     }
 
     return render(request, 'admin/content_page_add.html', context)
@@ -2679,30 +2762,24 @@ def subcategory_detail_view(request, card_slug, subcategory_path):
 
 # views.py - YE VIEW UPDATE KARO
 
-@never_cache
+from django.http import Http404
+
 @login_required(login_url='main_app:user_login')
 def page_detail_view(request, card_slug, subcategory_path, page_slug):
     """
-    Student side - Show full page content
-    URL: /counselling-services-all-india/engineering/admission-process/rahul/
+    Show individual page OR redirect to subcategory if page doesn't exist
     """
-    if request.user.is_staff or request.user.is_superuser:
-        return redirect('main_app:admin_dashboard')
+    card = get_object_or_404(AllIndiaServiceCard, 
+                            redirect_link__icontains=card_slug, 
+                            is_active=True)
     
-    # ✅ Get card
-    card = get_object_or_404(
-        AllIndiaServiceCard, 
-        redirect_link__icontains=card_slug, 
-        is_active=True
-    )
+    # Parse path
+    slugs = subcategory_path.strip('/').split('/')
     
-    # ✅ Parse nested path to find subcategory
-    path_parts = subcategory_path.strip('/').split('/')
-    
+    # Navigate to find current subcategory
     current_subcategory = None
-    for slug in path_parts:
+    for slug in slugs:
         if current_subcategory is None:
-            # First level
             current_subcategory = get_object_or_404(
                 SubCategory,
                 slug=slug,
@@ -2711,7 +2788,6 @@ def page_detail_view(request, card_slug, subcategory_path, page_slug):
                 is_active=True
             )
         else:
-            # Nested level
             current_subcategory = get_object_or_404(
                 SubCategory,
                 slug=slug,
@@ -2719,45 +2795,48 @@ def page_detail_view(request, card_slug, subcategory_path, page_slug):
                 is_active=True
             )
     
-    # ✅ Get the page
-    page = get_object_or_404(
-        ContentPage, 
-        sub_category=current_subcategory,
-        slug=page_slug, 
-        is_active=True
-    )
+    # ✅ TRY: Find page first
+    try:
+        page = ContentPage.objects.get(
+            sub_category=current_subcategory,
+            slug=page_slug,
+            is_active=True
+        )
+        
+        # Page found - show it
+        page.views_count += 1
+        page.save()
+        
+        context = {
+            'page': page,
+            'card': card,
+            'sub_category': current_subcategory,
+            'breadcrumb': current_subcategory.get_breadcrumb(),
+        }
+        return render(request, 'student/page_detail.html', context)
     
-    # Increment view count
-    page.increment_views()
-    
-    # Get related pages (same sub-category)
-    related_pages = ContentPage.objects.filter(
-        sub_category=current_subcategory,
-        is_active=True
-    ).exclude(id=page.id).order_by('order')[:5]
-    
-    # ✅ Split meta_keywords into tags
-    tags = []
-    if page.meta_keywords:
-        tags = [tag.strip() for tag in page.meta_keywords.split(',') if tag.strip()]
-    
-    context = {
-        'card': card,
-        'sub_category': current_subcategory,
-        'page': page,
-        'related_pages': related_pages,
-        'breadcrumb': current_subcategory.get_breadcrumb() if hasattr(current_subcategory, 'get_breadcrumb') else [],
-        'tags': tags,  # ✅ Add tags to context
-    }
-    
-    return render(request, 'student/page_detail.html', context)
+    except ContentPage.DoesNotExist:
+        # ✅ FALLBACK: Check if page_slug is actually a nested subcategory
+        try:
+            nested_sub = SubCategory.objects.get(
+                slug=page_slug,
+                parent_subcategory=current_subcategory,
+                is_active=True
+            )
+            
+            # It's a subcategory! Redirect to subcategory view
+            full_path = f"{subcategory_path}/{page_slug}/"
+            return redirect('main_app:subcategory_detail_view', 
+                          card_slug=card_slug, 
+                          subcategory_path=full_path)
+        
+        except SubCategory.DoesNotExist:
+            # Neither page nor subcategory - show 404
+            raise Http404("Content not found")
 
 
 # abroad india 
-
-
 # views.py mein add karo
-
 # Admin - Sub-categories by Card
 # Add these views to your views.py (REPLACE the incomplete admission abroad section at the bottom)
 
@@ -2765,20 +2844,25 @@ from .models import AdmissionAbroadCard, AdmissionAbroadSubCategory, AdmissionAb
 from .forms import AdmissionAbroadCardForm, AdmissionAbroadSubCategoryForm, AdmissionAbroadPageForm
 
 # ==================== PUBLIC VIEW (LOGIN REQUIRED) ====================
+# ==================== PUBLIC VIEW (LOGIN REQUIRED) ====================
+# ==================== PUBLIC VIEW (LOGIN REQUIRED) ====================
+# ==================== PUBLIC VIEW (LOGIN REQUIRED) ====================
+# ==================== PUBLIC VIEW (LOGIN REQUIRED) ====================
+
 @never_cache
 @login_required(login_url='main_app:user_login')
 def admission_abroad_view(request):
     """Admission Abroad Services Page - LOGIN REQUIRED"""
     if request.user.is_staff or request.user.is_superuser:
         messages.info(request, 'Admins can access from admin panel.')
-        return redirect('main_app:admin_dashboard')
-    
+        return redirect('main_app:admin_dashboard')    
     cards = AdmissionAbroadCard.objects.filter(is_active=True).order_by('order')
     context = {'cards': cards}
     return render(request, 'admission_abroad.html', context)
 
-
 # ==================== ADMIN: CARDS MANAGEMENT ====================
+
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -2963,14 +3047,14 @@ def admin_admission_abroad_page_add(request, subcategory_id):
             messages.success(request, 'Page added successfully!')
             return redirect('main_app:admin_admission_abroad_pages_by_subcategory', subcategory_id=subcategory_id)
     else:
-        form = AdmissionAbroadPageForm()
+        # Pre-fill the subcategory
+        form = AdmissionAbroadPageForm(initial={'sub_category': subcategory})
     
     context = {
         'form': form,
         'subcategory': subcategory,
     }
     return render(request, 'admin/admission_abroad_page_form.html', context)
-
 
 # ==================== STUDENT: FRONTEND VIEWS ====================
 
@@ -3587,9 +3671,17 @@ def admin_distance_education_page_add(request, subcategory_id):
             page = form.save(commit=False)
             page.sub_category = subcategory
             page.created_by = request.user
+            
+            # Auto-generate slug if not provided
+            if not page.slug:
+                from django.utils.text import slugify
+                page.slug = slugify(page.title)
+            
             page.save()
             messages.success(request, 'Page added successfully!')
             return redirect('main_app:admin_distance_education_pages_by_subcategory', subcategory_id=subcategory_id)
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = DistanceEducationPageForm()
     
@@ -3598,8 +3690,6 @@ def admin_distance_education_page_add(request, subcategory_id):
         'subcategory': subcategory,
     }
     return render(request, 'admin/distance_education_page_form.html', context)
-
-
 # ==================== STUDENT: FRONTEND VIEWS ====================
 
 # views.py mein distance_education_card_detail UPDATE karo
@@ -4006,9 +4096,17 @@ def admin_online_education_page_add(request, subcategory_id):
             page = form.save(commit=False)
             page.sub_category = subcategory
             page.created_by = request.user
+            
+            # Auto-generate slug if not provided
+            if not page.slug:
+                from django.utils.text import slugify
+                page.slug = slugify(page.title)
+            
             page.save()
             messages.success(request, 'Page added successfully!')
             return redirect('main_app:admin_online_education_pages_by_subcategory', subcategory_id=subcategory_id)
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = OnlineEducationPageForm()
     
@@ -4017,7 +4115,6 @@ def admin_online_education_page_add(request, subcategory_id):
         'subcategory': subcategory,
     }
     return render(request, 'admin/online_education_page_form.html', context)
-
 
 # ==================== STUDENT: FRONTEND VIEWS ====================
 
