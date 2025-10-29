@@ -3189,17 +3189,41 @@ def admission_abroad_subcategory_detail(request, card_slug, subcategory_path):
 def admission_abroad_page_detail(request, card_slug, subcategory_path, page_slug):
     """Student: Display full page content OR child subcategory"""
     
+    print("="*50)
+    print(f"🔍 VIEW CALLED: admission_abroad_page_detail")
+    print(f"📌 card_slug: {card_slug}")
+    print(f"📌 subcategory_path: {subcategory_path}")
+    print(f"📌 page_slug: {page_slug}")
+    print("="*50)
+    
     card = get_object_or_404(AdmissionAbroadCard, slug=card_slug, is_active=True)
     
     # Get subcategory from path
     path_parts = subcategory_path.strip('/').split('/')
     current_slug = path_parts[-1]
     
+    print(f"🔍 Looking for subcategory with slug: {current_slug}")
+    
     subcategory = get_object_or_404(
         AdmissionAbroadSubCategory,
         slug=current_slug,
         is_active=True
     )
+    
+    print(f"✅ Subcategory found: {subcategory}")
+    
+    # ✅ GET USER REGISTRATION (NOT student_profile!)
+    from main_app.models import UserRegistration
+    
+    user_registration = None
+    try:
+        user_registration = UserRegistration.objects.get(user=request.user)
+        print(f"✅ UserRegistration found: {user_registration.name}")
+        print(f"   Country: {user_registration.country}")
+        print(f"   State: {user_registration.state}")
+        print(f"   Course: {user_registration.course}")
+    except UserRegistration.DoesNotExist:
+        print(f"⚠️ No UserRegistration found for user")
     
     # PEHLE CHECK KARO - KYA YEH EK PAGE HAI?
     try:
@@ -3209,7 +3233,9 @@ def admission_abroad_page_detail(request, card_slug, subcategory_path, page_slug
             is_active=True
         )
         
-        # Agar page mil gaya, page render karo
+        print(f"✅ PAGE FOUND: {page}")
+        print(f"📄 Rendering template: student/admission_abroad_page_detail.html")
+        
         page.increment_views()
         
         related_pages = subcategory.content_pages.filter(
@@ -3227,7 +3253,9 @@ def admission_abroad_page_detail(request, card_slug, subcategory_path, page_slug
         return render(request, 'student/admission_abroad_page_detail.html', context)
     
     except AdmissionAbroadPage.DoesNotExist:
-        # Agar page nahi mila, CHECK KARO - KYA YEH CHILD SUBCATEGORY HAI?
+        print(f"❌ PAGE NOT FOUND")
+        print(f"🔍 Checking if it's a CHILD SUBCATEGORY...")
+        
         try:
             child_subcategory = AdmissionAbroadSubCategory.objects.get(
                 slug=page_slug,
@@ -3235,11 +3263,45 @@ def admission_abroad_page_detail(request, card_slug, subcategory_path, page_slug
                 is_active=True
             )
             
-            # ✅ DIRECT RENDER KARO - REDIRECT MAT KARO!
-            children = child_subcategory.get_children()
+            print(f"✅ CHILD SUBCATEGORY FOUND: {child_subcategory}")
+            print(f"📄 Rendering template: student/admission_abroad_subcategory_detail.html")
+            
+            # ✅ FILTERING LOGIC - Country & Course based
+            from django.db.models import Q
+            
+            children_query = child_subcategory.children.filter(is_active=True)
+            
+            if user_registration:
+                print(f"🔍 Applying filters:")
+                print(f"   User Country: {user_registration.country}")
+                print(f"   User State: {user_registration.state}")
+                print(f"   User Course: {user_registration.course}")
+                
+                # COUNTRY FILTER
+                children_query = children_query.filter(
+                    Q(target_country__isnull=True) | 
+                    Q(target_country=user_registration.country)
+                )
+                
+                # STATE FILTER (optional - if you want to filter by state too)
+                children_query = children_query.filter(
+                    Q(student_state__isnull=True) | 
+                    Q(student_state=user_registration.state)
+                )
+                
+                # COURSE FILTER
+                children_query = children_query.filter(
+                    Q(course__isnull=True) | 
+                    Q(course=user_registration.course)
+                )
+                
+                print(f"✅ Filtered children count: {children_query.count()}")
+            else:
+                print(f"⚠️ No user registration - showing all children")
+            
+            children = children_query.order_by('order')
             pages = child_subcategory.content_pages.filter(is_active=True).order_by('order')
             
-            # Build proper current path
             current_path = f"{subcategory_path.rstrip('/')}/{page_slug}"
             
             context = {
@@ -3254,10 +3316,17 @@ def admission_abroad_page_detail(request, card_slug, subcategory_path, page_slug
             return render(request, 'student/admission_abroad_subcategory_detail.html', context)
         
         except AdmissionAbroadSubCategory.DoesNotExist:
-            # Dono nahi mile - 404 raise karo
+            print(f"❌ CHILD SUBCATEGORY ALSO NOT FOUND")
+            print(f"🚫 Raising 404")
             raise Http404("Page or Subcategory not found")
 
+
+
+
 # views.py mein UPDATE karo
+
+
+
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
