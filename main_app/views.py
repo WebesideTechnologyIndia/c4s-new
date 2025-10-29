@@ -3181,13 +3181,17 @@ def admission_abroad_subcategory_detail(request, card_slug, subcategory_path):
     }
     
     return render(request, 'student/admission_abroad_subcategory_detail.html', context)
+
+
+
 @never_cache
 @login_required(login_url='main_app:user_login')
 def admission_abroad_page_detail(request, card_slug, subcategory_path, page_slug):
-    """Student: Display full page content"""
+    """Student: Display full page content OR child subcategory"""
+    
     card = get_object_or_404(AdmissionAbroadCard, slug=card_slug, is_active=True)
     
-    # Get subcategory
+    # Get subcategory from path
     path_parts = subcategory_path.strip('/').split('/')
     current_slug = path_parts[-1]
     
@@ -3197,33 +3201,61 @@ def admission_abroad_page_detail(request, card_slug, subcategory_path, page_slug
         is_active=True
     )
     
-    # Get page
-    page = get_object_or_404(
-        AdmissionAbroadPage,
-        sub_category=subcategory,
-        slug=page_slug,
-        is_active=True
-    )
+    # PEHLE CHECK KARO - KYA YEH EK PAGE HAI?
+    try:
+        page = AdmissionAbroadPage.objects.get(
+            sub_category=subcategory,
+            slug=page_slug,
+            is_active=True
+        )
+        
+        # Agar page mil gaya, page render karo
+        page.increment_views()
+        
+        related_pages = subcategory.content_pages.filter(
+            is_active=True
+        ).exclude(id=page.id).order_by('order')[:5]
+        
+        context = {
+            'card': card,
+            'subcategory': subcategory,
+            'page': page,
+            'related_pages': related_pages,
+            'breadcrumb': subcategory.get_breadcrumb(),
+        }
+        
+        return render(request, 'student/admission_abroad_page_detail.html', context)
     
-    # Increment views
-    page.increment_views()
-    
-    # Related pages
-    related_pages = subcategory.content_pages.filter(
-        is_active=True
-    ).exclude(id=page.id).order_by('order')[:5]
-    
-    context = {
-        'card': card,
-        'subcategory': subcategory,
-        'page': page,
-        'related_pages': related_pages,
-        'breadcrumb': subcategory.get_breadcrumb(),
-    }
-    
-    return render(request, 'student/admission_abroad_page_detail.html', context)
-
-
+    except AdmissionAbroadPage.DoesNotExist:
+        # Agar page nahi mila, CHECK KARO - KYA YEH CHILD SUBCATEGORY HAI?
+        try:
+            child_subcategory = AdmissionAbroadSubCategory.objects.get(
+                slug=page_slug,
+                parent_subcategory=subcategory,
+                is_active=True
+            )
+            
+            # ✅ DIRECT RENDER KARO - REDIRECT MAT KARO!
+            children = child_subcategory.get_children()
+            pages = child_subcategory.content_pages.filter(is_active=True).order_by('order')
+            
+            # Build proper current path
+            current_path = f"{subcategory_path.rstrip('/')}/{page_slug}"
+            
+            context = {
+                'card': card,
+                'subcategory': child_subcategory,
+                'children': children,
+                'pages': pages,
+                'current_path': current_path,
+                'breadcrumb': child_subcategory.get_breadcrumb(),
+            }
+            
+            return render(request, 'student/admission_abroad_subcategory_detail.html', context)
+        
+        except AdmissionAbroadSubCategory.DoesNotExist:
+            # Dono nahi mile - 404 raise karo
+            raise Http404("Page or Subcategory not found")
 
 # views.py mein UPDATE karo
 
