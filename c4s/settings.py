@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-i496jvbl9^v-s*v9gqbz+=)^137bpvkjv^%3_5%xxv^r_*34#i
 DEBUG = True
 
 # ALLOWED_HOSTS
-ALLOWED_HOSTS = ['c4s.webesidetechnology.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['c4s.webesidetechnology.com', 'localhost', '127.0.0.1','192.168.1.5']
 
 # CSRF Settings
 CSRF_TRUSTED_ORIGINS = [

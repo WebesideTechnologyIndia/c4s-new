@@ -878,8 +878,12 @@ class OnlineEducationSubCategory(models.Model):
                 return False
         
         return True  # All filters passed
-    
+
+
+
 from ckeditor_uploader.fields import RichTextUploadingField
+
+
 
 class OnlineEducationPage(models.Model):
     """Content pages for Online Education subcategories"""
@@ -939,6 +943,8 @@ class OnlineEducationPage(models.Model):
 
 from django.db import models
 from django.contrib.auth.models import User
+
+
 
 # ==================== COUNTRY MODEL ====================
 class Country(models.Model):
@@ -1294,7 +1300,9 @@ class SubCategory(models.Model):
             current = current.parent_subcategory
         
         return '/'.join(path)
-    
+
+
+
 from ckeditor_uploader.fields import RichTextUploadingField
 
 
@@ -1542,6 +1550,7 @@ class AdmissionAbroadPage(models.Model):
 
 
 # ==================== STUDENT CARD PURCHASE MODEL ====================
+
 class StudentCardPurchase(models.Model):
     """Model to track student card purchases"""
     

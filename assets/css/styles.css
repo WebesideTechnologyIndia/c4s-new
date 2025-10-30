@@ -7583,10 +7583,10 @@ ul.edu_list li {
 }
 
 .card-section {
-	/* display: flex; */
+	display: flex;
 	align-items: center;
 	justify-content: center;
-height:16.5rem;
+/* height:16.5rem; */
 }
 
 .card-section:hover{
@@ -7611,7 +7611,7 @@ height:16.5rem;
 /* Responsive */
 @media (max-width: 768px) {
 	.main-hero-image {
-		grid-template-columns: 1fr;
+		/* grid-template-columns: 1fr; */
 		grid-template-rows: auto;
         /* border: 1px solid #000; */
         height: 25rem;
@@ -7632,7 +7632,7 @@ height:16.5rem;
 
 @media (max-width: 422px) {
 	.main-hero-image {
-		grid-template-columns: 1fr;
+		/* grid-template-columns: 1fr; */
 		grid-template-rows: auto;
         /* border: 1px solid #000; */
         height: 25rem;
@@ -7654,7 +7654,7 @@ height:16.5rem;
 
 @media (max-width: 350px) {
 	.main-hero-image {
-		grid-template-columns: 1fr;
+		/* grid-template-columns: 1fr; */
 		grid-template-rows: auto;
         /* border: 1px solid #000; */
         height: 25rem;

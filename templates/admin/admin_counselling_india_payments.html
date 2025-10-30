@@ -1,0 +1,177 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}
+    Student Card Payments Management
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <!-- Stats Cards -->
+    <div class="col-md-3 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h6 class="card-title">Total Payments</h6>
+                <h3 class="mb-0">{{ stats.total }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h6 class="card-title">Pending</h6>
+                <h3 class="mb-0">{{ stats.pending }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h6 class="card-title">Completed</h6>
+                <h3 class="mb-0">{{ stats.completed }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <h6 class="card-title">Failed</h6>
+                <h3 class="mb-0">{{ stats.failed }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-credit-card me-2"></i> Student Card Payments
+                    </h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Filters -->
+                <form method="GET" class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Search by name, email, transaction ID..." 
+                               value="{{ search_query }}">
+                    </div>
+                    <div class="col-md-3">
+                        <select name="status" class="form-select">
+                            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Status</option>
+                            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                            <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Failed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-funnel me-2"></i> Filter
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'main_app:admin_counselling_india_payments' %}" class="btn btn-secondary w-100">
+                            <i class="bi bi-x-circle me-2"></i> Clear
+                        </a>
+                    </div>
+                </form>
+
+                <!-- Payments Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student</th>
+                                <th>Card</th>
+                                <th>Amount</th>
+                                <th>Transaction ID</th>
+                                <th>Payment Method</th>
+                                <th>Status</th>
+                                <th>Purchase Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>
+                                    <div>
+                                        <strong>{{ payment.student.name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ payment.student.email }}</small>
+                                    </div>
+                                </td>
+                                <td>{{ payment.card.title }}</td>
+                                <td>
+                                    <strong class="text-success">₹{{ payment.amount }}</strong>
+                                </td>
+                                <td>
+                                    {% if payment.transaction_id %}
+                                        <code>{{ payment.transaction_id }}</code>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ payment.payment_method|default:"-" }}</td>
+                                <td>
+                                    {% if payment.payment_status == 'completed' %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle me-1"></i> Completed
+                                        </span>
+                                    {% elif payment.payment_status == 'pending' %}
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-clock me-1"></i> Pending
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-x-circle me-1"></i> Failed
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>{{ payment.purchased_at|date:"d M Y" }}</small>
+                                    <br>
+                                    <small class="text-muted">{{ payment.purchased_at|time:"h:i A" }}</small>
+                                </td>
+                                <td>
+                                    {% if payment.payment_status == 'pending' %}
+                                        <div class="btn-group" role="group">
+                                            <form method="POST" action="{% url 'main_app:approve_payment' payment.id %}" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-success" 
+                                                        onclick="return confirm('Are you sure you want to approve this payment?')">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{% url 'main_app:reject_payment' payment.id %}" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-danger" 
+                                                        onclick="return confirm('Are you sure you want to reject this payment?')">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-5">
+                                    <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                                    <p class="text-muted mt-3">No payments found</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

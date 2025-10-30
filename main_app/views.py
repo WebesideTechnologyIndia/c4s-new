@@ -1738,8 +1738,16 @@ def admin_comparison_delete(request, pk):
     return redirect('main_app:admin_comparisons_list')
 
 
+
+
+
+
 # ==================== STUDENT: VIEW COMPARISONS ====================
 # ==================== STUDENT: VIEW COMPARISONS ====================
+
+
+
+
 from django.db.models import Q
 @never_cache
 @login_required
@@ -1815,9 +1823,6 @@ def student_comparisons_list(request):
         'default_view': default_view,
     }
     return render(request, 'student/comparisons_list.html', context)
-
-
-
 
 
 from .models import StateWiseCounsellingUpdate
@@ -3244,19 +3249,6 @@ def admission_abroad_page_detail(request, card_slug, subcategory_path, page_slug
     
     print(f"✅ Subcategory found: {subcategory}")
     
-    # ✅ GET USER REGISTRATION (NOT student_profile!)
-    from main_app.models import UserRegistration
-    
-    user_registration = None
-    try:
-        user_registration = UserRegistration.objects.get(user=request.user)
-        print(f"✅ UserRegistration found: {user_registration.name}")
-        print(f"   Country: {user_registration.country}")
-        print(f"   State: {user_registration.state}")
-        print(f"   Course: {user_registration.course}")
-    except UserRegistration.DoesNotExist:
-        print(f"⚠️ No UserRegistration found for user")
-    
     # PEHLE CHECK KARO - KYA YEH EK PAGE HAI?
     try:
         page = AdmissionAbroadPage.objects.get(
@@ -3298,41 +3290,12 @@ def admission_abroad_page_detail(request, card_slug, subcategory_path, page_slug
             print(f"✅ CHILD SUBCATEGORY FOUND: {child_subcategory}")
             print(f"📄 Rendering template: student/admission_abroad_subcategory_detail.html")
             
-            # ✅ FILTERING LOGIC - Country & Course based
-            from django.db.models import Q
-            
-            children_query = child_subcategory.children.filter(is_active=True)
-            
-            if user_registration:
-                print(f"🔍 Applying filters:")
-                print(f"   User Country: {user_registration.country}")
-                print(f"   User State: {user_registration.state}")
-                print(f"   User Course: {user_registration.course}")
-                
-                # COUNTRY FILTER
-                children_query = children_query.filter(
-                    Q(target_country__isnull=True) | 
-                    Q(target_country=user_registration.country)
-                )
-                
-                # STATE FILTER (optional - if you want to filter by state too)
-                children_query = children_query.filter(
-                    Q(student_state__isnull=True) | 
-                    Q(student_state=user_registration.state)
-                )
-                
-                # COURSE FILTER
-                children_query = children_query.filter(
-                    Q(course__isnull=True) | 
-                    Q(course=user_registration.course)
-                )
-                
-                print(f"✅ Filtered children count: {children_query.count()}")
-            else:
-                print(f"⚠️ No user registration - showing all children")
-            
-            children = children_query.order_by('order')
+            # ✅ SAB KUCH DIKHAO - NO FILTERING!
+            children = child_subcategory.children.filter(is_active=True).order_by('order')
             pages = child_subcategory.content_pages.filter(is_active=True).order_by('order')
+            
+            print(f"✅ Total children: {children.count()}")
+            print(f"✅ Total pages: {pages.count()}")
             
             current_path = f"{subcategory_path.rstrip('/')}/{page_slug}"
             
@@ -4821,3 +4784,78 @@ def admin_management_quota_seat_allocation(request):
     }
     
     return render(request, 'admin/management_quota_seat_allocation.html', context)
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from django.db.models import Q
+from .models import StudentCardPurchase
+
+def admin_counselling_india_payments(request):
+    # Get filter parameters
+    status_filter = request.GET.get('status', 'all')
+    search_query = request.GET.get('search', '')
+    
+    # Base queryset with related data
+    payments = StudentCardPurchase.objects.select_related('student', 'card').all()
+    
+    # Apply status filter
+    if status_filter != 'all':
+        payments = payments.filter(payment_status=status_filter)
+    
+    # Apply search filter
+    if search_query:
+        payments = payments.filter(
+            Q(student__name__icontains=search_query) |
+            Q(student__email__icontains=search_query) |
+            Q(transaction_id__icontains=search_query) |
+            Q(card__title__icontains=search_query)
+        )
+    
+    # Payment status counts for dashboard
+    stats = {
+        'total': StudentCardPurchase.objects.count(),
+        'pending': StudentCardPurchase.objects.filter(payment_status='pending').count(),
+        'completed': StudentCardPurchase.objects.filter(payment_status='completed').count(),
+        'failed': StudentCardPurchase.objects.filter(payment_status='failed').count(),
+    }
+    
+    context = {
+        'payments': payments,
+        'stats': stats,
+        'status_filter': status_filter,
+        'search_query': search_query,
+    }
+    
+    return render(request, 'admin/admin_counselling_india_payments.html', context)
+
+
+def approve_payment(request, payment_id):
+    """Approve a pending payment"""
+    if request.method == 'POST':
+        payment = get_object_or_404(StudentCardPurchase, id=payment_id)
+        
+        if payment.payment_status == 'pending':
+            payment.payment_status = 'completed'
+            payment.payment_completed_at = timezone.now()
+            payment.save()
+            messages.success(request, f"Payment approved for {payment.student.name}")
+        else:
+            messages.warning(request, "Payment is not in pending status")
+    
+    return redirect('main_app:admin_counselling_india_payments')
+
+
+def reject_payment(request, payment_id):
+    """Reject a pending payment"""
+    if request.method == 'POST':
+        payment = get_object_or_404(StudentCardPurchase, id=payment_id)
+        
+        if payment.payment_status == 'pending':
+            payment.payment_status = 'failed'
+            payment.save()
+            messages.success(request, f"Payment rejected for {payment.student.name}")
+        else:
+            messages.warning(request, "Payment is not in pending status")
+    
+    return redirect('main_app:admin_counselling_india_payments')

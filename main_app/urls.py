@@ -651,6 +651,11 @@ urlpatterns = [
         views.student_notifications,
         name="student_notifications",
     ),
+
+
+path("admin_counselling_india_payments/", views.admin_counselling_india_payments, name="admin_counselling_india_payments"),
+path("approve_payment/<int:payment_id>/", views.approve_payment, name="approve_payment"),
+path("reject_payment/<int:payment_id>/", views.reject_payment, name="reject_payment"),
     # ⚠️ ==================== CATCH-ALL PATTERNS (LAST MEIN) ====================
     path(
         "<str:card_slug>/<path:subcategory_path>/<str:page_slug>/",
