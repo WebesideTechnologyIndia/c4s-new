@@ -1990,10 +1990,26 @@ from .models import AllIndiaServiceCard, SubCategory, ContentPage
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_sub_categories_list(request):
     """Admin dashboard - All sub-categories list"""
-    sub_categories = SubCategory.objects.all().order_by('parent_card', 'order')
+    # ✅ CHANGE: contentpage_set → content_pages
+    sub_categories = SubCategory.objects.all().select_related(
+        'parent_card', 'state', 'created_by'
+    ).prefetch_related('content_pages').order_by('parent_card', 'order')
+    
+    # Calculate stats
+    total_subcategories = sub_categories.count()
+    active_subcategories = sub_categories.filter(is_active=True).count()
+    inactive_subcategories = sub_categories.filter(is_active=False).count()
+    
+    # Count total pages across all sub-categories
+    from django.db.models import Count
+    total_pages = ContentPage.objects.count()
     
     context = {
         'sub_categories': sub_categories,
+        'total_subcategories': total_subcategories,
+        'active_subcategories': active_subcategories,
+        'inactive_subcategories': inactive_subcategories,
+        'total_pages': total_pages,
     }
     return render(request, 'admin/sub_categories_list.html', context)
 
@@ -2135,11 +2151,20 @@ def admin_content_pages_list(request):
     """Admin dashboard - All content pages list"""
     pages = ContentPage.objects.all().select_related('sub_category__parent_card').order_by('sub_category', 'order')
     
+    # Calculate stats
+    total_pages = pages.count()
+    active_pages = pages.filter(is_active=True).count()
+    featured_pages = pages.filter(is_featured=True).count()
+    inactive_pages = pages.filter(is_active=False).count()
+    
     context = {
         'pages': pages,
+        'total_pages': total_pages,
+        'active_pages': active_pages,
+        'featured_pages': featured_pages,
+        'inactive_pages': inactive_pages,
     }
     return render(request, 'admin/content_pages_list.html', context)
-
 
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -2270,6 +2295,8 @@ from .models import AllIndiaServiceCard, SubCategory, State, UserRegistration
 
 def is_admin_or_staff(user):
     return user.is_staff or user.is_superuser
+
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -2325,13 +2352,17 @@ def admin_sub_category_add_for_card(request, card_id):
         except Exception as e:
             messages.error(request, f"Error: {str(e)}")
     
-    # ✅ Pass states and courses to template
+    # ✅ Pass only Indian states and courses to template
     context = {
         'parent_card': parent_card,
-        'states': State.objects.filter(is_active=True).order_by('name'),
+        'states': State.objects.filter(is_active=True, country__name='India').order_by('name'),
         'courses': UserRegistration.COURSE_CHOICES,  # Course choices
     }
     return render(request, 'admin/sub_category_add.html', context)
+
+
+
+
 
 #@never_cache ==================== ADMIN: CONTENT PAGES BY SUB-CATEGORY ====================
 @login_required(login_url='main_app:admin_login')
@@ -2948,6 +2979,7 @@ def admin_admission_abroad_subcategories(request, card_id):
     
     return render(request, 'admin/admission_abroad_subcategories.html', context)
 
+
 # ==================== ADMIN: ADD SUBCATEGORY FOR CARD ====================
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -3439,8 +3471,10 @@ def admin_admission_abroad_nested_subcategory_add(request, parent_id):
     
     return render(request, 'admin/admission_abroad_subcategory_form.html', context)
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
+@user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
 def admin_admission_abroad_subcategory_edit(request, subcategory_id):
     """
     Edit an existing subcategory
@@ -3450,42 +3484,45 @@ def admin_admission_abroad_subcategory_edit(request, subcategory_id):
     parent_subcategory = subcategory.parent_subcategory
     
     if request.method == 'POST':
-        subcategory.title = request.POST.get('title')
-        slug = request.POST.get('slug', '').strip()
-        subcategory.slug = slug if slug else slugify(subcategory.title)
-        subcategory.description = request.POST.get('description', '')
-        subcategory.icon_url = request.POST.get('icon_url', '')
-        subcategory.icon_color = request.POST.get('icon_color', '#007bff')
-        subcategory.order = request.POST.get('order', 0)
-        subcategory.is_active = request.POST.get('is_active') == 'on'
-        
-        # Handle image upload
-        if request.FILES.get('icon_image'):
-            subcategory.icon_image = request.FILES['icon_image']
-        
-        subcategory.save()
-        
-        messages.success(request, f"Subcategory '{subcategory.title}' updated successfully!")
-        
-        # Redirect back to appropriate list
-        if parent_subcategory:
-            return redirect('main_app:admin_admission_abroad_nested_subcategories', parent_id=parent_subcategory.id)
-        else:
-            return redirect('main_app:admin_admission_abroad_subcategories', card_id=parent_card.id)
+        form = AdmissionAbroadSubCategoryForm(request.POST, request.FILES, instance=subcategory)
+        if form.is_valid():
+            subcategory = form.save(commit=False)
+            subcategory.created_by = request.user
+            subcategory.save()
+            
+            messages.success(request, f"Subcategory '{subcategory.title}' updated successfully!")
+            
+            # Redirect back to appropriate list
+            if parent_subcategory:
+                return redirect('main_app:admin_admission_abroad_nested_subcategories', parent_id=parent_subcategory.id)
+            else:
+                return redirect('main_app:admin_admission_abroad_subcategories', card_id=parent_card.id)
+    else:
+        # GET request - populate form with existing data
+        form = AdmissionAbroadSubCategoryForm(instance=subcategory)
     
     # Build breadcrumb
     breadcrumb = subcategory.get_breadcrumb() if hasattr(subcategory, 'get_breadcrumb') else []
     
     context = {
-        'form': {'instance': subcategory},
+        'form': form,
         'subcategory': subcategory,
         'parent_card': parent_card,
         'parent_subcategory': parent_subcategory,
         'breadcrumb': breadcrumb,
         'is_edit': True,
+        'card_id': parent_card.id if parent_card else None,
+        'parent_id': parent_subcategory.id if parent_subcategory else None,
+        
+        # ✅ YE NAMES TEMPLATE KE MATCH HONE CHAHIYE
+        'countries': Country.objects.filter(is_active=True).order_by('name'),
+        'states': State.objects.filter(is_active=True).order_by('name'),
+        'courses': UserRegistration.COURSE_CHOICES,  # ✅ YE ALREADY TUPLE LIST HAI
     }
     
     return render(request, 'admin/admission_abroad_subcategory_form.html', context)
+
+
 
 @never_cache
 @login_required(login_url='main_app:admin_login')

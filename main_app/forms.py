@@ -771,12 +771,13 @@ class ContentPageForm(forms.ModelForm):
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_featured': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
-# forms.py mein add karo
+# forms.py mein UPDATE karo
 
 class AdmissionAbroadSubCategoryForm(forms.ModelForm):
     class Meta:
         model = AdmissionAbroadSubCategory
-        fields = ['parent_card', 'parent_subcategory', 'title', 'slug', 'description', 
+        fields = ['parent_card', 'parent_subcategory', 'title', 'slug', 'description',
+                  'target_country', 'student_state', 'course',  # ✅ YE ADD KARO
                   'icon_image', 'icon_url', 'icon_color', 'order', 'is_active']
         
         widgets = {
@@ -785,12 +786,46 @@ class AdmissionAbroadSubCategoryForm(forms.ModelForm):
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'slug': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            
+            # ✅ NEW FIELDS
+            'target_country': forms.Select(attrs={'class': 'form-control'}),
+            'student_state': forms.Select(attrs={'class': 'form-control'}),
+            'course': forms.Select(attrs={'class': 'form-control'}),
+            
             'icon_image': forms.FileInput(attrs={'class': 'form-control'}),
             'icon_url': forms.URLInput(attrs={'class': 'form-control'}),
             'icon_color': forms.Select(attrs={'class': 'form-select'}),
             'order': forms.NumberInput(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+    
+    # ✅ ADD THIS METHOD
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Make fields optional
+        self.fields['target_country'].required = False
+        self.fields['student_state'].required = False
+        self.fields['course'].required = False
+        self.fields['parent_card'].required = False
+        self.fields['parent_subcategory'].required = False
+        
+        # Filter active countries and states
+        self.fields['target_country'].queryset = Country.objects.filter(is_active=True).order_by('name')
+        self.fields['student_state'].queryset = State.objects.filter(is_active=True).order_by('name')
+        
+        # Add "All" option for dropdowns
+        self.fields['target_country'].empty_label = "-- All Countries --"
+        self.fields['student_state'].empty_label = "-- All States --"
+        
+        # ✅ Course dropdown with choices from UserRegistration
+        course_choices = [('', '-- All Courses --')] + list(UserRegistration.COURSE_CHOICES)
+        self.fields['course'] = forms.ChoiceField(
+            choices=course_choices,
+            required=False,
+            widget=forms.Select(attrs={'class': 'form-control'})
+        )
+
 
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 
