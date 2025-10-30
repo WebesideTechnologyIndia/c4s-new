@@ -1,0 +1,8 @@
+# Ignore media files and database
+media/
+db.sqlite3
+
+# Virtual environment
+venv/
+__pycache__/
+*.pyc
