@@ -60,7 +60,7 @@
         <!-- Subcategories Grid -->
         <div class="subcategories-grid">
             {% for sub_cat in sub_categories %}
-            <a href="{% url 'main_app:subcategory_detail_view' card.get_slug sub_cat.get_full_path %}" 
+<a href="{% url 'main_app:subcategory_detail_view' card.get_slug sub_cat.get_full_path|default:'' %}"
                class="text-decoration-none d-block">
                 <div class="subcategory-card">
                     <!-- Icon -->

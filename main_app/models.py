@@ -1291,15 +1291,14 @@ class SubCategory(models.Model):
         return path
     
     def get_full_path(self):
-        """Get URL path: engineering/government/delhi"""
-        path = [self.slug]
-        current = self.parent_subcategory
-        
+    # """Returns the full path from root to this subcategory"""
+        path_parts = []
+        current = self
         while current:
-            path.insert(0, current.slug)
+            path_parts.insert(0, current.slug)
             current = current.parent_subcategory
-        
-        return '/'.join(path)
+        # ✅ REMOVE trailing slash - let URL pattern handle it
+        return '/'.join(path_parts)  # Changed from '/'.join(path_parts) + '/'
 
 
 

@@ -2747,6 +2747,21 @@ def page_detail_view(request, card_slug, subcategory_path, page_slug):
     WITH Country, State, Course filtering
     """
     
+    # ✅ DEBUG: Print what we received
+    print(f"\n{'='*50}")
+    print(f"DEBUG page_detail_view called:")
+    print(f"  card_slug: '{card_slug}'")
+    print(f"  subcategory_path: '{subcategory_path}'")
+    print(f"  page_slug: '{page_slug}'")
+    print(f"{'='*50}\n")
+    
+    # ✅ FIX: Handle empty or slash-only page_slug
+    if not page_slug or page_slug.strip('/') == '':
+        print("⚠️ Empty page_slug detected, redirecting to subcategory view")
+        return redirect('main_app:subcategory_detail_view', 
+                       card_slug=card_slug, 
+                       subcategory_path=subcategory_path.rstrip('/'))
+    
     # ✅ STEP 1: Get student data
     try:
         student = UserRegistration.objects.get(user=request.user)
@@ -2758,54 +2773,63 @@ def page_detail_view(request, card_slug, subcategory_path, page_slug):
         student_state = None
         student_course = None
     
-    # ✅ STEP 2: Get card with filtering
-    card_query = Q(redirect_link__icontains=card_slug, is_active=True)
+    # ✅ STEP 2: Get card
+    card = get_object_or_404(AllIndiaServiceCard, 
+                            redirect_link__icontains=card_slug, 
+                            is_active=True)
+    print(f"✅ Card found: {card.title}")
     
-    if student_country or student_state or student_course:
-        card_query &= (
-            Q(country__isnull=True) | Q(country=student_country)
-        ) & (
-            Q(state__isnull=True) | Q(state=student_state)
-        ) & (
-            Q(course__isnull=True) | Q(course='') | Q(course=student_course)
-        )
-    
-    card = get_object_or_404(AllIndiaServiceCard, card_query)
-    
-    # ✅ STEP 3: Parse path and get subcategory with filtering
+    # ✅ STEP 3: Parse path and get subcategory
     slugs = subcategory_path.strip('/').split('/')
+    slugs = [s for s in slugs if s]  # Remove empty strings
+    print(f"📁 Path slugs: {slugs}")
     
     current_subcategory = None
     for slug in slugs:
         if current_subcategory is None:
-            # First level subcategory
-            subcat_query = Q(
+            current_subcategory = get_object_or_404(
+                SubCategory,
                 slug=slug,
                 parent_card=card,
                 parent_subcategory__isnull=True,
                 is_active=True
             )
+            print(f"  ✅ Found root subcategory: {current_subcategory.title}")
         else:
-            # Nested subcategory
-            subcat_query = Q(
+            current_subcategory = get_object_or_404(
+                SubCategory,
                 slug=slug,
                 parent_subcategory=current_subcategory,
                 is_active=True
             )
-        
-        # Apply filtering for subcategories
-        if student_country or student_state or student_course:
-            subcat_query &= (
-                Q(country__isnull=True) | Q(country=student_country)
-            ) & (
-                Q(state__isnull=True) | Q(state=student_state)
-            ) & (
-                Q(course__isnull=True) | Q(course='') | Q(course=student_course)
-            )
-        
-        current_subcategory = get_object_or_404(SubCategory, subcat_query)
+            print(f"  ✅ Found nested subcategory: {current_subcategory.title}")
     
-    # ✅ STEP 4: Try to find page with filtering
+    print(f"📂 Final subcategory: {current_subcategory.title}")
+    
+    # ✅ STEP 4: FIRST check if page_slug is a CHILD SUBCATEGORY
+    print(f"\n🔍 Checking if '{page_slug}' is a child subcategory...")
+    try:
+        nested_sub = SubCategory.objects.get(
+            slug=page_slug,
+            parent_subcategory=current_subcategory,
+            is_active=True
+        )
+        
+        print(f"✅ Found child subcategory: {nested_sub.title}")
+        print(f"🔀 Redirecting to subcategory view...")
+        
+        # ✅ It's a subcategory! Redirect to subcategory view
+        full_path = f"{subcategory_path.rstrip('/')}/{page_slug}"
+        return redirect('main_app:subcategory_detail_view', 
+                      card_slug=card_slug, 
+                      subcategory_path=full_path)
+    
+    except SubCategory.DoesNotExist:
+        print(f"❌ Not a child subcategory")
+        pass  # Not a subcategory, continue to check for page
+    
+    # ✅ STEP 5: Now try to find page with filtering
+    print(f"\n📄 Checking if '{page_slug}' is a page...")
     page_query = Q(
         sub_category=current_subcategory,
         slug=page_slug,
@@ -2824,6 +2848,8 @@ def page_detail_view(request, card_slug, subcategory_path, page_slug):
     
     try:
         page = ContentPage.objects.get(page_query)
+        
+        print(f"✅ Page found: {page.title}")
         
         # ✅ Page found - show it
         page.views_count += 1
@@ -2857,36 +2883,9 @@ def page_detail_view(request, card_slug, subcategory_path, page_slug):
         return render(request, 'student/page_detail.html', context)
     
     except ContentPage.DoesNotExist:
-        # ✅ FALLBACK: Check if page_slug is actually a nested subcategory
-        nested_query = Q(
-            slug=page_slug,
-            parent_subcategory=current_subcategory,
-            is_active=True
-        )
-        
-        if student_country or student_state or student_course:
-            nested_query &= (
-                Q(country__isnull=True) | Q(country=student_country)
-            ) & (
-                Q(state__isnull=True) | Q(state=student_state)
-            ) & (
-                Q(course__isnull=True) | Q(course='') | Q(course=student_course)
-            )
-        
-        try:
-            nested_sub = SubCategory.objects.get(nested_query)
-            
-            # It's a subcategory! Redirect to subcategory view
-            full_path = f"{subcategory_path}/{page_slug}/"
-            return redirect('main_app:subcategory_detail_view', 
-                          card_slug=card_slug, 
-                          subcategory_path=full_path)
-        
-        except SubCategory.DoesNotExist:
-            # Neither page nor subcategory found
-            raise Http404("Content not found or not accessible for your profile")
-        
-        
+        print(f"❌ Page not found")
+        # Neither page nor subcategory found
+        raise Http404("Content not found or not accessible for your profile")
 # views.py mein YE VIEWS ADD KARO
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -3027,6 +3026,13 @@ def subcategory_detail_view(request, card_slug, subcategory_path):
     WITH STRICT Course filtering
     """
     
+    # ✅ FIX: Handle double slashes - clean the path
+    subcategory_path = subcategory_path.strip('/')
+    
+    # ✅ FIX: If path is empty after stripping, redirect to card
+    if not subcategory_path:
+        return redirect('main_app:card_detail_view', card_slug=card_slug)
+    
     # Get student data
     try:
         student = UserRegistration.objects.get(user=request.user)
@@ -3052,7 +3058,9 @@ def subcategory_detail_view(request, card_slug, subcategory_path):
     )
     
     # Parse nested path
-    slugs = subcategory_path.strip('/').split('/')
+    slugs = subcategory_path.split('/')
+    # ✅ FIX: Filter out empty strings (handles consecutive slashes)
+    slugs = [s for s in slugs if s]
     
     current_subcategory = None
     for slug in slugs:
@@ -3117,6 +3125,7 @@ def subcategory_detail_view(request, card_slug, subcategory_path):
             'student': student,
         }
         return render(request, 'student/subcategory_pages.html', context)
+
 # views.py - YE VIEW UPDATE KARO
 
 from django.http import Http404
@@ -3238,6 +3247,8 @@ def page_detail_view(request, card_slug, subcategory_path, page_slug):
         except SubCategory.DoesNotExist:
             # Neither page nor subcategory - show 404
             raise Http404("Content not found or not accessible for your profile")
+
+
 # abroad india 
 # views.py mein add karo
 # Admin - Sub-categories by Card

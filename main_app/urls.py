@@ -665,7 +665,7 @@ path("reject_payment/<int:payment_id>/", views.reject_payment, name="reject_paym
         name="page_detail_view",
     ),
     path(
-        "<str:card_slug>/<path:subcategory_path>/",
+        "<str:card_slug>/<path:subcategory_path>",
         views.subcategory_detail_view,
         name="subcategory_detail_view",
     ),
