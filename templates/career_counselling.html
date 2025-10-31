@@ -127,7 +127,8 @@
         overflow: hidden;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         text-decoration: none;
-        display: block;
+        display: flex;
+        flex-direction: column;
         color: inherit;
     }
 
@@ -193,10 +194,6 @@
         margin-bottom: 15px;
         line-height: 1.4;
         transition: color 0.3s;
-        min-height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         position: relative;
         z-index: 1;
     }
@@ -209,16 +206,16 @@
         color: #718096;
         font-size: 0.95rem;
         line-height: 1.7;
-        margin-bottom: 20px;
-        min-height: 60px;
+        margin-bottom: 25px;
         position: relative;
         z-index: 1;
+        flex-grow: 1;
     }
 
     .explore-badge {
         background: linear-gradient(135deg, #ED651C 0%, #F4800C 100%);
         color: white;
-        padding: 10px 24px;
+        padding: 12px 28px;
         border-radius: 50px;
         font-weight: 700;
         font-size: 0.9rem;
@@ -227,6 +224,7 @@
         gap: 8px;
         box-shadow: 0 4px 15px rgba(237, 101, 28, 0.3);
         transition: all 0.3s;
+        margin-top: auto;
     }
 
     .service-card:hover .explore-badge {
@@ -333,11 +331,6 @@
 
         .service-card h4 {
             font-size: 1.15rem;
-            min-height: auto;
-        }
-
-        .service-card p {
-            min-height: auto;
         }
 
         .service-icon {
@@ -407,12 +400,10 @@
                         <p>{{ service.description }}</p>
                         
                         <!-- Explore Badge -->
-                        <div class="mt-auto">
-                            <span class="explore-badge">
-                                <i class="bi bi-arrow-right-circle"></i>
-                                Explore Service
-                            </span>
-                        </div>
+                        <span class="explore-badge">
+                            <i class="bi bi-arrow-right-circle"></i>
+                            Explore Service
+                        </span>
                     </a>
                 </div>
                 {% endfor %}

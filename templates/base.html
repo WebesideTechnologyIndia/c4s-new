@@ -6,32 +6,133 @@
 <head>
 	<meta charset="utf-8" />
 	<meta name="author" content="www.frebsite.nl" />
-	<meta name="viewport"
-		content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
 	<title>{% block title %}C4s{% endblock %}</title>
 
 	<link href="{% static 'css/styles.css' %}" rel="stylesheet">
 	<link href="{% static 'css/colors.css' %}" rel="stylesheet">
 	
+	<!-- Google Translate -->
+	<script type="text/javascript">
+		function googleTranslateElementInit() {
+			new google.translate.TranslateElement({
+				pageLanguage: 'en',
+				includedLanguages: 'en,hi,pa,ur,bn,ta,te,mr,gu,kn,ml',
+				autoDisplay: false
+			}, 'google_translate_element');
+		}
+	</script>
+	<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+	
 	{% block extra_css %}{% endblock %}
+	
+	<style>
+		#google_translate_element { display: none; }
+		.goog-te-banner-frame.skiptranslate { display: none !important; }
+		body { top: 0 !important; }
+		.goog-te-gadget-simple { display: none !important; }
+		
+		.custom-language-selector {
+			position: relative;
+			display: inline-block;
+		}
+		
+		.lang-dropdown-btn {
+			background: #F89237;
+			color: white;
+			padding: 10px 20px;
+			border: none;
+			border-radius: 25px;
+			cursor: pointer;
+			font-size: 14px;
+			font-weight: 600;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+			transition: all 0.3s ease;
+		}
+		
+		.lang-dropdown-btn:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+		}
+		
+		.lang-dropdown-content {
+			display: none;
+			position: absolute;
+			background-color: white;
+			min-width: 200px;
+			box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+			border-radius: 12px;
+			z-index: 1000;
+			top: 110%;
+			right: 0;
+			overflow: hidden;
+		}
+		
+		.custom-language-selector:hover .lang-dropdown-content {
+			display: block;
+		}
+		
+		.lang-option {
+			padding: 12px 20px;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			transition: all 0.2s ease;
+			border-bottom: 1px solid #f0f0f0;
+		}
+		
+		.lang-option:last-child { border-bottom: none; }
+		
+		.lang-option:hover {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white;
+		}
+		
+		.lang-flag { font-size: 24px; }
+		.lang-name { font-weight: 500; }
+
+		/* Mobile View Adjustments */
+		@media screen and (max-width: 991px) {
+			.custom-language-selector {
+				display: block;
+				width: 100%;
+				margin-bottom: 10px;
+			}
+			
+			.lang-dropdown-btn {
+				width: 100%;
+				justify-content: center;
+			}
+			
+			.lang-dropdown-content {
+				position: static;
+				display: none;
+				width: 100%;
+				margin-top: 10px;
+			}
+			
+			.custom-language-selector.active .lang-dropdown-content {
+				display: block;
+			}
+		}
+	</style>
 </head>
 
 <body class="red-skin">
-	<!-- Preloader -->
 	<div id="preloader">
 		<div class="preloader"><span></span><span></span></div>
 	</div>
 
-	<!-- Main wrapper -->
 	<div id="main-wrapper">
-
-		<!-- Navigation Header -->
 		<div class="header header-light head-shadow">
 			<div class="container">
 				<nav id="navigation" class="navigation navigation-landscape">
 					<div class="nav-header">
-						<!-- YAHA CHANGE KIYA - main_app:home -->
 						<a class="nav-brand" href="{% url 'main_app:home' %}">
 							<img src="{% static 'img/Untitled-design.png' %}" class="logo" alt="" />
 						</a>
@@ -39,44 +140,79 @@
 					</div>
 					<div class="nav-menus-wrapper">
 						<ul class="nav-menu">
-
-							<li class="active"><a href="#">HOME<span class="submenu-indicator"></span></a>
-								
+							<!-- Language selector inside sidebar for mobile -->
+							<li class="mobile-lang-selector">
+								<div class="custom-language-selector">
+									<button class="lang-dropdown-btn" onclick="toggleLangDropdown(event)">🌐 Language</button>
+									<div class="lang-dropdown-content">
+										<div class="lang-option" onclick="changeLanguage('en')">
+											<span class="lang-flag">🇬🇧</span>
+											<span class="lang-name">English</span>
+										</div>
+										<div class="lang-option" onclick="changeLanguage('hi')">
+											<span class="lang-flag">🇮🇳</span>
+											<span class="lang-name">हिंदी</span>
+										</div>
+										<div class="lang-option" onclick="changeLanguage('pa')">
+											<span class="lang-flag">🇮🇳</span>
+											<span class="lang-name">ਪੰਜਾਬੀ</span>
+										</div>
+										<div class="lang-option" onclick="changeLanguage('ur')">
+											<span class="lang-flag">🇵🇰</span>
+											<span class="lang-name">اردو</span>
+										</div>
+										<div class="lang-option" onclick="changeLanguage('bn')">
+											<span class="lang-flag">🇧🇩</span>
+											<span class="lang-name">বাংলা</span>
+										</div>
+									</div>
+								</div>
 							</li>
-
-							<li><a href="#">SERVICES<span class="submenu-indicator"></span></a>
-								
-							</li>
-
-							<li><a href="#">ABOUT<span class="submenu-indicator"></span></a>
-								
-							</li>
-
-							<li><a href="#">BLOG<span class="submenu-indicator"></span></a>
-								
-							</li>
-							<li><a href="#">CONTACT<span class="submenu-indicator"></span></a>
-
 						</ul>
 
-
 						<ul class="nav-menu nav-menu-social align-to-right">
+							<!-- Desktop language selector -->
+							<li class="desktop-lang-selector">
+								<div class="custom-language-selector">
+									<button class="lang-dropdown-btn">🌐 Language</button>
+									<div class="lang-dropdown-content">
+										<div class="lang-option" onclick="changeLanguage('en')">
+											<span class="lang-flag">🇬🇧</span>
+											<span class="lang-name">English</span>
+										</div>
+										<div class="lang-option" onclick="changeLanguage('hi')">
+											<span class="lang-flag">🇮🇳</span>
+											<span class="lang-name">हिंदी</span>
+										</div>
+										<div class="lang-option" onclick="changeLanguage('pa')">
+											<span class="lang-flag">🇮🇳</span>
+											<span class="lang-name">ਪੰਜਾਬੀ</span>
+										</div>
+										<div class="lang-option" onclick="changeLanguage('ur')">
+											<span class="lang-flag">🇵🇰</span>
+											<span class="lang-name">اردو</span>
+										</div>
+										<div class="lang-option" onclick="changeLanguage('bn')">
+											<span class="lang-flag">🇧🇩</span>
+											<span class="lang-name">বাংলা</span>
+										</div>
+									</div>
+								</div>
+								<div id="google_translate_element"></div>
+							</li>
+							
 							{% if user.is_authenticated %}
-								<!-- User logged in hai -->
 								<li class="become-tutor">
 									<a href="#"><i class="bi bi-person-circle"></i>Welcome, {{ user.username }}</a>
 								</li>
 								<li class="join-btn">
-									<!-- LOGOUT LINK BHI FIX KIYA -->
 									<a href="{% url 'main_app:admin_logout' %}"><i class="bi bi-box-arrow-right"></i>Logout</a>
 								</li>
 							{% else %}
-								<!-- User logged in nahi hai -->
 								<li class="become-tutor">
 									<a href="{% url 'main_app:user_register' %}"><i class="bi bi-person-circle"></i>Register Now</a>
 								</li>
 								<li class="join-btn">
-									<!-- LOGIN LINK FIX KIYA -->
 									<a href="{% url 'main_app:admin_login' %}"><i class="bi bi-box-arrow-in-right"></i>Login</a>
 								</li>
 							{% endif %}
@@ -85,17 +221,13 @@
 				</nav>
 			</div>
 		</div>
-		<!-- End Navigation -->
 		<div class="clearfix"></div>
 
-		<!-- Main Content Block -->
 		{% block content %}
-		<!-- Page specific content goes here -->
 		{% endblock %}
 
 	</div>
 
-	<!-- Scripts -->
 	<script src="{% static 'js/jquery.min.js' %}"></script>
 	<script src="{% static 'js/popper.min.js' %}"></script>
 	<script src="{% static 'js/bootstrap.min.js' %}"></script>
@@ -105,8 +237,47 @@
 	<script src="{% static 'js/counterup.min.js' %}"></script>
 	<script src="{% static 'js/custom.js' %}"></script>
 
+	<script>
+		function changeLanguage(lang) {
+			var checkExist = setInterval(function() {
+				var selectElement = document.querySelector('.goog-te-combo');
+				if (selectElement) {
+					clearInterval(checkExist);
+					selectElement.value = lang;
+					selectElement.dispatchEvent(new Event('change'));
+				}
+			}, 100);
+		}
+
+		function toggleLangDropdown(event) {
+			event.preventDefault();
+			event.stopPropagation();
+			var parent = event.target.closest('.custom-language-selector');
+			parent.classList.toggle('active');
+		}
+
+		// Hide/show language selector based on screen size
+		function manageLangSelector() {
+			var mobileSelector = document.querySelector('.mobile-lang-selector');
+			var desktopSelector = document.querySelector('.desktop-lang-selector');
+			
+			if (window.innerWidth <= 991) {
+				if (mobileSelector) mobileSelector.style.display = 'block';
+				if (desktopSelector) desktopSelector.style.display = 'none';
+			} else {
+				if (mobileSelector) mobileSelector.style.display = 'none';
+				if (desktopSelector) desktopSelector.style.display = 'inline-block';
+			}
+		}
+
+		// Run on page load
+		manageLangSelector();
+		
+		// Run on window resize
+		window.addEventListener('resize', manageLangSelector);
+	</script>
+
 	{% block extra_js %}{% endblock %}
 
 </body>
-
 </html>

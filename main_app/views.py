@@ -2576,6 +2576,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
 from .models import AllIndiaServiceCard, SubCategory, UserRegistration
+
+
 @never_cache
 @login_required(login_url='main_app:user_login')
 def card_detail_view(request, card_slug):
@@ -2591,9 +2593,14 @@ def card_detail_view(request, card_slug):
         return redirect('main_app:admin_dashboard')
     
     # Get card by slug or redirect_link
-    card = get_object_or_404(AllIndiaServiceCard, 
-                            redirect_link__icontains=card_slug, 
-                            is_active=True)
+    card = AllIndiaServiceCard.objects.filter(
+    redirect_link__icontains=card_slug, 
+    is_active=True
+).first()
+
+    if not card:
+        raise Http404("Card not found")
+
     
     # ✅ STEP 1: Get logged-in user's STATE and COURSE
     try:
@@ -2644,6 +2651,9 @@ def card_detail_view(request, card_slug):
     }
     
     return render(request, 'student/card_detail.html', context)
+
+
+
 
 #@never_cache ==================== STUDENT: SUB-CATEGORY DETAIL (PAGES LIST) ====================
 @login_required(login_url='main_app:user_login')
