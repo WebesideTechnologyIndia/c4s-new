@@ -465,6 +465,8 @@ urlpatterns = [
         views.admin_admission_abroad_page_add,
         name="admin_admission_abroad_page_add",
     ),
+    # urls.py mein add karo
+path('ajax/get-states/', views.get_states_by_country, name='get_states_by_country'),
     # ==================== ADMIN: DISTANCE EDUCATION NESTED ====================
     path(
         "admin/distance-education/<int:card_id>/subcategories/",

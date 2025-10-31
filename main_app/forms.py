@@ -633,60 +633,85 @@ from .models import Country, State, UserRegistration
 from django import forms
 from .models import Country, State, UserRegistration
 
+from django import forms
+from .models import UserRegistration, Country, State
+
 class UserRegistrationForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput(attrs={
-        'class': 'form-control',
-        'placeholder': 'Enter password'
-    }))
-    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={
-        'class': 'form-control',
-        'placeholder': 'Confirm password'
-    }))
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter password'
+        })
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirm password'
+        })
+    )
     
     class Meta:
         model = UserRegistration
         fields = ['name', 'father_name', 'mobile', 'whatsapp_mobile', 
                   'email', 'course', 'country', 'state', 'city']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'father_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'mobile': forms.TextInput(attrs={'class': 'form-control'}),
-            'whatsapp_mobile': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'course': forms.TextInput(attrs={'class': 'form-control'}),
-            'country': forms.Select(attrs={'class': 'form-select'}),
-            'state': forms.Select(attrs={'class': 'form-select'}),
-            'city': forms.TextInput(attrs={'class': 'form-control'}),
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter your full name'
+            }),
+            'father_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': "Enter father's name"
+            }),
+            'mobile': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter mobile number'
+            }),
+            'whatsapp_mobile': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter WhatsApp number'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter email address'
+            }),
+            'course': forms.Select(attrs={
+                'class': 'form-select',
+                'placeholder': 'Select your course'
+            }),
+            'country': forms.Select(attrs={
+                'class': 'form-select',
+                'id': 'id_country'
+            }),
+            'state': forms.Select(attrs={
+                'class': 'form-select',
+                'id': 'id_state'
+            }),
+            'city': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter city'
+            }),
         }
     
-    def __init__(self, *args, **kwargs):
-        # ✅ Accept country_filter parameter
-        country_filter = kwargs.pop('country_filter', 'all')
+    def __init__(self, *args, country_filter='all', **kwargs):
         super().__init__(*args, **kwargs)
         
-        # ✅ Filter countries based on next URL
+        # Apply country filter
         if country_filter == 'india_only':
-            # Only India
-            self.fields['country'].queryset = Country.objects.filter(name__iexact='India')
+            self.fields['country'].queryset = Country.objects.filter(name='India')
         elif country_filter == 'exclude_india':
-            # All except India
-            self.fields['country'].queryset = Country.objects.exclude(name__iexact='India').order_by('name')
+            self.fields['country'].queryset = Country.objects.exclude(name='India')
         else:
-            # All countries (default)
-            self.fields['country'].queryset = Country.objects.all().order_by('name')
+            self.fields['country'].queryset = Country.objects.all()
         
-        # Empty state initially (will be populated via AJAX)
+        # Initially empty states
         self.fields['state'].queryset = State.objects.none()
         
-        # If country is already selected (on form error), load states
-        if 'country' in self.data:
-            try:
-                country_id = int(self.data.get('country'))
-                self.fields['state'].queryset = State.objects.filter(country_id=country_id).order_by('name')
-            except (ValueError, TypeError):
-                pass
-        elif self.instance.pk and self.instance.country:
-            self.fields['state'].queryset = self.instance.country.state_set.order_by('name')
+        # If editing existing data, load states
+        if self.instance.pk and self.instance.country:
+            self.fields['state'].queryset = State.objects.filter(
+                country=self.instance.country
+            )
     
     def clean(self):
         cleaned_data = super().clean()
@@ -694,10 +719,9 @@ class UserRegistrationForm(forms.ModelForm):
         confirm_password = cleaned_data.get('confirm_password')
         
         if password and confirm_password and password != confirm_password:
-            raise forms.ValidationError("Passwords don't match!")
+            raise forms.ValidationError("Passwords do not match!")
         
         return cleaned_data
-    
 
 
 from django import forms
@@ -751,18 +775,44 @@ class SubCategoryForm(forms.ModelForm):
 # ==================== CONTENT PAGE FORM ====================
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 
+from django import forms
+from ckeditor_uploader.widgets import CKEditorUploadingWidget
+from .models import ContentPage, Country, State, UserRegistration
+
 class ContentPageForm(forms.ModelForm):
+    # Explicitly define country, state, and course fields
+    country = forms.ModelChoiceField(
+        queryset=Country.objects.filter(is_active=True),
+        required=False,
+        empty_label="--- Select Country ---",
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_country'})
+    )
+    
+    state = forms.ModelChoiceField(
+        queryset=State.objects.none(),  # Will be populated dynamically
+        required=False,
+        empty_label="--- Select State ---",
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_state'})
+    )
+    
+    course = forms.ChoiceField(
+        choices=[('', '--- Select Course ---')] + UserRegistration.COURSE_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_course'})
+    )
+    
     class Meta:
         model = ContentPage
-        fields = ['sub_category', 'title', 'slug', 'summary', 'content', 'featured_image', 
-                  'featured_image_url', 'meta_description', 'meta_keywords', 'order', 'is_active', 'is_featured']
+        fields = ['sub_category', 'country', 'state', 'course', 'title', 'slug', 'summary', 
+                  'content', 'featured_image', 'featured_image_url', 'meta_description', 
+                  'meta_keywords', 'order', 'is_active', 'is_featured']
         
         widgets = {
             'sub_category': forms.Select(attrs={'class': 'form-control'}),
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Top 10 Engineering Colleges'}),
             'slug': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'top-10-engineering-colleges'}),
             'summary': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Brief summary'}),
-            'content': CKEditorUploadingWidget(),  # Changed to CKEditor
+            'content': CKEditorUploadingWidget(),
             'featured_image': forms.FileInput(attrs={'class': 'form-control'}),
             'featured_image_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://example.com/image.jpg'}),
             'meta_description': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'SEO description'}),
@@ -771,7 +821,28 @@ class ContentPageForm(forms.ModelForm):
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_featured': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
-# forms.py mein UPDATE karo
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Initialize state queryset based on selected country
+        if 'country' in self.data:
+            try:
+                country_id = int(self.data.get('country'))
+                self.fields['state'].queryset = State.objects.filter(
+                    country_id=country_id, 
+                    is_active=True
+                ).order_by('name')
+            except (ValueError, TypeError):
+                self.fields['state'].queryset = State.objects.none()
+        elif self.instance.pk and self.instance.country:
+            # For edit form
+            self.fields['state'].queryset = State.objects.filter(
+                country=self.instance.country, 
+                is_active=True
+            ).order_by('name')
+            
+#  forms.py mein UPDATE karo
 
 class AdmissionAbroadSubCategoryForm(forms.ModelForm):
     class Meta:
@@ -829,24 +900,62 @@ class AdmissionAbroadSubCategoryForm(forms.ModelForm):
 
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 
+
+from main_app.models import UserRegistration  # Import karo
+
 class AdmissionAbroadPageForm(forms.ModelForm):
+    # Course field with choices from UserRegistration
+    course = forms.ChoiceField(
+        choices=[('', '--- Select Course ---')] + UserRegistration.COURSE_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    
     class Meta:
         model = AdmissionAbroadPage
-        fields = ['sub_category', 'title', 'slug', 'summary', 'content', 
-                  'featured_image', 'featured_image_url', 'order', 'is_active', 'is_featured']
+        fields = ['sub_category', 'country', 'state', 'course', 'title', 'slug', 
+                  'summary', 'content', 'featured_image', 'featured_image_url', 
+                  'order', 'is_active', 'is_featured']
         
         widgets = {
             'sub_category': forms.Select(attrs={'class': 'form-control'}),
+            'country': forms.Select(attrs={'class': 'form-control', 'id': 'id_country'}),
+            'state': forms.Select(attrs={'class': 'form-control', 'id': 'id_state'}),
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Study in USA - Complete Guide 2025'}),
             'slug': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'study-in-usa-guide-2025'}),
             'summary': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Brief summary of the page'}),
-            'content': CKEditorUploadingWidget(),  # CKEditor for rich text
+            'content': CKEditorUploadingWidget(),
             'featured_image': forms.FileInput(attrs={'class': 'form-control'}),
             'featured_image_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://example.com/image.jpg'}),
             'order': forms.NumberInput(attrs={'class': 'form-control', 'value': '0'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_featured': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Country dropdown - only active countries
+        self.fields['country'].queryset = Country.objects.filter(is_active=True)
+        self.fields['country'].empty_label = "--- Select Country ---"
+        
+        # State dropdown - filter by country if country is selected
+        if 'country' in self.data:
+            try:
+                country_id = int(self.data.get('country'))
+                self.fields['state'].queryset = State.objects.filter(
+                    country_id=country_id, is_active=True
+                ).order_by('name')
+            except (ValueError, TypeError):
+                self.fields['state'].queryset = State.objects.none()
+        elif self.instance.pk and self.instance.country:
+            self.fields['state'].queryset = State.objects.filter(
+                country=self.instance.country, is_active=True
+            ).order_by('name')
+        else:
+            self.fields['state'].queryset = State.objects.none()
+        
+        self.fields['state'].empty_label = "--- Select State ---"
 
 
 # forms.py mein add karo
@@ -904,25 +1013,84 @@ class AdmissionAbroadSubCategoryForm(forms.ModelForm):
         self.fields['course'].required = False  # Optional field
 
 
+from django import forms
+from ckeditor_uploader.widgets import CKEditorUploadingWidget
+from .models import AdmissionAbroadPage, Country, State, UserRegistration
 
 class AdmissionAbroadPageForm(forms.ModelForm):
+    # Explicitly define fields with proper configuration
+    country = forms.ModelChoiceField(
+        queryset=Country.objects.filter(is_active=True),
+        required=False,
+        empty_label="--- Select Country ---",
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_country'})
+    )
+    
+    state = forms.ModelChoiceField(
+        queryset=State.objects.none(),  # Will be populated dynamically
+        required=False,
+        empty_label="--- Select State ---",
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_state'})
+    )
+    
+    course = forms.ChoiceField(
+        choices=[('', '--- Select Course ---')] + UserRegistration.COURSE_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_course'})
+    )
+    
     class Meta:
         model = AdmissionAbroadPage
-        fields = ['sub_category', 'title', 'slug', 'summary', 'content', 
-                  'featured_image', 'featured_image_url', 'order', 'is_active', 'is_featured']
+        fields = ['sub_category', 'country', 'state', 'course', 'title', 'slug', 
+                  'summary', 'content', 'featured_image', 'featured_image_url', 
+                  'order', 'is_active', 'is_featured']
         
         widgets = {
             'sub_category': forms.Select(attrs={'class': 'form-control'}),
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
-            'slug': forms.TextInput(attrs={'class': 'form-control'}),
-            'summary': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 15}),
+            'title': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'e.g., Study in USA - Complete Guide 2025'
+            }),
+            'slug': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'study-in-usa-guide-2025'
+            }),
+            'summary': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'rows': 3, 
+                'placeholder': 'Brief summary of the page'
+            }),
+            'content': CKEditorUploadingWidget(),
             'featured_image': forms.FileInput(attrs={'class': 'form-control'}),
-            'featured_image_url': forms.URLInput(attrs={'class': 'form-control'}),
-            'order': forms.NumberInput(attrs={'class': 'form-control'}),
+            'featured_image_url': forms.URLInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'https://example.com/image.jpg'
+            }),
+            'order': forms.NumberInput(attrs={'class': 'form-control', 'value': '0'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_featured': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Initialize state queryset based on selected country
+        if 'country' in self.data:
+            try:
+                country_id = int(self.data.get('country'))
+                self.fields['state'].queryset = State.objects.filter(
+                    country_id=country_id, 
+                    is_active=True
+                ).order_by('name')
+            except (ValueError, TypeError):
+                self.fields['state'].queryset = State.objects.none()
+        elif self.instance.pk and self.instance.country:
+            # For edit form
+            self.fields['state'].queryset = State.objects.filter(
+                country=self.instance.country, 
+                is_active=True
+            ).order_by('name')
+
 
 from .models import DistanceEducationSubCategory, DistanceEducationPage
 

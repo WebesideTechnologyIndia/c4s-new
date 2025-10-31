@@ -1,0 +1,441 @@
+{% extends 'admin/base.html' %}
+{% block title %}Edit Content Page{% endblock %}
+{% block page_title %}Edit Content Page{% endblock %}
+{% block extra_css %}
+
+<style>
+    .preview-image {
+        max-width: 300px;
+        max-height: 200px;
+        margin-top: 10px;
+        border-radius: 8px;
+        display: none;
+    }
+
+    .preview-image.show {
+        display: block;
+    }
+
+    .char-counter {
+        font-size: 0.85rem;
+        color: #6c757d;
+        float: right;
+    }
+
+    .form-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .form-section h6 {
+        color: #495057;
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    /* CKEditor custom styling */
+    .django-ckeditor-widget {
+        width: 100% !important;
+    }
+
+    .cke_chrome {
+        border: 1px solid #ced4da !important;
+        border-radius: 0.25rem !important;
+    }
+
+    .current-image {
+        max-width: 200px;
+        max-height: 150px;
+        border-radius: 8px;
+        border: 2px solid #dee2e6;
+        padding: 5px;
+        background: white;
+    }
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Edit Content Page Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Display form errors -->
+                    {% if messages %}
+                    <div class="alert alert-info">
+                        {% for message in messages %}
+                        {{ message }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- BASIC INFO SECTION -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-info-circle me-2"></i>Basic Information</h6>
+
+                        <div class="row">
+                            <!-- Sub-Category -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Sub-Category</label>
+                                <select name="sub_category" id="id_sub_category" class="form-control" required>
+                                    <option value="">--- Select Sub-Category ---</option>
+                                    {% for sub_cat in sub_categories %}
+                                    <option value="{{ sub_cat.id }}" 
+                                        {% if sub_cat.id == page.sub_category_id %}selected{% endif %}>
+                                        {{ sub_cat.parent_card.title }} → {{ sub_cat.title }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Country Selection -->
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Country (Optional)</label>
+                                <select name="country" id="id_country" class="form-control">
+                                    <option value="">--- Select Country ---</option>
+                                    {% for country in countries %}
+                                    <option value="{{ country.id }}" 
+                                        {% if country.id == page.country_id %}selected{% endif %}>
+                                        {{ country.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bi bi-globe me-1"></i>Select if content is country-specific
+                                </small>
+                            </div>
+
+                            <!-- State Selection -->
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">State (Optional)</label>
+                                <select name="state" id="id_state" class="form-control">
+                                    <option value="">--- Select State ---</option>
+                                    {% for state in states %}
+                                    <option value="{{ state.id }}" 
+                                        {% if state.id == page.state_id %}selected{% endif %}>
+                                        {{ state.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bi bi-geo-alt me-1"></i>Select country first
+                                </small>
+                            </div>
+
+                            <!-- Course Selection -->
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Course (Optional)</label>
+                                <select name="course" id="id_course" class="form-control">
+                                    <option value="">--- Select Course ---</option>
+                                    {% for course_code, course_name in course_choices %}
+                                    <option value="{{ course_code }}" 
+                                        {% if course_code == page.course %}selected{% endif %}>
+                                        {{ course_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bi bi-book me-1"></i>Select if content is course-specific
+                                </small>
+                            </div>
+
+                            <!-- Title -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Page Title <span class="text-danger">*</span></label>
+                                <input type="text" name="title" id="id_title" class="form-control" 
+                                    value="{{ page.title }}" maxlength="300" required>
+                                <span class="char-counter">
+                                    <span id="titleCount">0</span>/300 characters
+                                </span>
+                            </div>
+
+                            <!-- Slug (optional) -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">URL Slug (Optional - Auto-generated from title)</label>
+                                <input type="text" name="slug" id="id_slug" class="form-control" 
+                                    value="{{ page.slug }}" maxlength="300">
+                                <small class="text-muted">Leave blank for auto-generation. Used in URL.</small>
+                            </div>
+
+                            <!-- Summary -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Summary (Optional)</label>
+                                <textarea name="summary" id="id_summary" class="form-control" 
+                                    rows="3" maxlength="500">{{ page.summary }}</textarea>
+                                <span class="char-counter">
+                                    <span id="summaryCount">0</span>/500 characters
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CONTENT SECTION -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-file-text me-2"></i>Page Content</h6>
+
+                        <div class="row">
+                            <!-- Main Content with CKEditor -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Full Content <span class="text-danger">*</span></label>
+                                <textarea name="content" id="id_content" class="form-control" 
+                                    rows="10" required>{{ page.content }}</textarea>
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle"></i>
+                                    Use the rich text editor above to format your content with headings, lists, links, images, and more.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FEATURED IMAGE SECTION -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-image me-2"></i>Featured Image</h6>
+
+                        <div class="row">
+                            <!-- Current Image -->
+                            {% if page.featured_image %}
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Current Image</label>
+                                <div>
+                                    <img src="{{ page.featured_image.url }}" class="current-image" alt="Current">
+                                </div>
+                            </div>
+                            {% elif page.featured_image_url %}
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Current Image</label>
+                                <div>
+                                    <img src="{{ page.featured_image_url }}" class="current-image" alt="Current">
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Upload Image -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Upload New Featured Image</label>
+                                <input type="file" name="featured_image" id="id_featured_image" 
+                                    class="form-control" accept="image/*">
+                                <small class="text-muted">Recommended: 800x400px or 16:9 ratio</small>
+                            </div>
+
+                            <!-- OR Image URL -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">OR Image URL</label>
+                                <input type="url" name="featured_image_url" id="id_featured_image_url" 
+                                    class="form-control" value="{{ page.featured_image_url }}">
+                            </div>
+
+                            <!-- Image Preview -->
+                            <div class="col-md-12 mb-3">
+                                <img id="imagePreview" class="preview-image" alt="Preview">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEO SECTION -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-search me-2"></i>SEO Settings (Optional)</h6>
+
+                        <div class="row">
+                            <!-- Meta Description -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Meta Description</label>
+                                <input type="text" name="meta_description" id="id_meta_description" 
+                                    class="form-control" value="{{ page.meta_description }}" maxlength="160">
+                                <span class="char-counter">
+                                    <span id="metaCount">0</span>/160 characters
+                                </span>
+                                <small class="text-muted">Appears in search engine results</small>
+                            </div>
+
+                            <!-- Meta Keywords -->
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Meta Keywords</label>
+                                <input type="text" name="meta_keywords" id="id_meta_keywords" 
+                                    class="form-control" value="{{ page.meta_keywords }}">
+                                <small class="text-muted">Comma separated keywords</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DISPLAY SETTINGS SECTION -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-gear me-2"></i>Display Settings</h6>
+
+                        <div class="row">
+                            <!-- Order -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Display Order</label>
+                                <input type="number" name="order" id="id_order" class="form-control" 
+                                    value="{{ page.order }}" min="0">
+                                <small class="text-muted">Lower numbers appear first</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <!-- Empty space -->
+                            </div>
+
+                            <!-- Active Status -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" name="is_active" id="id_is_active" 
+                                        class="form-check-input" {% if page.is_active %}checked{% endif %}>
+                                    <label class="form-check-label" for="id_is_active">
+                                        <strong>Active</strong> (Show on website)
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Featured -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" name="is_featured" id="id_is_featured" 
+                                        class="form-check-input" {% if page.is_featured %}checked{% endif %}>
+                                    <label class="form-check-label" for="id_is_featured">
+                                        <strong>Featured</strong> (Highlight this page)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BUTTONS -->
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Update Page
+                        </button>
+                        <a href="{% url 'main_app:admin_content_pages_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script>
+    // Character counters
+    const titleInput = document.getElementById('id_title');
+    const titleCount = document.getElementById('titleCount');
+    const summaryInput = document.getElementById('id_summary');
+    const summaryCount = document.getElementById('summaryCount');
+    const metaInput = document.getElementById('id_meta_description');
+    const metaCount = document.getElementById('metaCount');
+
+    if (titleInput) {
+        titleInput.addEventListener('input', function () {
+            titleCount.textContent = this.value.length;
+        });
+        titleCount.textContent = titleInput.value.length;
+    }
+
+    if (summaryInput) {
+        summaryInput.addEventListener('input', function () {
+            summaryCount.textContent = this.value.length;
+        });
+        summaryCount.textContent = summaryInput.value.length;
+    }
+
+    if (metaInput) {
+        metaInput.addEventListener('input', function () {
+            metaCount.textContent = this.value.length;
+        });
+        metaCount.textContent = metaInput.value.length;
+    }
+
+    // Image preview
+    const imageUpload = document.getElementById('id_featured_image');
+    const imageUrl = document.getElementById('id_featured_image_url');
+    const imagePreview = document.getElementById('imagePreview');
+
+    function updatePreview(src) {
+        if (src) {
+            imagePreview.src = src;
+            imagePreview.classList.add('show');
+        } else {
+            imagePreview.classList.remove('show');
+        }
+    }
+
+    if (imageUpload) {
+        imageUpload.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    updatePreview(e.target.result);
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    if (imageUrl) {
+        imageUrl.addEventListener('input', function () {
+            updatePreview(this.value);
+        });
+    }
+
+    // Country-State dropdown
+    const countrySelect = document.getElementById('id_country');
+    const stateSelect = document.getElementById('id_state');
+    
+    if (countrySelect && stateSelect) {
+        countrySelect.addEventListener('change', function() {
+            const countryId = this.value;
+            
+            // Clear existing states
+            stateSelect.innerHTML = '<option value="">--- Select State ---</option>';
+            
+            if (countryId) {
+                // Show loading
+                stateSelect.disabled = true;
+                stateSelect.innerHTML = '<option value="">Loading...</option>';
+                
+                // Fetch states via AJAX
+                fetch(`{% url 'main_app:get_states_by_country' %}?country_id=${countryId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        stateSelect.disabled = false;
+                        stateSelect.innerHTML = '<option value="">--- Select State ---</option>';
+                        
+                        data.states.forEach(state => {
+                            const option = document.createElement('option');
+                            option.value = state.id;
+                            option.textContent = state.name;
+                            stateSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching states:', error);
+                        stateSelect.disabled = false;
+                        stateSelect.innerHTML = '<option value="">Error loading states</option>';
+                    });
+            } else {
+                stateSelect.disabled = false;
+            }
+        });
+    }
+
+    // Initialize CKEditor if available
+    if (typeof CKEDITOR !== 'undefined') {
+        CKEDITOR.replace('id_content');
+    }
+</script>
+
+{% endblock %}

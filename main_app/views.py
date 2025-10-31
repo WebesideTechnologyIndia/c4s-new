@@ -19,6 +19,8 @@ from django.views.decorators.cache import never_cache
 
 
 # ==================== HELPER FUNCTION ====================
+
+
 def is_admin_or_staff(user):
     """Check if user is staff or superuser"""
     return user.is_staff or user.is_superuser
@@ -48,6 +50,7 @@ def career_counselling_view(request):
 
 
 # ==================== USER AUTHENTICATION ====================
+
 
 # ==================== USER AUTHENTICATION (SMART LOGIN) ====================
 
@@ -108,6 +111,7 @@ def user_logout_view(request):
     response['Expires'] = '0'
     
     return response
+
 
 # ✅ ALIAS: admin_login aur admin_logout same hain user_login ke
 admin_login_view = user_login_view
@@ -184,6 +188,8 @@ def admission_india_services_view(request):
     return render(request, 'admission_india_services.html', context)
 
 
+
+
 @never_cache
 @login_required(login_url='main_app:user_login')
 def purchase_card_view(request, card_id):
@@ -231,6 +237,7 @@ def purchase_card_view(request, card_id):
     }
     return render(request, 'purchase_card.html', context)
 
+
 # ==================== ADMIN LOGIN/LOGOUT ====================
 
 
@@ -275,6 +282,7 @@ def admin_cards_list(request):
     context = {'cards': cards}
     return render(request, 'admin/cards_list.html', context)
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -294,6 +302,7 @@ def admin_card_add(request):
     context = {'form': form}
     return render(request, 'admin/card_form.html', context)
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -312,6 +321,7 @@ def admin_card_edit(request, card_id):
     
     context = {'form': form, 'card': card}
     return render(request, 'admin/card_form.html', context)
+
 
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -339,6 +349,7 @@ def admin_counselling_cards_list(request):
     context = {'cards': cards, 'card_type': 'counselling'}
     return render(request, 'admin/counselling_cards_list.html', context)
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -358,6 +369,7 @@ def admin_counselling_card_add(request):
     context = {'form': form, 'card_type': 'counselling'}
     return render(request, 'admin/counselling_card_form.html', context)
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -376,6 +388,7 @@ def admin_counselling_card_edit(request, card_id):
     
     context = {'form': form, 'card': card, 'card_type': 'counselling'}
     return render(request, 'admin/counselling_card_form.html', context)
+
 
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -402,6 +415,7 @@ def admin_career_services_list(request):
     services = CareerCounsellingService.objects.all()
     return render(request, 'admin/career_services_list.html', {'services': services})
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -421,6 +435,7 @@ def admin_career_service_add(request):
         form = CareerCounsellingServiceForm()
     return render(request, 'admin/career_service_form.html', {'form': form})
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -436,6 +451,7 @@ def admin_career_service_edit(request, service_id):
     else:
         form = CareerCounsellingServiceForm(instance=service)
     return render(request, 'admin/career_service_form.html', {'form': form, 'service': service})
+
 
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -459,6 +475,7 @@ def admin_admission_cards_list(request):
     cards = AdmissionIndiaCard.objects.all()
     return render(request, 'admin/admission_cards_list.html', {'cards': cards})
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -477,6 +494,7 @@ def admin_admission_card_add(request):
     
     return render(request, 'admin/admission_card_form.html', {'form': form})
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -494,6 +512,7 @@ def admin_admission_card_edit(request, card_id):
         form = AdmissionIndiaCardForm(instance=card)
     
     return render(request, 'admin/admission_card_form.html', {'form': form, 'card': card})
+
 
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -534,7 +553,11 @@ def all_india_services_view(request):
     
     context = {'cards': cards}
     return render(request, 'all_india_services.html', context)
+
+
 # ==================== ADMIN VIEWS ====================
+
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -542,6 +565,7 @@ def admin_all_india_cards_list(request):
     """List all All India Service cards"""
     cards = AllIndiaServiceCard.objects.all()
     return render(request, 'admin/all_india_cards_list.html', {'cards': cards})
+
 
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -561,6 +585,7 @@ def admin_all_india_card_add(request):
     
     return render(request, 'admin/all_india_card_form.html', {'form': form})
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -579,6 +604,7 @@ def admin_all_india_card_edit(request, card_id):
     
     return render(request, 'admin/all_india_card_form.html', {'form': form, 'card': card})
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -592,6 +618,7 @@ def admin_all_india_card_delete(request, card_id):
         return redirect('main_app:admin_all_india_cards_list')
     
     return render(request, 'admin/all_india_card_delete.html', {'card': card})
+
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -611,6 +638,7 @@ from .forms import (
     DoubtSessionForm,
     ComplaintForm
 )
+
 
 # ==================== STUDENT DASHBOARD VIEW ====================
 @never_cache
@@ -737,8 +765,9 @@ def student_dashboard_view(request):
     return render(request, 'student_dashboard.html', context)
 
 
-
 # ==================== ADMIN - PROFESSIONAL COUNSELLING CARDS MANAGEMENT ====================
+
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -746,6 +775,7 @@ def admin_pro_counselling_cards_list(request):
     """List all Professional Counselling Cards"""
     cards = ProfessionalCounsellingCard.objects.all()
     return render(request, 'admin/pro_counselling_cards_list.html', {'cards': cards})
+
 
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -765,6 +795,7 @@ def admin_pro_counselling_card_add(request):
     
     return render(request, 'admin/pro_counselling_card_form.html', {'form': form})
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -782,6 +813,7 @@ def admin_pro_counselling_card_edit(request, card_id):
         form = ProfessionalCounsellingCardForm(instance=card)
     
     return render(request, 'admin/pro_counselling_card_form.html', {'form': form, 'card': card})
+
 
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -810,6 +842,7 @@ def admin_students_list(request):
     
     context = {'students': students}
     return render(request, 'admin/students_list.html', context)
+
 
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -852,6 +885,7 @@ def admin_documents_list(request):
     
     context = {'documents': documents}
     return render(request, 'admin/documents_list.html', context)
+
 
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -899,6 +933,7 @@ def admin_doubts_list(request):
     context = {'doubts': doubts}
     return render(request, 'admin/doubts_list.html', context)
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -936,6 +971,7 @@ def admin_complaints_list(request):
     
     context = {'complaints': complaints}
     return render(request, 'admin/complaints_list.html', context)
+
 
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -982,9 +1018,9 @@ def admin_update_status(request, student_id):
     return render(request, 'admin/update_status.html', context)
 
 
-
 from .models import DistanceEducationCard, OnlineEducationCard
 from .forms import DistanceEducationCardForm, OnlineEducationCardForm
+
 
 # ==================== DISTANCE EDUCATION ====================
 @never_cache
@@ -1076,6 +1112,8 @@ def online_education_view(request):
 def admin_online_education_cards_list(request):
     cards = OnlineEducationCard.objects.all()
     return render(request, 'admin/online_education_cards_list.html', {'cards': cards})
+
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -1091,6 +1129,8 @@ def admin_online_education_card_add(request):
     else:
         form = OnlineEducationCardForm()
     return render(request, 'admin/online_education_card_form.html', {'form': form})
+
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -1105,6 +1145,8 @@ def admin_online_education_card_edit(request, card_id):
     else:
         form = OnlineEducationCardForm(instance=card)
     return render(request, 'admin/online_education_card_form.html', {'form': form, 'card': card})
+
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -1115,7 +1157,6 @@ def admin_online_education_card_delete(request, card_id):
         messages.success(request, 'Card deleted!')
         return redirect('main_app:admin_online_education_cards_list')
     return render(request, 'admin/online_education_card_delete.html', {'card': card})
-
 
 
 
@@ -1140,6 +1181,8 @@ def distance_education_view(request):
 def admin_distance_education_cards_list(request):
     cards = DistanceEducationCard.objects.all()
     return render(request, 'admin/distance_education_cards_list.html', {'cards': cards})
+
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -1155,6 +1198,8 @@ def admin_distance_education_card_add(request):
     else:
         form = DistanceEducationCardForm()
     return render(request, 'admin/distance_education_card_form.html', {'form': form})
+
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -1169,6 +1214,8 @@ def admin_distance_education_card_edit(request, card_id):
     else:
         form = DistanceEducationCardForm(instance=card)
     return render(request, 'admin/distance_education_card_form.html', {'form': form, 'card': card})
+
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -1199,6 +1246,8 @@ def online_education_view(request):
 def admin_online_education_cards_list(request):
     cards = OnlineEducationCard.objects.all()
     return render(request, 'admin/online_education_cards_list.html', {'cards': cards})
+
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -1214,6 +1263,8 @@ def admin_online_education_card_add(request):
     else:
         form = OnlineEducationCardForm()
     return render(request, 'admin/online_education_card_form.html', {'form': form})
+
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -1228,6 +1279,8 @@ def admin_online_education_card_edit(request, card_id):
     else:
         form = OnlineEducationCardForm(instance=card)
     return render(request, 'admin/online_education_card_form.html', {'form': form, 'card': card})
+
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -1238,7 +1291,6 @@ def admin_online_education_card_delete(request, card_id):
         messages.success(request, 'Card deleted!')
         return redirect('main_app:admin_online_education_cards_list')
     return render(request, 'admin/online_education_card_delete.html', {'card': card})
-
 
 
 from django.http import JsonResponse
@@ -2082,37 +2134,77 @@ def admin_sub_category_edit(request, pk):
         sub_category.title = request.POST.get('title')
         sub_category.slug = request.POST.get('slug')
         sub_category.description = request.POST.get('description')
-        sub_category.icon_url = request.POST.get('icon_url')
-        sub_category.icon_color = request.POST.get('icon_color')
         sub_category.order = request.POST.get('order') or 0
         sub_category.is_active = request.POST.get('is_active') == 'on'
+        sub_category.icon_color = request.POST.get('icon_color')
         
-        # ✅ NEW: Save state and course filters
+        # State and course filters
         state_id = request.POST.get('state')
         sub_category.state_id = state_id if state_id else None
         
         course = request.POST.get('course')
         sub_category.course = course if course else None
         
+        # Handle icon upload
         if request.FILES.get('icon_image'):
             sub_category.icon_image = request.FILES.get('icon_image')
+            sub_category.icon_url = ''
+        else:
+            icon_url = request.POST.get('icon_url', '').strip()
+            if icon_url:
+                sub_category.icon_url = icon_url
         
         sub_category.save()
         
-        messages.success(request, "Sub-category updated successfully!")
+        messages.success(request, f"Sub-category '{sub_category.title}' updated successfully!")
+        
+        if sub_category.parent_subcategory:
+            root = sub_category.parent_subcategory
+            while root.parent_subcategory:
+                root = root.parent_subcategory
+            if root.parent_card:
+                return redirect('main_app:admin_sub_categories_by_card', root.parent_card.id)
+        elif sub_category.parent_card:
+            return redirect('main_app:admin_sub_categories_by_card', sub_category.parent_card.id)
+        
         return redirect('main_app:admin_sub_categories_list')
     
-    parent_cards = AllIndiaServiceCard.objects.filter(is_active=True).order_by('title')
+    # GET request
+    # ✅ Find root parent card
+    def get_root_parent_card(subcategory):
+        if subcategory.parent_subcategory:
+            root = subcategory.parent_subcategory
+            while root.parent_subcategory:
+                root = root.parent_subcategory
+            return root.parent_card
+        return subcategory.parent_card
     
-    # ✅ Get states for dropdown
-    states = State.objects.all().order_by('name')
+    # ✅ Calculate full path
+    def get_full_path(subcategory):
+        path = []
+        current = subcategory
+        
+        # Build path from child to parent
+        while current:
+            path.insert(0, current.title)
+            current = current.parent_subcategory
+        
+        # Add root card
+        root_card = get_root_parent_card(subcategory)
+        if root_card:
+            path.insert(0, root_card.title)
+        
+        return " → ".join(path)
     
-    # ✅ Get courses - You need to define COURSE_CHOICES somewhere
-    # Option 1: If you have it in a model
-    # from .models import Course
-    # courses = Course.COURSE_CHOICES
+    root_parent_card = get_root_parent_card(sub_category)
+    full_path = get_full_path(sub_category)
     
-    # Option 2: Define it here temporarily
+    try:
+        india = Country.objects.get(name='India')
+        states = State.objects.filter(country=india).order_by('name')
+    except Country.DoesNotExist:
+        states = State.objects.filter(country__name__icontains='India').order_by('name')
+    
     courses = [
         ('btech', 'B.Tech'),
         ('mtech', 'M.Tech'),
@@ -2126,14 +2218,17 @@ def admin_sub_category_edit(request, pk):
         ('ma', 'M.A'),
     ]
     
+    parent_cards = AllIndiaServiceCard.objects.filter(is_active=True).order_by('title')
+    
     context = {
-        'subcategory': sub_category,  # ✅ Changed to match template
+        'subcategory': sub_category,
+        'root_parent_card': root_parent_card,  # ✅ Root card
+        'full_path': full_path,  # ✅ Full path
         'parent_cards': parent_cards,
         'states': states,
         'courses': courses,
     }
     return render(request, 'admin/sub_category_edit.html', context)
-
 
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -2237,6 +2332,9 @@ def admin_content_page_edit(request, pk):
     
     if request.method == 'POST':
         page.sub_category_id = request.POST.get('sub_category')
+        page.country_id = request.POST.get('country') or None
+        page.state_id = request.POST.get('state') or None
+        page.course = request.POST.get('course') or None  # Direct field, not FK
         page.title = request.POST.get('title')
         page.slug = request.POST.get('slug')
         page.summary = request.POST.get('summary')
@@ -2256,11 +2354,24 @@ def admin_content_page_edit(request, pk):
         messages.success(request, "Page updated successfully!")
         return redirect('main_app:admin_content_pages_list')
     
+    # Get dropdown data
     sub_categories = SubCategory.objects.filter(is_active=True).select_related('parent_card').order_by('parent_card', 'title')
+    countries = Country.objects.filter(is_active=True).order_by('name')
+    
+    # Get states for selected country
+    states = []
+    if page.country_id:
+        states = State.objects.filter(country_id=page.country_id, is_active=True).order_by('name')
+    
+    # Get course choices from UserRegistration model
+    course_choices = UserRegistration.COURSE_CHOICES
     
     context = {
         'page': page,
         'sub_categories': sub_categories,
+        'countries': countries,
+        'states': states,
+        'course_choices': course_choices,
     }
     return render(request, 'admin/content_page_edit.html', context)
 
@@ -2386,7 +2497,32 @@ def admin_content_pages_by_subcategory(request, subcategory_id):
 
 
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.views.decorators.cache import never_cache
+from django.contrib import messages
+from django.http import JsonResponse
+from .models import SubCategory, State
+from .forms import ContentPageForm
 
+# ==================== AJAX: Get States by Country (Reuse same function) ====================
+@login_required(login_url='main_app:admin_login')
+@user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
+def get_states_by_country(request):
+    """AJAX endpoint to get states based on selected country"""
+    country_id = request.GET.get('country_id')
+    
+    if country_id:
+        states = State.objects.filter(
+            country_id=country_id, 
+            is_active=True
+        ).values('id', 'name').order_by('name')
+        return JsonResponse({'states': list(states)})
+    
+    return JsonResponse({'states': []})
+
+
+# ==================== ADMIN: ADD CONTENT PAGE ====================
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -2415,6 +2551,10 @@ def admin_content_page_add_for_subcategory(request, subcategory_id):
     else:
         # Pre-fill sub_category in the form
         form = ContentPageForm(initial={'sub_category': sub_category})
+    
+    # DEBUG - Remove after testing
+    print("Countries count:", form.fields['country'].queryset.count())
+    print("Course choices count:", len(form.fields['course'].choices))
     
     context = {
         'sub_category': sub_category,
@@ -2509,100 +2649,234 @@ def card_detail_view(request, card_slug):
 @login_required(login_url='main_app:user_login')
 def subcategory_detail_view(request, card_slug, subcategory_path):
     """
-    Shows:
-    - Child subcategories (if exist) OR
-    - Pages (if no children)
+    Show subcategory with filtered pages
     """
+    
+    # Get student data
+    try:
+        student = UserRegistration.objects.get(user=request.user)
+        student_country = student.country
+        student_state = student.state
+        student_course = student.course
+    except UserRegistration.DoesNotExist:
+        student_country = None
+        student_state = None
+        student_course = None
     
     # Get card
     card = get_object_or_404(AllIndiaServiceCard, 
                             redirect_link__icontains=card_slug, 
                             is_active=True)
     
-    # Parse path: "engineering/government/delhi"
+    # Parse path and get subcategory
     slugs = subcategory_path.strip('/').split('/')
-    current_slug = slugs[-1]  # Last slug
+    current_subcategory = None
     
-    # Get current subcategory
-    sub_category = get_object_or_404(SubCategory, 
-                                     slug=current_slug, 
-                                     is_active=True)
+    for slug in slugs:
+        if current_subcategory is None:
+            current_subcategory = get_object_or_404(
+                SubCategory,
+                slug=slug,
+                parent_card=card,
+                parent_subcategory__isnull=True,
+                is_active=True
+            )
+        else:
+            current_subcategory = get_object_or_404(
+                SubCategory,
+                slug=slug,
+                parent_subcategory=current_subcategory,
+                is_active=True
+            )
     
-    # Check: Does it have child subcategories?
-    children = sub_category.children.filter(is_active=True).order_by('order')
-    
-    if children.exists():
-        # ✅ Show child subcategories
-        context = {
-            'card': card,
-            'sub_category': sub_category,
-            'sub_categories': children,  # Child subcategories
-            'breadcrumb': sub_category.get_breadcrumb(),
-        }
-        return render(request, 'student/card_detail.html', context)  # Reuse same template
-    else:
-        # ✅ Show pages (no more children)
-        pages = ContentPage.objects.filter(
-            sub_category=sub_category, 
-            is_active=True
-        ).order_by('order')
-        
-        context = {
-            'card': card,
-            'sub_category': sub_category,
-            'pages': pages,
-            'breadcrumb': sub_category.get_breadcrumb(),
-        }
-        return render(request, 'student/subcategory_detail.html', context)
-    
-
-#@never_cache ==================== STUDENT: PAGE DETAIL (FULL CONTENT) ====================
-@login_required(login_url='main_app:user_login')
-def page_detail_view(request, card_slug, subcategory_slug, page_slug):
-
-
-
-    """
-    Student side - Show full page content
-    URL: /all-india-services/rti/documents/how-to-file-rti/
-    """
-    if request.user.is_staff or request.user.is_superuser:
-        return redirect('main_app:admin_dashboard')
-    
-    # Get card, sub-category, and page
-    card = get_object_or_404(AllIndiaServiceCard, 
-                            redirect_link__icontains=card_slug, 
-                            is_active=True)
-    
-    sub_category = get_object_or_404(SubCategory, 
-                                     parent_card=card,
-                                     slug=subcategory_slug, 
-                                     is_active=True)
-    
-    page = get_object_or_404(ContentPage, 
-                            sub_category=sub_category,
-                            slug=page_slug, 
-                            is_active=True)
-    
-    # Increment view count
-    page.increment_views()
-    
-    # Get related pages (same sub-category)
-    related_pages = ContentPage.objects.filter(
-        sub_category=sub_category,
+    # Get child subcategories
+    child_subcategories = SubCategory.objects.filter(
+        parent_subcategory=current_subcategory,
         is_active=True
-    ).exclude(id=page.id).order_by('order')[:5]
+    ).order_by('order')
+    
+    # ✅ Get pages with filtering
+    pages_query = Q(
+        sub_category=current_subcategory,
+        is_active=True
+    )
+    
+    if student_country or student_state or student_course:
+        pages_query &= (
+            Q(country__isnull=True) | Q(country=student_country)
+        ) & (
+            Q(state__isnull=True) | Q(state=student_state)
+        ) & (
+            Q(course__isnull=True) | Q(course='') | Q(course=student_course)
+        )
+    
+    pages = ContentPage.objects.filter(pages_query).order_by('order', '-created_at')
     
     context = {
         'card': card,
-        'sub_category': sub_category,
-        'page': page,
-        'related_pages': related_pages,
+        'sub_category': current_subcategory,
+        'child_subcategories': child_subcategories,
+        'pages': pages,
+        'breadcrumb': current_subcategory.get_breadcrumb(),
+        'student': student,
     }
-    return render(request, 'student/page_detail.html', context)
+    
+    return render(request, 'student/subcategory_detail.html', context)
 
 
+#@never_cache ==================== STUDENT: PAGE DETAIL (FULL CONTENT) ====================
+from django.db.models import Q
 
+from django.db.models import Q
+from django.http import Http404
+
+@login_required(login_url='main_app:user_login')
+def page_detail_view(request, card_slug, subcategory_path, page_slug):
+    """
+    Show individual page OR redirect to subcategory if page doesn't exist
+    WITH Country, State, Course filtering
+    """
+    
+    # ✅ STEP 1: Get student data
+    try:
+        student = UserRegistration.objects.get(user=request.user)
+        student_country = student.country
+        student_state = student.state
+        student_course = student.course
+    except UserRegistration.DoesNotExist:
+        student_country = None
+        student_state = None
+        student_course = None
+    
+    # ✅ STEP 2: Get card with filtering
+    card_query = Q(redirect_link__icontains=card_slug, is_active=True)
+    
+    if student_country or student_state or student_course:
+        card_query &= (
+            Q(country__isnull=True) | Q(country=student_country)
+        ) & (
+            Q(state__isnull=True) | Q(state=student_state)
+        ) & (
+            Q(course__isnull=True) | Q(course='') | Q(course=student_course)
+        )
+    
+    card = get_object_or_404(AllIndiaServiceCard, card_query)
+    
+    # ✅ STEP 3: Parse path and get subcategory with filtering
+    slugs = subcategory_path.strip('/').split('/')
+    
+    current_subcategory = None
+    for slug in slugs:
+        if current_subcategory is None:
+            # First level subcategory
+            subcat_query = Q(
+                slug=slug,
+                parent_card=card,
+                parent_subcategory__isnull=True,
+                is_active=True
+            )
+        else:
+            # Nested subcategory
+            subcat_query = Q(
+                slug=slug,
+                parent_subcategory=current_subcategory,
+                is_active=True
+            )
+        
+        # Apply filtering for subcategories
+        if student_country or student_state or student_course:
+            subcat_query &= (
+                Q(country__isnull=True) | Q(country=student_country)
+            ) & (
+                Q(state__isnull=True) | Q(state=student_state)
+            ) & (
+                Q(course__isnull=True) | Q(course='') | Q(course=student_course)
+            )
+        
+        current_subcategory = get_object_or_404(SubCategory, subcat_query)
+    
+    # ✅ STEP 4: Try to find page with filtering
+    page_query = Q(
+        sub_category=current_subcategory,
+        slug=page_slug,
+        is_active=True
+    )
+    
+    # Apply smart filtering based on student data
+    if student_country or student_state or student_course:
+        page_query &= (
+            Q(country__isnull=True) | Q(country=student_country)
+        ) & (
+            Q(state__isnull=True) | Q(state=student_state)
+        ) & (
+            Q(course__isnull=True) | Q(course='') | Q(course=student_course)
+        )
+    
+    try:
+        page = ContentPage.objects.get(page_query)
+        
+        # ✅ Page found - show it
+        page.views_count += 1
+        page.save(update_fields=['views_count'])
+        
+        # Get related pages with same filtering
+        related_query = Q(
+            sub_category=current_subcategory,
+            is_active=True
+        ) & ~Q(id=page.id)
+        
+        if student_country or student_state or student_course:
+            related_query &= (
+                Q(country__isnull=True) | Q(country=student_country)
+            ) & (
+                Q(state__isnull=True) | Q(state=student_state)
+            ) & (
+                Q(course__isnull=True) | Q(course='') | Q(course=student_course)
+            )
+        
+        related_pages = ContentPage.objects.filter(related_query).order_by('order', '-created_at')[:5]
+        
+        context = {
+            'page': page,
+            'card': card,
+            'sub_category': current_subcategory,
+            'breadcrumb': current_subcategory.get_breadcrumb(),
+            'related_pages': related_pages,
+            'student': student,
+        }
+        return render(request, 'student/page_detail.html', context)
+    
+    except ContentPage.DoesNotExist:
+        # ✅ FALLBACK: Check if page_slug is actually a nested subcategory
+        nested_query = Q(
+            slug=page_slug,
+            parent_subcategory=current_subcategory,
+            is_active=True
+        )
+        
+        if student_country or student_state or student_course:
+            nested_query &= (
+                Q(country__isnull=True) | Q(country=student_country)
+            ) & (
+                Q(state__isnull=True) | Q(state=student_state)
+            ) & (
+                Q(course__isnull=True) | Q(course='') | Q(course=student_course)
+            )
+        
+        try:
+            nested_sub = SubCategory.objects.get(nested_query)
+            
+            # It's a subcategory! Redirect to subcategory view
+            full_path = f"{subcategory_path}/{page_slug}/"
+            return redirect('main_app:subcategory_detail_view', 
+                          card_slug=card_slug, 
+                          subcategory_path=full_path)
+        
+        except SubCategory.DoesNotExist:
+            # Neither page nor subcategory found
+            raise Http404("Content not found or not accessible for your profile")
+        
+        
 # views.py mein YE VIEWS ADD KARO
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -2730,29 +3004,49 @@ def admin_sub_categories_by_card(request, card_id):
     return render(request, 'admin/nested_subcategories_list.html', context)
 
 
-#@never_cache ==================== STUDENT VIEWS (UPDATED) ====================
+from django.db.models import Q
+from django.db.models import Q
+import logging
+
+logger = logging.getLogger(__name__)
+
 @login_required(login_url='main_app:user_login')
 def subcategory_detail_view(request, card_slug, subcategory_path):
     """
     Student side - Navigate through nested subcategories
-    URL examples:
-    - /rti/engineering/
-    - /rti/engineering/government/
-    - /rti/engineering/government/delhi/
+    WITH STRICT Course filtering
     """
+    
+    # Get student data
+    try:
+        student = UserRegistration.objects.get(user=request.user)
+        student_country = student.country
+        student_state = student.state
+        student_course = student.course
+        
+        # ✅ DEBUG: Print student info
+        print(f"DEBUG: Student Course = {student_course}")
+        print(f"DEBUG: Student Country = {student_country}")
+        print(f"DEBUG: Student State = {student_state}")
+        
+    except UserRegistration.DoesNotExist:
+        student_country = None
+        student_state = None
+        student_course = None
+    
     # Get card
-    card = get_object_or_404(AllIndiaServiceCard, 
-                            redirect_link__icontains=card_slug, 
-                            is_active=True)
+    card = get_object_or_404(
+        AllIndiaServiceCard, 
+        redirect_link__icontains=card_slug, 
+        is_active=True
+    )
     
     # Parse nested path
     slugs = subcategory_path.strip('/').split('/')
     
-    # Navigate through the path to find current subcategory
     current_subcategory = None
     for slug in slugs:
         if current_subcategory is None:
-            # First level - find under card
             current_subcategory = get_object_or_404(
                 SubCategory,
                 slug=slug,
@@ -2761,7 +3055,6 @@ def subcategory_detail_view(request, card_slug, subcategory_path):
                 is_active=True
             )
         else:
-            # Nested level - find under parent
             current_subcategory = get_object_or_404(
                 SubCategory,
                 slug=slug,
@@ -2769,42 +3062,76 @@ def subcategory_detail_view(request, card_slug, subcategory_path):
                 is_active=True
             )
     
-    # Check if has children
+    # Get child subcategories
     children = current_subcategory.get_children()
     
-    # ✅ SAHI - Related name use kar: content_pages
-    pages = current_subcategory.content_pages.filter(is_active=True).order_by('order')
+    # ✅ BUILD QUERY with STRICT filtering
+    pages_query = Q(sub_category=current_subcategory, is_active=True)
     
+    # ✅ CRITICAL: Only show pages that match OR have no filter set
+    if student_course:
+        # Show pages with matching course OR no course filter
+        pages_query &= (Q(course__isnull=True) | Q(course='') | Q(course=student_course))
+    
+    if student_country:
+        pages_query &= (Q(country__isnull=True) | Q(country=student_country))
+    
+    if student_state:
+        pages_query &= (Q(state__isnull=True) | Q(state=student_state))
+    
+    # Get pages
+    pages = ContentPage.objects.filter(pages_query).order_by('order', '-created_at')
+    
+    # ✅ DEBUG: Print filtered pages
+    print(f"\nDEBUG: Total pages found = {pages.count()}")
+    for page in pages:
+        print(f"  - Page: {page.title}, Course: {page.course}, Country: {page.country}, State: {page.state}")
+    
+    # Render template
     if children.exists():
-        # Show child subcategories AND pages both
         context = {
             'card': card,
             'sub_category': current_subcategory,
             'sub_categories': children,
-            'pages': pages,  # ✅ Dono dikhengi - subcategories aur pages
+            'pages': pages,
             'breadcrumb': current_subcategory.get_breadcrumb(),
+            'student': student,
         }
         return render(request, 'student/subcategory_children.html', context)
     else:
-        # Show pages only (leaf node)
         context = {
             'card': card,
             'sub_category': current_subcategory,
             'pages': pages,
             'breadcrumb': current_subcategory.get_breadcrumb(),
+            'student': student,
         }
         return render(request, 'student/subcategory_pages.html', context)
-
-
 # views.py - YE VIEW UPDATE KARO
 
 from django.http import Http404
+
+from django.db.models import Q
 
 @login_required(login_url='main_app:user_login')
 def page_detail_view(request, card_slug, subcategory_path, page_slug):
     """
     Show individual page OR redirect to subcategory if page doesn't exist
+    WITH Country, State, Course filtering
     """
+    
+    # Get student registration data
+    try:
+        student = UserRegistration.objects.get(user=request.user)
+        student_country = student.country
+        student_state = student.state
+        student_course = student.course
+    except UserRegistration.DoesNotExist:
+        student_country = None
+        student_state = None
+        student_course = None
+    
+    # Get card
     card = get_object_or_404(AllIndiaServiceCard, 
                             redirect_link__icontains=card_slug, 
                             is_active=True)
@@ -2831,23 +3158,55 @@ def page_detail_view(request, card_slug, subcategory_path, page_slug):
                 is_active=True
             )
     
-    # ✅ TRY: Find page first
-    try:
-        page = ContentPage.objects.get(
-            sub_category=current_subcategory,
-            slug=page_slug,
-            is_active=True
+    # ✅ BUILD QUERY with filtering
+    page_query = Q(
+        sub_category=current_subcategory,
+        slug=page_slug,
+        is_active=True
+    )
+    
+    # Apply smart filtering based on student data
+    if student_country or student_state or student_course:
+        page_query &= (
+            Q(country__isnull=True) | Q(country=student_country)  # No country filter OR matching country
+        ) & (
+            Q(state__isnull=True) | Q(state=student_state)        # No state filter OR matching state
+        ) & (
+            Q(course__isnull=True) | Q(course='') | Q(course=student_course)  # No course filter OR matching course
         )
+    
+    # ✅ TRY: Find page with filtering
+    try:
+        page = ContentPage.objects.get(page_query)
         
         # Page found - show it
         page.views_count += 1
-        page.save()
+        page.save(update_fields=['views_count'])
+        
+        # Get related pages with same filtering
+        related_query = Q(
+            sub_category=current_subcategory,
+            is_active=True
+        ) & ~Q(id=page.id)
+        
+        if student_country or student_state or student_course:
+            related_query &= (
+                Q(country__isnull=True) | Q(country=student_country)
+            ) & (
+                Q(state__isnull=True) | Q(state=student_state)
+            ) & (
+                Q(course__isnull=True) | Q(course='') | Q(course=student_course)
+            )
+        
+        related_pages = ContentPage.objects.filter(related_query).order_by('order', '-created_at')[:5]
         
         context = {
             'page': page,
             'card': card,
             'sub_category': current_subcategory,
             'breadcrumb': current_subcategory.get_breadcrumb(),
+            'related_pages': related_pages,
+            'student': student,
         }
         return render(request, 'student/page_detail.html', context)
     
@@ -2868,9 +3227,7 @@ def page_detail_view(request, card_slug, subcategory_path, page_slug):
         
         except SubCategory.DoesNotExist:
             # Neither page nor subcategory - show 404
-            raise Http404("Content not found")
-
-
+            raise Http404("Content not found or not accessible for your profile")
 # abroad india 
 # views.py mein add karo
 # Admin - Sub-categories by Card
@@ -3049,6 +3406,9 @@ def admin_admission_abroad_nested_subcategories(request, parent_id):
     }
     
     return render(request, 'admin/admission_abroad_nested_subcategories.html', context)
+
+
+
 # ==================== ADMIN: CONTENT PAGES FOR SUBCATEGORY ====================
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -3064,6 +3424,26 @@ def admin_admission_abroad_pages_by_subcategory(request, subcategory_id):
         'breadcrumb': subcategory.get_breadcrumb(),
     }
     return render(request, 'admin/admission_abroad_pages_list.html', context)
+
+
+
+from django.http import JsonResponse
+
+# ==================== AJAX: Get States by Country ====================
+@login_required(login_url='main_app:admin_login')
+@user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
+def get_states_by_country(request):
+    """AJAX endpoint to get states based on selected country"""
+    country_id = request.GET.get('country_id')
+    
+    if country_id:
+        states = State.objects.filter(
+            country_id=country_id, 
+            is_active=True
+        ).values('id', 'name').order_by('name')
+        return JsonResponse({'states': list(states)})
+    
+    return JsonResponse({'states': []})
 
 
 # ==================== ADMIN: ADD CONTENT PAGE FOR SUBCATEGORY ====================
@@ -3084,7 +3464,6 @@ def admin_admission_abroad_page_add(request, subcategory_id):
             messages.success(request, 'Page added successfully!')
             return redirect('main_app:admin_admission_abroad_pages_by_subcategory', subcategory_id=subcategory_id)
     else:
-        # Pre-fill the subcategory
         form = AdmissionAbroadPageForm(initial={'sub_category': subcategory})
     
     context = {
@@ -3092,6 +3471,7 @@ def admin_admission_abroad_page_add(request, subcategory_id):
         'subcategory': subcategory,
     }
     return render(request, 'admin/admission_abroad_page_form.html', context)
+
 
 # ==================== STUDENT: FRONTEND VIEWS ====================
 
@@ -3791,7 +4171,11 @@ def admin_distance_education_page_add(request, subcategory_id):
         'subcategory': subcategory,
     }
     return render(request, 'admin/distance_education_page_form.html', context)
+
+
 # ==================== STUDENT: FRONTEND VIEWS ====================
+
+
 
 # views.py mein distance_education_card_detail UPDATE karo
 # views.py mein distance_education_card_detail UPDATE karo
@@ -3904,6 +4288,7 @@ def distance_education_subcategory_detail(request, card_slug, subcategory_path):
     
     return render(request, 'student/distance_education_subcategory_detail.html', context)
 
+
 @never_cache
 @login_required(login_url='main_app:user_login')
 def distance_education_page_detail(request, card_slug, subcategory_path, page_slug):
@@ -3972,6 +4357,7 @@ def admin_online_education_subcategories(request, card_id):
     
     return render(request, 'admin/online_education_subcategories.html', context)
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -3994,6 +4380,7 @@ def admin_online_education_nested_subcategories(request, parent_id):
     }
     
     return render(request, 'admin/online_education_nested_subcategories.html', context)
+
 
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -4099,6 +4486,7 @@ def admin_online_education_nested_subcategory_add(request, parent_id):
     
     return render(request, 'admin/online_education_subcategory_form.html', context)
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -4143,6 +4531,7 @@ def admin_online_education_subcategory_edit(request, subcategory_id):
     
     return render(request, 'admin/online_education_subcategory_form.html', context)
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -4169,6 +4558,7 @@ def admin_online_education_subcategory_delete(request, subcategory_id):
     else:
         return redirect('main_app:admin_online_education_subcategories', card_id=parent_card.id)
 
+
 @never_cache
 @login_required(login_url='main_app:admin_login')
 @user_passes_test(is_admin_or_staff, login_url='main_app:user_login')
@@ -4183,6 +4573,7 @@ def admin_online_education_pages_by_subcategory(request, subcategory_id):
         'breadcrumb': subcategory.get_breadcrumb(),
     }
     return render(request, 'admin/online_education_pages_list.html', context)
+
 
 @never_cache
 @login_required(login_url='main_app:admin_login')
@@ -4217,7 +4608,9 @@ def admin_online_education_page_add(request, subcategory_id):
     }
     return render(request, 'admin/online_education_page_form.html', context)
 
+
 # ==================== STUDENT: FRONTEND VIEWS ====================
+
 
 from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
@@ -4288,6 +4681,7 @@ def online_education_card_detail(request, card_slug):
     
     return render(request, 'student/online_education_card_detail.html', context)
 
+
 @never_cache
 @login_required(login_url='main_app:user_login')
 def online_education_subcategory_detail(request, card_slug, subcategory_path):
@@ -4328,6 +4722,7 @@ def online_education_subcategory_detail(request, card_slug, subcategory_path):
     }
     
     return render(request, 'student/online_education_subcategory_detail.html', context)
+
 
 @never_cache
 @login_required(login_url='main_app:user_login')

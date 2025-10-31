@@ -64,7 +64,6 @@
 <div class="breadcrumb-section">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-           
             <li class="breadcrumb-item">
                 <a href="{% url 'main_app:admin_admission_abroad_subcategories' subcategory.parent_card.id %}">
                     {{ subcategory.parent_card.title }}
@@ -121,6 +120,58 @@
                                        value="{{ subcategory.parent_card.title }} → {{ subcategory.title }}" readonly>
                                 {{ form.sub_category.as_hidden }}
                             </div>
+
+                           <!-- Country Selection -->
+<div class="col-md-4 mb-3">
+    <label class="form-label">Country (Optional)</label>
+    <select name="country" id="id_country" class="form-control">
+        <option value="">--- Select Country ---</option>
+        {% for country in form.fields.country.queryset %}
+            <option value="{{ country.id }}" {% if form.country.value == country.id %}selected{% endif %}>
+                {{ country.name }}
+            </option>
+        {% endfor %}
+    </select>
+    <small class="text-muted d-block mt-1">
+        <i class="bi bi-globe me-1"></i>Select if content is country-specific
+    </small>
+</div>
+
+<!-- State Selection -->
+<div class="col-md-4 mb-3">
+    <label class="form-label">State (Optional)</label>
+    <select name="state" id="id_state" class="form-control">
+        <option value="">--- Select State ---</option>
+        {% if form.state.value %}
+            {% for state in form.fields.state.queryset %}
+                <option value="{{ state.id }}" {% if form.state.value == state.id %}selected{% endif %}>
+                    {{ state.name }}
+                </option>
+            {% endfor %}
+        {% endif %}
+    </select>
+    <small class="text-muted d-block mt-1">
+        <i class="bi bi-geo-alt me-1"></i>Select country first
+    </small>
+</div>
+
+<!-- Course Selection -->
+<div class="col-md-4 mb-3">
+    <label class="form-label">Course (Optional)</label>
+    <select name="course" id="id_course" class="form-control">
+        <option value="">--- Select Course ---</option>
+        {% for value, label in form.fields.course.choices %}
+            {% if value %}
+                <option value="{{ value }}" {% if form.course.value == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+            {% endif %}
+        {% endfor %}
+    </select>
+    <small class="text-muted d-block mt-1">
+        <i class="bi bi-book me-1"></i>Select if content is course-specific
+    </small>
+</div>
 
                             <!-- Title -->
                             <div class="col-md-12 mb-3">
@@ -284,6 +335,47 @@
             summaryCount.textContent = this.value.length;
         });
         summaryCount.textContent = summaryInput.value.length;
+    }
+
+    // **NEW: Dynamic State Loading based on Country**
+    const countrySelect = document.getElementById('id_country');
+    const stateSelect = document.getElementById('id_state');
+    
+    if (countrySelect && stateSelect) {
+        countrySelect.addEventListener('change', function() {
+            const countryId = this.value;
+            
+            // Clear existing states
+            stateSelect.innerHTML = '<option value="">--- Select State ---</option>';
+            
+            if (countryId) {
+                // Show loading
+                stateSelect.disabled = true;
+                stateSelect.innerHTML = '<option value="">Loading...</option>';
+                
+                // Fetch states via AJAX
+                fetch(`{% url 'main_app:get_states_by_country' %}?country_id=${countryId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        stateSelect.disabled = false;
+                        stateSelect.innerHTML = '<option value="">--- Select State ---</option>';
+                        
+                        data.states.forEach(state => {
+                            const option = document.createElement('option');
+                            option.value = state.id;
+                            option.textContent = state.name;
+                            stateSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching states:', error);
+                        stateSelect.disabled = false;
+                        stateSelect.innerHTML = '<option value="">Error loading states</option>';
+                    });
+            } else {
+                stateSelect.disabled = false;
+            }
+        });
     }
 
     // Image preview functionality

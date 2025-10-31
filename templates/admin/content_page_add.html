@@ -73,44 +73,81 @@
                     {% endif %}
 
                     <!-- BASIC INFO SECTION -->
-                    <div class="form-section">
-                        <h6><i class="bi bi-info-circle me-2"></i>Basic Information</h6>
+                    <!-- BASIC INFO SECTION -->
+<div class="form-section">
+    <h6><i class="bi bi-info-circle me-2"></i>Basic Information</h6>
 
-                        <div class="row">
-                            <!-- Sub-Category -->
-                            <div class="col-md-12 mb-3">
-                                <label class="form-label">Sub-Category</label>
-                                <input type="text" class="form-control"
-                                    value="{{ sub_category.parent_card.title }} → {{ sub_category.title }}" readonly>
-                                {{ form.sub_category.as_hidden }}
-                            </div>
+    <div class="row">
+        <!-- Sub-Category -->
+        <div class="col-md-12 mb-3">
+            <label class="form-label">Sub-Category</label>
+            <input type="text" class="form-control"
+                value="{{ sub_category.parent_card.title }} → {{ sub_category.title }}" readonly>
+            {{ form.sub_category.as_hidden }}
+        </div>
 
-                            <!-- Title -->
-                            <div class="col-md-12 mb-3">
-                                <label class="form-label">Page Title <span class="text-danger">*</span></label>
-                                {{ form.title }}
-                                <span class="char-counter">
-                                    <span id="titleCount">0</span>/300 characters
-                                </span>
-                            </div>
+        <!-- Country Selection -->
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Country (Optional)</label>
+            {{ form.country }}
+            {% if form.country.errors %}
+                <div class="text-danger small">{{ form.country.errors }}</div>
+            {% endif %}
+            <small class="text-muted d-block mt-1">
+                <i class="bi bi-globe me-1"></i>Select if content is country-specific
+            </small>
+        </div>
 
-                            <!-- Slug (optional) -->
-                            <div class="col-md-12 mb-3">
-                                <label class="form-label">URL Slug (Optional - Auto-generated from title)</label>
-                                {{ form.slug }}
-                                <small class="text-muted">Leave blank for auto-generation. Used in URL.</small>
-                            </div>
+        <!-- State Selection -->
+        <div class="col-md-4 mb-3">
+            <label class="form-label">State (Optional)</label>
+            {{ form.state }}
+            {% if form.state.errors %}
+                <div class="text-danger small">{{ form.state.errors }}</div>
+            {% endif %}
+            <small class="text-muted d-block mt-1">
+                <i class="bi bi-geo-alt me-1"></i>Select country first
+            </small>
+        </div>
 
-                            <!-- Summary -->
-                            <div class="col-md-12 mb-3">
-                                <label class="form-label">Summary (Optional)</label>
-                                {{ form.summary }}
-                                <span class="char-counter">
-                                    <span id="summaryCount">0</span>/500 characters
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Course Selection -->
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Course (Optional)</label>
+            {{ form.course }}
+            {% if form.course.errors %}
+                <div class="text-danger small">{{ form.course.errors }}</div>
+            {% endif %}
+            <small class="text-muted d-block mt-1">
+                <i class="bi bi-book me-1"></i>Select if content is course-specific
+            </small>
+        </div>
+
+        <!-- Title -->
+        <div class="col-md-12 mb-3">
+            <label class="form-label">Page Title <span class="text-danger">*</span></label>
+            {{ form.title }}
+            <span class="char-counter">
+                <span id="titleCount">0</span>/300 characters
+            </span>
+        </div>
+
+        <!-- Slug (optional) -->
+        <div class="col-md-12 mb-3">
+            <label class="form-label">URL Slug (Optional - Auto-generated from title)</label>
+            {{ form.slug }}
+            <small class="text-muted">Leave blank for auto-generation. Used in URL.</small>
+        </div>
+
+        <!-- Summary -->
+        <div class="col-md-12 mb-3">
+            <label class="form-label">Summary (Optional)</label>
+            {{ form.summary }}
+            <span class="char-counter">
+                <span id="summaryCount">0</span>/500 characters
+            </span>
+        </div>
+    </div>
+</div>
 
                     <!-- CONTENT SECTION -->
                     <div class="form-section">
@@ -297,6 +334,46 @@
     if (imageUrl) {
         imageUrl.addEventListener('input', function () {
             updatePreview(this.value);
+        });
+    }
+
+     const countrySelect = document.getElementById('id_country');
+    const stateSelect = document.getElementById('id_state');
+    
+    if (countrySelect && stateSelect) {
+        countrySelect.addEventListener('change', function() {
+            const countryId = this.value;
+            
+            // Clear existing states
+            stateSelect.innerHTML = '<option value="">--- Select State ---</option>';
+            
+            if (countryId) {
+                // Show loading
+                stateSelect.disabled = true;
+                stateSelect.innerHTML = '<option value="">Loading...</option>';
+                
+                // Fetch states via AJAX
+                fetch(`{% url 'main_app:get_states_by_country' %}?country_id=${countryId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        stateSelect.disabled = false;
+                        stateSelect.innerHTML = '<option value="">--- Select State ---</option>';
+                        
+                        data.states.forEach(state => {
+                            const option = document.createElement('option');
+                            option.value = state.id;
+                            option.textContent = state.name;
+                            stateSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching states:', error);
+                        stateSelect.disabled = false;
+                        stateSelect.innerHTML = '<option value="">Error loading states</option>';
+                    });
+            } else {
+                stateSelect.disabled = false;
+            }
         });
     }
 </script>

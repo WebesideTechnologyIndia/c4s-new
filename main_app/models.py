@@ -1308,12 +1308,18 @@ from ckeditor_uploader.fields import RichTextUploadingField
 
 # ==================== CONTENT PAGE MODEL (Level 3) ====================
 
-
 class ContentPage(models.Model):
     """Individual content pages under SubCategory"""
     
     # Parent Sub-Category
     sub_category = models.ForeignKey(SubCategory, on_delete=models.CASCADE, related_name='content_pages')
+    
+    # **NEW: Country, State and Course Selection**
+    country = models.ForeignKey('Country', on_delete=models.SET_NULL, null=True, blank=True,
+                                related_name='content_pages')
+    state = models.ForeignKey('State', on_delete=models.SET_NULL, null=True, blank=True, 
+                              related_name='content_pages')
+    course = models.CharField(max_length=100, blank=True, null=True)
     
     # Page Info
     title = models.CharField(max_length=300, help_text="e.g., Top 10 Engineering Colleges in India")
@@ -1367,8 +1373,6 @@ class ContentPage(models.Model):
         """Increment view count"""
         self.views_count += 1
         self.save(update_fields=['views_count'])
-
-
 # models.py mein ye add karo
 # **DELETE THE SECOND DEFINITION** - Keep only ONE copy of AdmissionAbroadSubCategory and AdmissionAbroadPage
 
@@ -1499,7 +1503,12 @@ class AdmissionAbroadPage(models.Model):
     # Parent Sub-Category
     sub_category = models.ForeignKey(AdmissionAbroadSubCategory, on_delete=models.CASCADE, 
                                      related_name='content_pages')
-    
+     # **NEW: Country, State and Course Selection**
+    country = models.ForeignKey('Country', on_delete=models.SET_NULL, null=True, blank=True,
+                                related_name='admission_pages')
+    state = models.ForeignKey('State', on_delete=models.SET_NULL, null=True, blank=True, 
+                              related_name='admission_pages')
+    course = models.CharField(max_length=100, blank=True, null=True)  # Will use UserRegistration.COURSE_CHOICES
     # Page Info
     title = models.CharField(max_length=300)
     slug = models.SlugField(max_length=300, unique=True, blank=True)

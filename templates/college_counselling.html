@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}College Admission Counselling Services{% endblock %}
+{% block title %}C4s{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -156,6 +156,20 @@
         .service-card {
             margin-bottom: 25px;
         }
+        .services-hero::before {
+        content: '';
+        position: absolute;
+        top:160px;
+        right: -126px;
+        width: 438px;
+        height: 393px;
+        background: #DDA25B;
+        background: linear-gradient(135deg, #DDA25B, #EA8405);
+        background-image: url("{% static 'img/main_img.png' %}");
+        background-size: contain;
+        background-repeat: no-repeat;
+        display: none;
+    }
     }
 </style>
 {% endblock %}

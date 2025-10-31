@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Admission India Services{% endblock %}
+{% block title %}C4s{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -371,6 +371,21 @@
         .modal-body { grid-template-columns: 1fr; }
         .modal-content { padding: 25px; }
         .modal-header h2 { font-size: 1.3rem; }
+          .services-hero::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: -50px;
+        transform: translateY(-50%);
+        width: 450px;
+        height: 450px;
+        background-image: url("{% static 'img/main_img.png' %}");
+        background-size: contain;
+        background-repeat: no-repeat;
+        opacity: 0.9;
+        z-index: 1;
+        display: none;
+    }
     }
 </style>
 {% endblock %}
@@ -387,7 +402,7 @@
                     </svg>
                 </div>
                 <h1>Admission India Services</h1>
-                <p>Welcome, {{ request.user.username }}! Expert Guidance for Your Educational Journey</p>
+                <p>Welcome, {{student.name }} ! Get Updates And Expert Guidance For Your Educational Journey</p>
             </div>
         </div>
     </div>
